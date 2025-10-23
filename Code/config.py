@@ -1,20 +1,20 @@
 from numpy import sin, cos, sqrt, pi
 
 # Use same constants as @vesaMultiheightObservationsAtmospheric2023 Figure 3
-cs = 7.8 # km/s
-dz = 150  # km
+cs = 7.8   # km/s
+dz = 150   # km
 g  = 0.274 # km/s^2
 gamma = 5*3**(-1)
 H = 125.00 # km
 N = sqrt((g*H**(-1)) - (g**2*cs**(-2))) # Hz
-tau = 200 # s
+tau = 200  # s
 wac = cs*(2*H)**(-1) # Hz
 
 # Magnetic parameters
 B = 100 # Gauss
 epsilon = 0.0
-phi = 40.0 * pi*(180)**(-1) # deg -> rads
-theta = 80.0 * pi*(180)**(-1) # deg -> rads
+phi = 40.0*pi*(180)**(-1) # deg -> rads
+theta = 80.0*pi*(180)**(-1) # deg -> rads
 
 # Aflven velocity components
 a  = 0.33*cs # km/s
