@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:bin}/PreviewLikePDFZoom",
+            "name": "Debug PreviewLikePDFZoomApp (PreviewLikePDFZoom)",
+            "target": "PreviewLikePDFZoomApp",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug PreviewLikePDFZoomApp (PreviewLikePDFZoom)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:bin}/PreviewLikePDFZoom",
+            "name": "Release PreviewLikePDFZoomApp (PreviewLikePDFZoom)",
+            "target": "PreviewLikePDFZoomApp",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release PreviewLikePDFZoomApp (PreviewLikePDFZoom)"
+        }
+    ]
+}

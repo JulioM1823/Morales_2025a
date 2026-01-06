@@ -1,0 +1,131 @@
+arxiv-picker.swift:3687:16: warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+ 3671 |         // The pill's animations are driven by masks/strokes on this view's layer, so only the
+ 3672 |         // underlying background implementation changes.
+ 3673 |         if #available(macOS 26.0, *) {
+      |         `- note: enclosing scope here
+ 3674 |             let v = PassthroughGlassEffectView(frame: .zero)
+ 3675 |             v.style = .regular
+      :
+ 3685 |             v.wantsLayer = true
+ 3686 |             v.layer?.masksToBounds = true
+ 3687 |             if #available(macOS 10.13, *) {
+      |                `- warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+ 3688 |                 v.layer?.cornerCurve = .continuous
+ 3689 |             }
+
+arxiv-picker.swift:10529:20: warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+10507 |         } else {
+10508 |             // Use a passthrough glass/effect view so the titlebar reads like the same surface as the search bar.
+10509 |             if #available(macOS 26.0, *) {
+      |             `- note: enclosing scope here
+10510 |                 let v = PassthroughGlassEffectView(frame: titlebarContainer.bounds)
+10511 |                 v.translatesAutoresizingMaskIntoConstraints = false
+      :
+10527 |                 v.wantsLayer = true
+10528 |                 v.layer?.masksToBounds = true
+10529 |                 if #available(macOS 10.13, *) { v.layer?.cornerCurve = .continuous }
+      |                    `- warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+10530 |                 // Match the search bar's fallback material choices.
+10531 |                 v.material = currentSearchBarTheme().fallbackMaterial
+
+arxiv-picker.swift:20396:14: warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20394 | 
+20395 | if ProcessInfo.processInfo.environment["ARXIV_UI_DEBUG"] == "1" {
+20396 |     weak var weakController = controller
+      |              `- warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20397 |     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+20398 |         let window = weakController?.window
+
+arxiv-picker.swift:20406:14: warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20404 | 
+20405 | if launchDebugEnabled {
+20406 |     weak var weakController = controller
+      |              `- warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20407 |     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+20408 |         let window = weakController?.window
+
+arxiv-picker.swift:265:29: warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  263 |         let appearanceName = snapshot().nsAppearanceName
+  264 |         let appearance = NSAppearance(named: appearanceName)
+  265 |             ?? NSAppearance.current
+      |                             `- warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  266 |             ?? NSAppearance(named: .aqua)
+  267 |             ?? NSAppearance(named: .darkAqua)
+
+arxiv-picker.swift:348:15: warning: 'disableScreenUpdatesUntilFlush()' was deprecated in macOS 15.0: This method does not do anything and should not be called. [#DeprecatedDeclaration]
+  346 |         let windows = NSApp.windows
+  347 |         for w in windows {
+  348 |             w.disableScreenUpdatesUntilFlush()
+      |               `- warning: 'disableScreenUpdatesUntilFlush()' was deprecated in macOS 15.0: This method does not do anything and should not be called. [#DeprecatedDeclaration]
+  349 |         }
+  350 | 
+
+arxiv-picker.swift:324:13: warning: variable 'oldSnapshot' was written to, but never read
+  322 | 
+  323 |         var newSnapshot: AppearanceSnapshot?
+  324 |         var oldSnapshot: AppearanceSnapshot?
+      |             `- warning: variable 'oldSnapshot' was written to, but never read
+  325 | 
+  326 |         lock.lock()
+
+arxiv-picker.swift:416:25: warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  414 |     let name = AppearanceManager.shared.snapshot().nsAppearanceName
+  415 |     return NSAppearance(named: name)
+  416 |         ?? NSAppearance.current
+      |                         `- warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  417 |         ?? NSAppearance(named: .aqua)
+  418 |         ?? NSAppearance(named: .darkAqua)
+
+arxiv-picker.swift:655:22: warning: 'CVDisplayLinkCreateWithActiveCGDisplays' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  653 | 
+  654 |         var link: CVDisplayLink?
+  655 |         let result = CVDisplayLinkCreateWithActiveCGDisplays(&link)
+      |                      `- warning: 'CVDisplayLinkCreateWithActiveCGDisplays' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  656 |         guard result == kCVReturnSuccess, let created = link else {
+  657 |             os_log("CVDisplayLinkCreate failed=%d", log: log, type: .error, result)
+
+arxiv-picker.swift:671:9: warning: 'CVDisplayLinkSetOutputCallback' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  669 |         }
+  670 | 
+  671 |         CVDisplayLinkSetOutputCallback(created, callback, Unmanaged.passUnretained(self).toOpaque())
+      |         `- warning: 'CVDisplayLinkSetOutputCallback' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  672 |         CVDisplayLinkStart(created)
+  673 | 
+
+arxiv-picker.swift:672:9: warning: 'CVDisplayLinkStart' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  670 | 
+  671 |         CVDisplayLinkSetOutputCallback(created, callback, Unmanaged.passUnretained(self).toOpaque())
+  672 |         CVDisplayLinkStart(created)
+      |         `- warning: 'CVDisplayLinkStart' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  673 | 
+  674 |         lock.lock()
+
+arxiv-picker.swift:686:9: warning: 'CVDisplayLinkStop' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  684 |         displayLink = nil
+  685 |         lock.unlock()
+  686 |         CVDisplayLinkStop(link)
+      |         `- warning: 'CVDisplayLinkStop' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  687 |     }
+  688 | }
+
+arxiv-picker.swift:8081:60: warning: 'selectedMenuItemColor' was deprecated in macOS 11.0: Use NSVisualEffectMaterialSelection [#DeprecatedDeclaration]
+ 8079 |         let enabled = menuItem?.isEnabled ?? true
+ 8080 |         let active = enabled && (isHovering || isMenuHighlighted)
+ 8081 |         let highlightColor = active ? resolvedSystemColor(.selectedMenuItemColor) : .clear
+      |                                                            `- warning: 'selectedMenuItemColor' was deprecated in macOS 11.0: Use NSVisualEffectMaterialSelection [#DeprecatedDeclaration]
+ 8082 | 
+ 8083 |         CATransaction.begin()
+
+arxiv-picker.swift:16003:34: warning: use '#selector' instead of explicitly constructing a 'Selector'
+16001 | 
+16002 |             // Some PDFKit internal views respond to KVC backgroundColor.
+16003 |             if view.responds(to: Selector(("setBackgroundColor:"))) {
+      |                                  `- warning: use '#selector' instead of explicitly constructing a 'Selector'
+16004 |                 view.setValue(bg, forKey: "backgroundColor")
+16005 |             }
+
+2026-01-05 11:32:32.172 swift-frontend[96390:10611139] [PDFEager] cache_dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-94722BF1-BD2B-41D5-9962-98D793FB4DFD concurrent=8
+2026-01-05 11:33:11.099 swift-frontend[96390:10611139] [PDFSelectDebug] down loc=554.4,173.0 isShowingPDF=false loadingHidden=true hit=NSView frame=0,0 1080x743 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:33:11.214 swift-frontend[96390:10611139] [PDFSelectDebug] up loc=554.4,173.0 hit=NSView frame=0,0 1080x743 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:33:11.470 swift-frontend[96390:10611139] [PDFEager] cleanup_start reason=window_close dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-94722BF1-BD2B-41D5-9962-98D793FB4DFD
+2026-01-05 11:33:11.471 swift-frontend[96390:10611589] [PDFEager] cleanup dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-94722BF1-BD2B-41D5-9962-98D793FB4DFD existed_before=false exists_after=false

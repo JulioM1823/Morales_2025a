@@ -1,0 +1,232 @@
+arxiv-picker.swift:3687:16: warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+ 3671 |         // The pill's animations are driven by masks/strokes on this view's layer, so only the
+ 3672 |         // underlying background implementation changes.
+ 3673 |         if #available(macOS 26.0, *) {
+      |         `- note: enclosing scope here
+ 3674 |             let v = PassthroughGlassEffectView(frame: .zero)
+ 3675 |             v.style = .regular
+      :
+ 3685 |             v.wantsLayer = true
+ 3686 |             v.layer?.masksToBounds = true
+ 3687 |             if #available(macOS 10.13, *) {
+      |                `- warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+ 3688 |                 v.layer?.cornerCurve = .continuous
+ 3689 |             }
+
+arxiv-picker.swift:10529:20: warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+10507 |         } else {
+10508 |             // Use a passthrough glass/effect view so the titlebar reads like the same surface as the search bar.
+10509 |             if #available(macOS 26.0, *) {
+      |             `- note: enclosing scope here
+10510 |                 let v = PassthroughGlassEffectView(frame: titlebarContainer.bounds)
+10511 |                 v.translatesAutoresizingMaskIntoConstraints = false
+      :
+10527 |                 v.wantsLayer = true
+10528 |                 v.layer?.masksToBounds = true
+10529 |                 if #available(macOS 10.13, *) { v.layer?.cornerCurve = .continuous }
+      |                    `- warning: unnecessary check for 'macOS'; enclosing scope ensures guard will always be true
+10530 |                 // Match the search bar's fallback material choices.
+10531 |                 v.material = currentSearchBarTheme().fallbackMaterial
+
+arxiv-picker.swift:20396:14: warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20394 | 
+20395 | if ProcessInfo.processInfo.environment["ARXIV_UI_DEBUG"] == "1" {
+20396 |     weak var weakController = controller
+      |              `- warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20397 |     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+20398 |         let window = weakController?.window
+
+arxiv-picker.swift:20406:14: warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20404 | 
+20405 | if launchDebugEnabled {
+20406 |     weak var weakController = controller
+      |              `- warning: weak variable 'weakController' was never mutated; consider changing to 'let' constant [#WeakMutability]
+20407 |     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+20408 |         let window = weakController?.window
+
+arxiv-picker.swift:265:29: warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  263 |         let appearanceName = snapshot().nsAppearanceName
+  264 |         let appearance = NSAppearance(named: appearanceName)
+  265 |             ?? NSAppearance.current
+      |                             `- warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  266 |             ?? NSAppearance(named: .aqua)
+  267 |             ?? NSAppearance(named: .darkAqua)
+
+arxiv-picker.swift:348:15: warning: 'disableScreenUpdatesUntilFlush()' was deprecated in macOS 15.0: This method does not do anything and should not be called. [#DeprecatedDeclaration]
+  346 |         let windows = NSApp.windows
+  347 |         for w in windows {
+  348 |             w.disableScreenUpdatesUntilFlush()
+      |               `- warning: 'disableScreenUpdatesUntilFlush()' was deprecated in macOS 15.0: This method does not do anything and should not be called. [#DeprecatedDeclaration]
+  349 |         }
+  350 | 
+
+arxiv-picker.swift:324:13: warning: variable 'oldSnapshot' was written to, but never read
+  322 | 
+  323 |         var newSnapshot: AppearanceSnapshot?
+  324 |         var oldSnapshot: AppearanceSnapshot?
+      |             `- warning: variable 'oldSnapshot' was written to, but never read
+  325 | 
+  326 |         lock.lock()
+
+arxiv-picker.swift:416:25: warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  414 |     let name = AppearanceManager.shared.snapshot().nsAppearanceName
+  415 |     return NSAppearance(named: name)
+  416 |         ?? NSAppearance.current
+      |                         `- warning: 'current' was deprecated in macOS 12.0: Use -performAsCurrentDrawingAppearance: to temporarily set the drawing appearance, or +currentDrawingAppearance to access the currently drawing appearance. [#DeprecatedDeclaration]
+  417 |         ?? NSAppearance(named: .aqua)
+  418 |         ?? NSAppearance(named: .darkAqua)
+
+arxiv-picker.swift:655:22: warning: 'CVDisplayLinkCreateWithActiveCGDisplays' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  653 | 
+  654 |         var link: CVDisplayLink?
+  655 |         let result = CVDisplayLinkCreateWithActiveCGDisplays(&link)
+      |                      `- warning: 'CVDisplayLinkCreateWithActiveCGDisplays' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  656 |         guard result == kCVReturnSuccess, let created = link else {
+  657 |             os_log("CVDisplayLinkCreate failed=%d", log: log, type: .error, result)
+
+arxiv-picker.swift:671:9: warning: 'CVDisplayLinkSetOutputCallback' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  669 |         }
+  670 | 
+  671 |         CVDisplayLinkSetOutputCallback(created, callback, Unmanaged.passUnretained(self).toOpaque())
+      |         `- warning: 'CVDisplayLinkSetOutputCallback' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  672 |         CVDisplayLinkStart(created)
+  673 | 
+
+arxiv-picker.swift:672:9: warning: 'CVDisplayLinkStart' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  670 | 
+  671 |         CVDisplayLinkSetOutputCallback(created, callback, Unmanaged.passUnretained(self).toOpaque())
+  672 |         CVDisplayLinkStart(created)
+      |         `- warning: 'CVDisplayLinkStart' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  673 | 
+  674 |         lock.lock()
+
+arxiv-picker.swift:686:9: warning: 'CVDisplayLinkStop' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  684 |         displayLink = nil
+  685 |         lock.unlock()
+  686 |         CVDisplayLinkStop(link)
+      |         `- warning: 'CVDisplayLinkStop' was deprecated in macOS 15.0: use NSView.displayLink(target:selector:), NSWindow.displayLink(target:selector:), or NSScreen.displayLink(target:selector:)  [#DeprecatedDeclaration]
+  687 |     }
+  688 | }
+
+arxiv-picker.swift:8081:60: warning: 'selectedMenuItemColor' was deprecated in macOS 11.0: Use NSVisualEffectMaterialSelection [#DeprecatedDeclaration]
+ 8079 |         let enabled = menuItem?.isEnabled ?? true
+ 8080 |         let active = enabled && (isHovering || isMenuHighlighted)
+ 8081 |         let highlightColor = active ? resolvedSystemColor(.selectedMenuItemColor) : .clear
+      |                                                            `- warning: 'selectedMenuItemColor' was deprecated in macOS 11.0: Use NSVisualEffectMaterialSelection [#DeprecatedDeclaration]
+ 8082 | 
+ 8083 |         CATransaction.begin()
+
+arxiv-picker.swift:16003:34: warning: use '#selector' instead of explicitly constructing a 'Selector'
+16001 | 
+16002 |             // Some PDFKit internal views respond to KVC backgroundColor.
+16003 |             if view.responds(to: Selector(("setBackgroundColor:"))) {
+      |                                  `- warning: use '#selector' instead of explicitly constructing a 'Selector'
+16004 |                 view.setValue(bg, forKey: "backgroundColor")
+16005 |             }
+
+2026-01-05 11:29:44.086 swift-frontend[93969:10604352] [PDFEager] cache_dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-C48ACFBF-8423-44C5-AC0A-8E576EBB3729 concurrent=8
+2026-01-05 11:29:44.252 swift-frontend[93969:10604352] [PDFSelectDebug] installed_sample_pdf pages=1
+2026-01-05 11:29:46.770 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=772.9,239.7 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:29:46.869 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=772.9,239.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:29:46.936 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=772.9,239.7 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:29:47.037 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=772.9,239.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:29:47.103 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=772.9,239.7 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:29:47.212 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=772.9,239.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:29:47.628 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=846.3,261.4 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:29:47.794 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=845.8,261.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.803 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=843.6,261.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.811 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=837.6,261.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.819 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=826.8,261.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.828 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=809.2,261.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.836 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=787.2,263.1 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.845 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=763.8,268.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.853 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=737.1,275.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.861 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=708.7,284.2 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.869 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=674.0,295.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.878 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=655.4,301.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.886 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=633.5,309.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.903 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=598.0,324.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.911 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=587.4,329.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.919 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=579.4,333.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.936 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=565.1,341.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.945 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=560.7,344.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.953 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=557.3,347.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.969 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=553.1,351.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.978 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=552.2,352.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:47.986 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=551.6,353.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.003 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=550.9,354.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.019 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=550.7,354.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.028 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=550.6,354.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.053 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=550.5,354.9 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.078 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=550.4,356.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:48.119 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=550.4,356.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:29:57.111 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=824.9,258.3 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:29:57.328 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=824.7,258.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.336 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=823.1,258.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.345 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=818.0,258.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.353 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=810.3,259.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.361 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=800.9,261.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.370 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=788.1,263.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.378 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=773.7,266.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.386 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=758.8,268.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.395 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=742.7,269.4 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.403 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=725.3,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.411 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=708.9,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.419 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=696.0,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.428 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=687.1,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.436 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=679.7,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.444 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=671.8,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.453 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=666.5,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.461 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=662.0,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.469 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=657.0,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.478 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=655.2,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.486 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=653.8,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.503 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=653.0,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.511 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=652.1,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.536 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=651.8,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:29:57.636 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=651.8,269.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:30:09.162 swift-frontend[93969:10604352] [PDFSelectDebug] down loc=836.8,359.4 isShowingPDF=true loadingHidden=true hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0 chain=NSView -> GapSplitView -> NSView -> GapSplitView -> NSView -> NSThemeFrame
+2026-01-05 11:30:09.311 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=836.8,359.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.320 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=836.8,358.1 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.328 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=836.8,354.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.336 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=837.1,350.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.344 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=837.8,346.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.353 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=838.9,343.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.361 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=842.1,335.9 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.369 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=846.1,326.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.378 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=849.0,316.2 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.386 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=856.1,296.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.403 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=858.4,289.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.411 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=864.0,269.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.419 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=866.3,258.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.436 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=870.6,243.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.444 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=873.1,234.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.461 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=875.8,225.9 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.469 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=880.1,213.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.478 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=882.4,207.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.486 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=884.4,200.9 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.503 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=888.5,191.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.511 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=890.2,187.1 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.520 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=891.7,183.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.528 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=892.8,180.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.536 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=893.5,179.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.545 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=894.1,177.6 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.553 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=894.6,176.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.561 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=895.1,175.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.570 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=895.6,174.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.578 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=895.9,174.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.586 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=896.2,174.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.595 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=896.5,173.8 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.603 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=896.7,173.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.611 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=896.9,173.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.619 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=897.0,173.3 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.628 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=897.2,173.2 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.636 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=897.4,173.0 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.640 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=897.5,172.9 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.665 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=897.9,172.7 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.707 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=898.0,172.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.741 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=898.2,172.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.774 swift-frontend[93969:10604352] [PDFSelectDebug] drag loc=898.5,172.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0
+2026-01-05 11:30:09.882 swift-frontend[93969:10604352] [PDFSelectDebug] up loc=898.5,172.5 hit=NSView frame=0,0 1080x747 hidden=false inPDF=false selLen=0 selPages=0
+2026-01-05 11:30:11.793 swift-frontend[93969:10604352] [PDFEager] cleanup_start reason=window_close dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-C48ACFBF-8423-44C5-AC0A-8E576EBB3729
+2026-01-05 11:30:11.794 swift-frontend[93969:10605094] [PDFEager] cleanup dir=/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/appCache/pdfs/session-C48ACFBF-8423-44C5-AC0A-8E576EBB3729 existed_before=false exists_after=false
