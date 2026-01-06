@@ -9250,6 +9250,7 @@ final class PickerWindowController: NSWindowController,
     private let headerControlsTopInset: CGFloat = 12
     private let searchFieldMinimumWidth: CGFloat = 140
     private let toolbarControls = NSStackView()
+    private let leftToolbarCluster = NSStackView()
     private let sidebarControlContainer = NSView(frame: .zero)
     private let navControlContainer = NSView(frame: .zero)
     private let pageControlContainer = NSView(frame: .zero)
@@ -12726,7 +12727,11 @@ The quick brown fox jumps over the lazy dog.
         NSImage.SymbolConfiguration(pointSize: 13 * toolbarControlScale, weight: .regular)
     }
 
-    private func sidebarToggleSymbol(visible: Bool) -> NSImage? {
+    private func toolbarSymbolConfig(pointSize: CGFloat) -> NSImage.SymbolConfiguration {
+        NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+    }
+
+    private func sidebarToggleSymbol(visible: Bool, symbolConfig: NSImage.SymbolConfiguration) -> NSImage? {
         let names: [String]
         if visible {
             names = ["sidebar.leading", "sidebar.left"]
@@ -12735,14 +12740,18 @@ The quick brown fox jumps over the lazy dog.
         }
         for name in names {
             if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
-                return image.withSymbolConfiguration(toolbarSymbolConfig())
+                return image.withSymbolConfiguration(symbolConfig)
             }
         }
         return nil
     }
 
     private func updateSidebarToggleIcon() {
-        sidebarToggleButton.image = sidebarToggleSymbol(visible: sidebarVisible)
+        sidebarToggleButton.image = sidebarToggleSymbol(visible: sidebarVisible, symbolConfig: toolbarSymbolConfig())
+    }
+
+    private func updateSidebarToggleIcon(symbolConfig: NSImage.SymbolConfiguration) {
+        sidebarToggleButton.image = sidebarToggleSymbol(visible: sidebarVisible, symbolConfig: symbolConfig)
     }
 
     private func setupToolbarControls() {
@@ -12822,21 +12831,37 @@ The quick brown fox jumps over the lazy dog.
         toolbarControls.setContentHuggingPriority(.required, for: .horizontal)
         toolbarControls.setContentCompressionResistancePriority(.required, for: .horizontal)
 
+        leftToolbarCluster.translatesAutoresizingMaskIntoConstraints = false
+        leftToolbarCluster.orientation = .horizontal
+        leftToolbarCluster.alignment = .centerY
+        leftToolbarCluster.distribution = .fill
+        leftToolbarCluster.spacing = toolbarBaseSpacing
+
         sidebarControlContainer.translatesAutoresizingMaskIntoConstraints = false
         navControlContainer.translatesAutoresizingMaskIntoConstraints = false
         pageControlContainer.translatesAutoresizingMaskIntoConstraints = false
 
-        sidebarControlContainer.addSubview(sidebarControlBackground)
-        sidebarControlContainer.addSubview(sidebarControlOrnamentOverlay, positioned: .above, relativeTo: sidebarControlBackground)
-        sidebarControlContainer.addSubview(sidebarDivider)
-        sidebarControlContainer.addSubview(sidebarToggleButton)
-        sidebarControlContainer.addSubview(sidebarMenuButton)
+        if ToolbarAutoScale.isEnabled {
+            // New left cluster: [sidebar, back, forward] as a true NSStackView cluster.
+            // Keep legacy containers intact for rollback.
+            sidebarMenuButton.isHidden = true
+            leftToolbarCluster.addArrangedSubview(sidebarToggleButton)
+            leftToolbarCluster.addArrangedSubview(backButton)
+            leftToolbarCluster.addArrangedSubview(forwardButton)
+        } else {
+            // Legacy left controls: pill groups with dividers.
+            sidebarControlContainer.addSubview(sidebarControlBackground)
+            sidebarControlContainer.addSubview(sidebarControlOrnamentOverlay, positioned: .above, relativeTo: sidebarControlBackground)
+            sidebarControlContainer.addSubview(sidebarDivider)
+            sidebarControlContainer.addSubview(sidebarToggleButton)
+            sidebarControlContainer.addSubview(sidebarMenuButton)
 
-        navControlContainer.addSubview(navControlBackground)
-        navControlContainer.addSubview(navControlOrnamentOverlay, positioned: .above, relativeTo: navControlBackground)
-        navControlContainer.addSubview(navDivider)
-        navControlContainer.addSubview(backButton)
-        navControlContainer.addSubview(forwardButton)
+            navControlContainer.addSubview(navControlBackground)
+            navControlContainer.addSubview(navControlOrnamentOverlay, positioned: .above, relativeTo: navControlBackground)
+            navControlContainer.addSubview(navDivider)
+            navControlContainer.addSubview(backButton)
+            navControlContainer.addSubview(forwardButton)
+        }
 
         pageControlContainer.addSubview(pageControlBackground)
         pageControlContainer.addSubview(pageMenuButton)
@@ -12890,9 +12915,14 @@ The quick brown fox jumps over the lazy dog.
         rightPanelRightEdgeButtonBackground = rightEdgeGlass
         rightPanelSettingsEdgeButtonBackground = settingsEdgeGlass
 
-        toolbarControls.addArrangedSubview(sidebarControlContainer)
-        toolbarControls.addArrangedSubview(navControlContainer)
-        toolbarControls.addArrangedSubview(pageControlContainer)
+        if ToolbarAutoScale.isEnabled {
+            toolbarControls.addArrangedSubview(leftToolbarCluster)
+            toolbarControls.addArrangedSubview(pageControlContainer)
+        } else {
+            toolbarControls.addArrangedSubview(sidebarControlContainer)
+            toolbarControls.addArrangedSubview(navControlContainer)
+            toolbarControls.addArrangedSubview(pageControlContainer)
+        }
 
         let symbolConfig = NSImage.SymbolConfiguration(pointSize: 13 * toolbarControlScaleBase, weight: .regular)
         updateSidebarToggleIcon()
@@ -13018,99 +13048,133 @@ The quick brown fox jumps over the lazy dog.
         rightPanelSettingsEdgeButton.translatesAutoresizingMaskIntoConstraints = true
 
         // Capture constraint handles so window resize can update constants smoothly.
-        sidebarWidthConstraint = sidebarControlContainer.widthAnchor.constraint(equalToConstant: navWidth)
-        sidebarHeightConstraint = sidebarControlContainer.heightAnchor.constraint(equalToConstant: controlHeight)
-
-        navWidthConstraint = navControlContainer.widthAnchor.constraint(equalToConstant: navWidth)
-        navHeightConstraint = navControlContainer.heightAnchor.constraint(equalToConstant: controlHeight)
-
         pageHeightConstraint = pageControlContainer.heightAnchor.constraint(equalToConstant: controlHeight)
         pageWidthConstraint = pageControlContainer.widthAnchor.constraint(greaterThanOrEqualToConstant: pageMinWidth)
-
-        sidebarToggleWidthConstraint = sidebarToggleButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
-        sidebarToggleHeightConstraint = sidebarToggleButton.heightAnchor.constraint(equalToConstant: buttonSize)
-        sidebarMenuWidthConstraint = sidebarMenuButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
-        sidebarMenuHeightConstraint = sidebarMenuButton.heightAnchor.constraint(equalToConstant: buttonSize)
-        backWidthConstraint = backButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
-        backHeightConstraint = backButton.heightAnchor.constraint(equalToConstant: buttonSize)
-        forwardWidthConstraint = forwardButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
-        forwardHeightConstraint = forwardButton.heightAnchor.constraint(equalToConstant: buttonSize)
         pageMenuLeadingConstraint = pageMenuButton.leadingAnchor.constraint(equalTo: pageControlContainer.leadingAnchor, constant: pageInset)
         pageMenuTrailingConstraint = pageMenuButton.trailingAnchor.constraint(equalTo: pageControlContainer.trailingAnchor, constant: -pageInset)
         pageMenuHeightConstraint = pageMenuButton.heightAnchor.constraint(equalToConstant: buttonSize)
 
-        NSLayoutConstraint.activate([
-            sidebarWidthConstraint!,
-            sidebarHeightConstraint!,
+        if ToolbarAutoScale.isEnabled {
+            // New left cluster: three standalone buttons in a stack view.
+            // Width/height are explicit and will be updated by autoscale.
+            let baseBtn = max(toolbarMinHitSize, 24 * toolbarControlScaleBase)
+            sidebarToggleWidthConstraint = sidebarToggleButton.widthAnchor.constraint(equalToConstant: baseBtn)
+            sidebarToggleHeightConstraint = sidebarToggleButton.heightAnchor.constraint(equalToConstant: baseBtn)
+            backWidthConstraint = backButton.widthAnchor.constraint(equalToConstant: baseBtn)
+            backHeightConstraint = backButton.heightAnchor.constraint(equalToConstant: baseBtn)
+            forwardWidthConstraint = forwardButton.widthAnchor.constraint(equalToConstant: baseBtn)
+            forwardHeightConstraint = forwardButton.heightAnchor.constraint(equalToConstant: baseBtn)
 
-            navWidthConstraint!,
-            navHeightConstraint!,
+            NSLayoutConstraint.activate([
+                pageHeightConstraint!,
+                pageWidthConstraint!,
 
-            pageHeightConstraint!,
-            pageWidthConstraint!,
+                pageControlBackground.leadingAnchor.constraint(equalTo: pageControlContainer.leadingAnchor),
+                pageControlBackground.trailingAnchor.constraint(equalTo: pageControlContainer.trailingAnchor),
+                pageControlBackground.topAnchor.constraint(equalTo: pageControlContainer.topAnchor),
+                pageControlBackground.bottomAnchor.constraint(equalTo: pageControlContainer.bottomAnchor),
 
-            sidebarControlBackground.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor),
-            sidebarControlBackground.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor),
-            sidebarControlBackground.topAnchor.constraint(equalTo: sidebarControlContainer.topAnchor),
-            sidebarControlBackground.bottomAnchor.constraint(equalTo: sidebarControlContainer.bottomAnchor),
+                sidebarToggleWidthConstraint!,
+                sidebarToggleHeightConstraint!,
+                backWidthConstraint!,
+                backHeightConstraint!,
+                forwardWidthConstraint!,
+                forwardHeightConstraint!,
 
-            sidebarControlOrnamentOverlay.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor),
-            sidebarControlOrnamentOverlay.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor),
-            sidebarControlOrnamentOverlay.topAnchor.constraint(equalTo: sidebarControlContainer.topAnchor),
-            sidebarControlOrnamentOverlay.bottomAnchor.constraint(equalTo: sidebarControlContainer.bottomAnchor),
+                pageMenuLeadingConstraint!,
+                pageMenuTrailingConstraint!,
+                pageMenuButton.centerYAnchor.constraint(equalTo: pageControlContainer.centerYAnchor),
+                pageMenuHeightConstraint!
+            ])
+        } else {
+            sidebarWidthConstraint = sidebarControlContainer.widthAnchor.constraint(equalToConstant: navWidth)
+            sidebarHeightConstraint = sidebarControlContainer.heightAnchor.constraint(equalToConstant: controlHeight)
 
-            navControlBackground.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor),
-            navControlBackground.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor),
-            navControlBackground.topAnchor.constraint(equalTo: navControlContainer.topAnchor),
-            navControlBackground.bottomAnchor.constraint(equalTo: navControlContainer.bottomAnchor),
+            navWidthConstraint = navControlContainer.widthAnchor.constraint(equalToConstant: navWidth)
+            navHeightConstraint = navControlContainer.heightAnchor.constraint(equalToConstant: controlHeight)
 
-            navControlOrnamentOverlay.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor),
-            navControlOrnamentOverlay.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor),
-            navControlOrnamentOverlay.topAnchor.constraint(equalTo: navControlContainer.topAnchor),
-            navControlOrnamentOverlay.bottomAnchor.constraint(equalTo: navControlContainer.bottomAnchor),
+            sidebarToggleWidthConstraint = sidebarToggleButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
+            sidebarToggleHeightConstraint = sidebarToggleButton.heightAnchor.constraint(equalToConstant: buttonSize)
+            sidebarMenuWidthConstraint = sidebarMenuButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
+            sidebarMenuHeightConstraint = sidebarMenuButton.heightAnchor.constraint(equalToConstant: buttonSize)
+            backWidthConstraint = backButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
+            backHeightConstraint = backButton.heightAnchor.constraint(equalToConstant: buttonSize)
+            forwardWidthConstraint = forwardButton.widthAnchor.constraint(equalToConstant: navButtonWidth)
+            forwardHeightConstraint = forwardButton.heightAnchor.constraint(equalToConstant: buttonSize)
 
-            pageControlBackground.leadingAnchor.constraint(equalTo: pageControlContainer.leadingAnchor),
-            pageControlBackground.trailingAnchor.constraint(equalTo: pageControlContainer.trailingAnchor),
-            pageControlBackground.topAnchor.constraint(equalTo: pageControlContainer.topAnchor),
-            pageControlBackground.bottomAnchor.constraint(equalTo: pageControlContainer.bottomAnchor),
+            NSLayoutConstraint.activate([
+                sidebarWidthConstraint!,
+                sidebarHeightConstraint!,
 
-            sidebarToggleButton.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor, constant: navInset),
-            sidebarToggleButton.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
-            sidebarToggleWidthConstraint!,
-            sidebarToggleHeightConstraint!,
+                navWidthConstraint!,
+                navHeightConstraint!,
 
-            sidebarDivider.leadingAnchor.constraint(equalTo: sidebarToggleButton.trailingAnchor),
-            sidebarDivider.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
-            sidebarDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
-            sidebarDivider.heightAnchor.constraint(equalToConstant: 18),
+                pageHeightConstraint!,
+                pageWidthConstraint!,
 
-            sidebarMenuButton.leadingAnchor.constraint(equalTo: sidebarDivider.trailingAnchor),
-            sidebarMenuButton.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor, constant: -navInset),
-            sidebarMenuButton.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
-            sidebarMenuWidthConstraint!,
-            sidebarMenuHeightConstraint!,
+                sidebarControlBackground.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor),
+                sidebarControlBackground.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor),
+                sidebarControlBackground.topAnchor.constraint(equalTo: sidebarControlContainer.topAnchor),
+                sidebarControlBackground.bottomAnchor.constraint(equalTo: sidebarControlContainer.bottomAnchor),
 
-            backButton.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor, constant: navInset),
-            backButton.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
-            backWidthConstraint!,
-            backHeightConstraint!,
+                sidebarControlOrnamentOverlay.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor),
+                sidebarControlOrnamentOverlay.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor),
+                sidebarControlOrnamentOverlay.topAnchor.constraint(equalTo: sidebarControlContainer.topAnchor),
+                sidebarControlOrnamentOverlay.bottomAnchor.constraint(equalTo: sidebarControlContainer.bottomAnchor),
 
-            navDivider.leadingAnchor.constraint(equalTo: backButton.trailingAnchor),
-            navDivider.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
-            navDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
-            navDivider.heightAnchor.constraint(equalToConstant: 18),
+                navControlBackground.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor),
+                navControlBackground.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor),
+                navControlBackground.topAnchor.constraint(equalTo: navControlContainer.topAnchor),
+                navControlBackground.bottomAnchor.constraint(equalTo: navControlContainer.bottomAnchor),
 
-            forwardButton.leadingAnchor.constraint(equalTo: navDivider.trailingAnchor),
-            forwardButton.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor, constant: -navInset),
-            forwardButton.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
-            forwardWidthConstraint!,
-            forwardHeightConstraint!,
+                navControlOrnamentOverlay.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor),
+                navControlOrnamentOverlay.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor),
+                navControlOrnamentOverlay.topAnchor.constraint(equalTo: navControlContainer.topAnchor),
+                navControlOrnamentOverlay.bottomAnchor.constraint(equalTo: navControlContainer.bottomAnchor),
 
-            pageMenuLeadingConstraint!,
-            pageMenuTrailingConstraint!,
-            pageMenuButton.centerYAnchor.constraint(equalTo: pageControlContainer.centerYAnchor),
-            pageMenuHeightConstraint!
-        ])
+                pageControlBackground.leadingAnchor.constraint(equalTo: pageControlContainer.leadingAnchor),
+                pageControlBackground.trailingAnchor.constraint(equalTo: pageControlContainer.trailingAnchor),
+                pageControlBackground.topAnchor.constraint(equalTo: pageControlContainer.topAnchor),
+                pageControlBackground.bottomAnchor.constraint(equalTo: pageControlContainer.bottomAnchor),
+
+                sidebarToggleButton.leadingAnchor.constraint(equalTo: sidebarControlContainer.leadingAnchor, constant: navInset),
+                sidebarToggleButton.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
+                sidebarToggleWidthConstraint!,
+                sidebarToggleHeightConstraint!,
+
+                sidebarDivider.leadingAnchor.constraint(equalTo: sidebarToggleButton.trailingAnchor),
+                sidebarDivider.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
+                sidebarDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
+                sidebarDivider.heightAnchor.constraint(equalToConstant: 18),
+
+                sidebarMenuButton.leadingAnchor.constraint(equalTo: sidebarDivider.trailingAnchor),
+                sidebarMenuButton.trailingAnchor.constraint(equalTo: sidebarControlContainer.trailingAnchor, constant: -navInset),
+                sidebarMenuButton.centerYAnchor.constraint(equalTo: sidebarControlContainer.centerYAnchor),
+                sidebarMenuWidthConstraint!,
+                sidebarMenuHeightConstraint!,
+
+                backButton.leadingAnchor.constraint(equalTo: navControlContainer.leadingAnchor, constant: navInset),
+                backButton.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
+                backWidthConstraint!,
+                backHeightConstraint!,
+
+                navDivider.leadingAnchor.constraint(equalTo: backButton.trailingAnchor),
+                navDivider.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
+                navDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
+                navDivider.heightAnchor.constraint(equalToConstant: 18),
+
+                forwardButton.leadingAnchor.constraint(equalTo: navDivider.trailingAnchor),
+                forwardButton.trailingAnchor.constraint(equalTo: navControlContainer.trailingAnchor, constant: -navInset),
+                forwardButton.centerYAnchor.constraint(equalTo: navControlContainer.centerYAnchor),
+                forwardWidthConstraint!,
+                forwardHeightConstraint!,
+
+                pageMenuLeadingConstraint!,
+                pageMenuTrailingConstraint!,
+                pageMenuButton.centerYAnchor.constraint(equalTo: pageControlContainer.centerYAnchor),
+                pageMenuHeightConstraint!
+            ])
+        }
 
         pageControlContainer.isHidden = true
         layoutToolbarControls()
@@ -15590,22 +15654,30 @@ The quick brown fox jumps over the lazy dog.
     private func layoutToolbarControls() {
         applyLeftToolbarClusterAutoScaleIfNeeded()
 
-        // Respect resize-driven coupled corner radius when available.
-        let radius: CGFloat = toolbarScaleLastApplied?.cornerRadius ?? max(10, sidebarControlContainer.bounds.height / 2)
-        sidebarControlBackground.wantsLayer = true
-        sidebarControlBackground.layer?.cornerRadius = radius
-        if #available(macOS 10.13, *) {
-            sidebarControlBackground.layer?.cornerCurve = .continuous
+        if ToolbarAutoScale.isEnabled {
+            let btnSize = max(0, sidebarToggleWidthConstraint?.constant ?? (24 * toolbarControlScaleBase))
+            let radius = max(0, btnSize / 2)
+            sidebarToggleButton.setCornerRadius(radius)
+            backButton.setCornerRadius(radius)
+            forwardButton.setCornerRadius(radius)
+        } else {
+            // Respect resize-driven coupled corner radius when available.
+            let radius: CGFloat = toolbarScaleLastApplied?.cornerRadius ?? max(10, sidebarControlContainer.bounds.height / 2)
+            sidebarControlBackground.wantsLayer = true
+            sidebarControlBackground.layer?.cornerRadius = radius
+            if #available(macOS 10.13, *) {
+                sidebarControlBackground.layer?.cornerCurve = .continuous
+            }
+            navControlBackground.wantsLayer = true
+            navControlBackground.layer?.cornerRadius = radius
+            if #available(macOS 10.13, *) {
+                navControlBackground.layer?.cornerCurve = .continuous
+            }
+            sidebarToggleButton.setCornerRadius(radius)
+            sidebarMenuButton.setCornerRadius(radius)
+            backButton.setCornerRadius(radius, maskedCorners: [.layerMinXMinYCorner, .layerMinXMaxYCorner])
+            forwardButton.setCornerRadius(radius, maskedCorners: [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
         }
-        navControlBackground.wantsLayer = true
-        navControlBackground.layer?.cornerRadius = radius
-        if #available(macOS 10.13, *) {
-            navControlBackground.layer?.cornerCurve = .continuous
-        }
-        sidebarToggleButton.setCornerRadius(radius)
-        sidebarMenuButton.setCornerRadius(radius)
-        backButton.setCornerRadius(radius, maskedCorners: [.layerMinXMinYCorner, .layerMinXMaxYCorner])
-        forwardButton.setCornerRadius(radius, maskedCorners: [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
         let edgeRadius: CGFloat
         if let metrics = toolbarScaleLastApplied {
             edgeRadius = max(0, metrics.controlHeight / 2)
@@ -15628,8 +15700,119 @@ The quick brown fox jumps over the lazy dog.
 
     private func applyLeftToolbarClusterAutoScaleIfNeeded() {
         guard ToolbarAutoScale.isEnabled else { return }
-        // Scaffolding-only (Commit 1): do not change existing constants/behavior.
-        // Commit 2 will implement deterministic sizing based on `leftContainer.frame.width`.
+        guard leftToolbarCluster.arrangedSubviews.count >= 3 else { return }
+        let availableWidth = max(0, leftContainer.frame.width - leftToolbarAutoScaleSidePadding)
+        let result = computeLeftToolbarClusterAutoScale(availableWidth: availableWidth)
+        applyLeftToolbarClusterAutoScale(result: result, force: false)
+    }
+
+    private func smoothstep01(_ t: CGFloat) -> CGFloat {
+        let x = max(0, min(1, t))
+        return x * x * (3 - 2 * x)
+    }
+
+    private func computeLeftToolbarClusterAutoScale(availableWidth: CGFloat) -> LeftToolbarClusterAutoScaleResult {
+        let w = max(0, availableWidth)
+        let n: CGFloat = 3
+        let baseSpacing = toolbarBaseSpacing
+        let minSpacing = toolbarMinSpacing
+
+        let baseBtn: CGFloat = max(toolbarMinHitSize, 24 * toolbarControlScaleBase)
+        let minBtn: CGFloat = toolbarMinHitSize
+
+        let baseSymbolPt: CGFloat = 13 * toolbarControlScaleBase
+        let minSymbolPt: CGFloat = 11
+
+        func totalWidth(btn: CGFloat, spacing: CGFloat) -> CGFloat {
+            (n * btn) + ((n - 1) * spacing)
+        }
+
+        let wBase = totalWidth(btn: baseBtn, spacing: baseSpacing)
+        if w >= wBase {
+            return LeftToolbarClusterAutoScaleResult(spacing: baseSpacing, navButtonWidth: baseBtn, buttonSize: baseBtn, symbolPointSize: baseSymbolPt)
+        }
+
+        // Phase 1: reduce spacing from base -> min.
+        let wMinSpacing = totalWidth(btn: baseBtn, spacing: minSpacing)
+        if w >= wMinSpacing {
+            let t = (w - wMinSpacing) / max(0.0001, (wBase - wMinSpacing))
+            let eased = smoothstep01(t)
+            let candidate = minSpacing + (baseSpacing - minSpacing) * eased
+
+            let spacingMaxFit = max(0, (w - (n * baseBtn)) / (n - 1))
+            let spacing = max(0, min(candidate, spacingMaxFit))
+            return LeftToolbarClusterAutoScaleResult(spacing: spacing, navButtonWidth: baseBtn, buttonSize: baseBtn, symbolPointSize: baseSymbolPt)
+        }
+
+        // Phase 2: spacing at min; reduce button size from base -> min.
+        var spacing = minSpacing
+        if w < ((n - 1) * spacing) {
+            spacing = w / (n - 1)
+            return LeftToolbarClusterAutoScaleResult(spacing: spacing, navButtonWidth: 0, buttonSize: 0, symbolPointSize: 0)
+        }
+
+        let btnNeeded = max(0, (w - ((n - 1) * spacing)) / n)
+        let btn: CGFloat
+        let symbolPt: CGFloat
+
+        if btnNeeded >= baseBtn {
+            btn = baseBtn
+            symbolPt = baseSymbolPt
+        } else if btnNeeded >= minBtn {
+            let t = (btnNeeded - minBtn) / max(0.0001, (baseBtn - minBtn))
+            let eased = smoothstep01(t)
+            let btnCandidate = minBtn + (baseBtn - minBtn) * eased
+            let symCandidate = minSymbolPt + (baseSymbolPt - minSymbolPt) * eased
+
+            let btnClamped = min(btnCandidate, btnNeeded)
+            let symClamped = (btnCandidate > 0) ? (symCandidate * (btnClamped / btnCandidate)) : symCandidate
+            btn = btnClamped
+            symbolPt = symClamped
+        } else {
+            // Final guard clamp for *all* widths.
+            btn = btnNeeded
+            let scale = (minBtn > 0) ? (btn / minBtn) : 0
+            symbolPt = max(0, minSymbolPt * scale)
+        }
+
+        // Final guard clamp (per spec).
+        let btnClamped = min(btn, btnNeeded)
+        let symClamped = (btn > 0) ? (symbolPt * (btnClamped / btn)) : symbolPt
+
+        return LeftToolbarClusterAutoScaleResult(
+            spacing: spacing,
+            navButtonWidth: btnClamped,
+            buttonSize: btnClamped,
+            symbolPointSize: symClamped
+        )
+    }
+
+    private func applyLeftToolbarClusterAutoScale(result: LeftToolbarClusterAutoScaleResult, force: Bool) {
+        if !force, let last = leftToolbarAutoScaleLastApplied {
+            if abs(last.spacing - result.spacing) < leftToolbarAutoScaleEpsilon,
+               abs(last.navButtonWidth - result.navButtonWidth) < leftToolbarAutoScaleEpsilon,
+               abs(last.buttonSize - result.buttonSize) < leftToolbarAutoScaleEpsilon,
+               abs(last.symbolPointSize - result.symbolPointSize) < leftToolbarAutoScaleEpsilon {
+                return
+            }
+        }
+
+        leftToolbarCluster.spacing = result.spacing
+
+        sidebarToggleWidthConstraint?.constant = result.buttonSize
+        sidebarToggleHeightConstraint?.constant = result.buttonSize
+        backWidthConstraint?.constant = result.buttonSize
+        backHeightConstraint?.constant = result.buttonSize
+        forwardWidthConstraint?.constant = result.buttonSize
+        forwardHeightConstraint?.constant = result.buttonSize
+
+        // Symbol sizes scale with the same eased factor as control size.
+        let symbolConfig = toolbarSymbolConfig(pointSize: result.symbolPointSize)
+        updateSidebarToggleIcon(symbolConfig: symbolConfig)
+        backButton.image = NSImage(systemSymbolName: "chevron.left", accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig)
+        forwardButton.image = NSImage(systemSymbolName: "chevron.right", accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig)
+
+        leftToolbarAutoScaleLastApplied = result
     }
 
     private func updateToolbarLayoutForWindowSize() {
