@@ -12082,6 +12082,23 @@ The quick brown fox jumps over the lazy dog.
         ProcessInfo.processInfo.environment["ARXIV_TOOLBAR_SCALE_DEBUG"] == "1"
     }
 
+    // Experimental: deterministic autoscale for the left toolbar cluster.
+    // Kill switch: one-line disable by setting `ToolbarAutoScale.isEnabled = false`.
+    private enum ToolbarAutoScale {
+        static var isEnabled: Bool = true
+    }
+
+    private struct LeftToolbarClusterAutoScaleResult: Equatable {
+        let spacing: CGFloat
+        let navButtonWidth: CGFloat
+        let buttonSize: CGFloat
+        let symbolPointSize: CGFloat
+    }
+
+    private var leftToolbarAutoScaleLastApplied: LeftToolbarClusterAutoScaleResult?
+    private let leftToolbarAutoScaleEpsilon: CGFloat = 0.02
+    private let leftToolbarAutoScaleSidePadding: CGFloat = 8
+
     // Window-resize-driven toolbar scaling: spring tracker with an Apple-like cubic-ease fallback.
     // Scale coupling rules (s is normalized in [sMin,sMax]):
     // - font/icon: s^1.00
@@ -15571,6 +15588,8 @@ The quick brown fox jumps over the lazy dog.
     }
 
     private func layoutToolbarControls() {
+        applyLeftToolbarClusterAutoScaleIfNeeded()
+
         // Respect resize-driven coupled corner radius when available.
         let radius: CGFloat = toolbarScaleLastApplied?.cornerRadius ?? max(10, sidebarControlContainer.bounds.height / 2)
         sidebarControlBackground.wantsLayer = true
@@ -15605,6 +15624,12 @@ The quick brown fox jumps over the lazy dog.
                 rightPanelRightEdgeButtonBackground?.layer?.cornerCurve = .continuous
             }
         }
+    }
+
+    private func applyLeftToolbarClusterAutoScaleIfNeeded() {
+        guard ToolbarAutoScale.isEnabled else { return }
+        // Scaffolding-only (Commit 1): do not change existing constants/behavior.
+        // Commit 2 will implement deterministic sizing based on `leftContainer.frame.width`.
     }
 
     private func updateToolbarLayoutForWindowSize() {
