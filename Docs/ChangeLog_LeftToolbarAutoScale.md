@@ -4,23 +4,42 @@ This change is an experiment behind a reversible patch.
 
 ## Files touched
 
-- (pending)
+- arxiv-picker.swift
+- Docs/ChangeLog_LeftToolbarAutoScale.md
+- PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/LeftToolbarClusterAutoScale.swift
+- PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/LeftToolbarClusterAutoScaleTests.swift
+- PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationPersistenceTests.swift (SDK compatibility fix so tests compile)
 
 ## Symbols / classes added or modified
 
-- (pending)
+- arxiv-picker.swift
+  - Toolbar auto-scale kill switch: `ToolbarAutoScale.isEnabled`
+  - Left cluster stack: `leftToolbarCluster: NSStackView`
+  - Autoscale state: `leftToolbarAutoScaleLastApplied`, `leftToolbarAutoScaleEpsilon`, `leftToolbarAutoScaleSidePadding`
+  - Autoscale helpers: `smoothstep01(_:)`, `computeLeftToolbarClusterAutoScale(availableWidth:)`, `applyLeftToolbarClusterAutoScaleIfNeeded()`, `applyLeftToolbarClusterAutoScale(result:force:)`
+- PreviewLikePDFZoomKit
+  - Pure helper: `LeftToolbarClusterAutoScale.compute(...)` + `LeftToolbarClusterAutoScale.shouldApplyChange(...)`
 
 ## Constraints added/changed
 
-- (pending)
+- New feature-flagged path uses a real `NSStackView` cluster in the left toolbar with exactly 3 arranged subviews:
+  - `[sidebarToggleButton, backButton, forwardButton]`
+- When enabled, each of the 3 buttons has explicit width + height constraints that are updated during layout:
+  - `sidebarToggleWidthConstraint`, `sidebarToggleHeightConstraint`
+  - `backWidthConstraint`, `backHeightConstraint`
+  - `forwardWidthConstraint`, `forwardHeightConstraint`
+- `leftToolbarCluster.spacing` is updated deterministically in `layoutToolbarControls()`.
 
 ## Constants introduced
 
-- (pending)
+- `leftToolbarAutoScaleEpsilon` (apply changes only if delta > epsilon)
+- `leftToolbarAutoScaleSidePadding` (availableWidth = leftContainerWidth - sidePadding)
 
 ## Kill switch (fast rollback, no git)
 
 - Set `ToolbarAutoScale.isEnabled = false`.
+
+This restores the legacy pill-container layout path.
 
 ## Git rollback (exact commands)
 
@@ -30,3 +49,10 @@ This change is an experiment behind a reversible patch.
   - `git reset --hard pre-left-toolbar-autoscale-rollback-YYYYMMDD_HHMMSS`
 - Or hard-revert the last commit:
   - `git reset --hard HEAD~1`
+
+## Verification notes
+
+- Typecheck: `swiftc -typecheck arxiv-picker.swift`
+- Unit tests (only the new autoscale sweep tests):
+  - `cd PreviewLikePDFZoom && swift test --filter LeftToolbarClusterAutoScaleTests`
+

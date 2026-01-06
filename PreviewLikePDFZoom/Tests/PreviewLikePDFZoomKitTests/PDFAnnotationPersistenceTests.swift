@@ -86,16 +86,13 @@ final class PDFAnnotationPersistenceTests: XCTestCase {
             return
         }
 
-        let selection = workingDoc.findString("Introduction", withOptions: [])?.first
+        let selection = workingDoc.findString("Introduction", withOptions: []).first
         XCTAssertNotNil(selection, "Fixture must contain the word 'Introduction' for this test")
         guard let sel = selection else { return }
 
         let bounds = sel.bounds(for: page0)
         let highlight = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
         highlight.color = NSColor.systemYellow.withAlphaComponent(0.3)
-        if let quads = sel.quadrilateralPoints(for: page0) {
-            highlight.quadrilateralPoints = quads
-        }
 
         page0.addAnnotation(highlight)
 
