@@ -16,6 +16,249 @@ import os
 import XCTest
 #endif
 
+// MARK: - Shortcuts Integration (runs user-defined Apple Shortcuts)
+
+private protocol ShortcutRunning {
+    func runShortcut(name: String, payload: ShortcutPayload?) throws
+}
+
+private struct ShortcutPayload: Equatable {
+    var inputText: String?
+}
+
+private enum ShortcutRunnerError: Error, LocalizedError, Equatable {
+    case invalidName
+    case couldNotBuildURL
+    case openFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidName:
+            return "Invalid Shortcut name."
+        case .couldNotBuildURL:
+            return "Could not build Shortcut URL."
+        case .openFailed:
+            return "macOS could not open the Shortcut URL."
+        }
+    }
+}
+
+private enum ShortcutRunnerLog {
+    static var isEnabled: Bool {
+        #if DEBUG
+        return true
+        #else
+        return ProcessInfo.processInfo.environment["ARXIV_SHORTCUT_DEBUG"] == "1"
+        #endif
+    }
+
+    private static let log = OSLog(subsystem: APP_LOG_SUBSYSTEM, category: "shortcuts")
+
+    static func info(_ message: String) {
+        guard isEnabled else { return }
+        os_log("%{public}@", log: log, type: .info, message)
+    }
+
+    static func error(_ message: String) {
+        guard isEnabled else { return }
+        os_log("%{public}@", log: log, type: .error, message)
+    }
+}
+
+private enum ShortcutOpenURLHooks {
+    typealias OpenURLHandler = (URL) -> Bool
+
+    // Injection seam used by UI tests.
+    static var openURL: OpenURLHandler = { NSWorkspace.shared.open($0) }
+}
+
+// MARK: - PDF Annotation Debug Logging
+
+private enum PDFAnnotationLog {
+    static var isEnabled: Bool {
+        ProcessInfo.processInfo.environment["ARXIV_PDF_ANNOTATION_DEBUG"] == "1"
+    }
+
+    private static let log = OSLog(subsystem: APP_LOG_SUBSYSTEM, category: "pdf-annotations")
+
+    static func info(_ message: String) {
+        guard isEnabled else { return }
+        print(message)
+        os_log("%{public}@", log: log, type: .info, message)
+    }
+}
+
+private final class ShortcutRunner: ShortcutRunning {
+    typealias OpenURLHandler = ShortcutOpenURLHooks.OpenURLHandler
+
+    struct Configuration: Equatable {
+        var useXCallback: Bool = false
+        var xSuccess: URL = URL(string: "shortcuts://")!
+        var xError: URL = URL(string: "shortcuts://")!
+        var xCancel: URL = URL(string: "shortcuts://")!
+    }
+
+    private let config: Configuration
+    private let openURL: OpenURLHandler
+
+    init(config: Configuration = Configuration(), openURL: @escaping OpenURLHandler = ShortcutOpenURLHooks.openURL) {
+        self.config = config
+        self.openURL = openURL
+    }
+
+    func makeRunURL(name: String, inputText: String? = nil) throws -> URL {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw ShortcutRunnerError.invalidName }
+
+        var components = URLComponents()
+        components.scheme = "shortcuts"
+        components.host = "run-shortcut"
+
+        var items: [URLQueryItem] = [URLQueryItem(name: "name", value: trimmed)]
+        if let inputText {
+            items.append(URLQueryItem(name: "input", value: "text"))
+            items.append(URLQueryItem(name: "text", value: inputText))
+        }
+        components.queryItems = items
+
+        guard let url = components.url else { throw ShortcutRunnerError.couldNotBuildURL }
+        return url
+    }
+
+    func makeXCallbackURL(
+        name: String,
+        xSuccess: URL,
+        xError: URL,
+        xCancel: URL,
+        inputText: String? = nil
+    ) throws -> URL {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw ShortcutRunnerError.invalidName }
+
+        var components = URLComponents()
+        components.scheme = "shortcuts"
+        components.host = "x-callback-url"
+        components.path = "/run-shortcut"
+
+        var items: [URLQueryItem] = [
+            URLQueryItem(name: "name", value: trimmed),
+            URLQueryItem(name: "x-success", value: xSuccess.absoluteString),
+            URLQueryItem(name: "x-error", value: xError.absoluteString),
+            URLQueryItem(name: "x-cancel", value: xCancel.absoluteString),
+        ]
+
+        if let inputText {
+            items.append(URLQueryItem(name: "input", value: "text"))
+            items.append(URLQueryItem(name: "text", value: inputText))
+        }
+
+        components.queryItems = items
+
+        guard let url = components.url else { throw ShortcutRunnerError.couldNotBuildURL }
+        return url
+    }
+
+    func runShortcut(name: String, payload: ShortcutPayload?) throws {
+        let inputText = payload?.inputText
+        let url: URL
+        if config.useXCallback {
+            url = try makeXCallbackURL(name: name, xSuccess: config.xSuccess, xError: config.xError, xCancel: config.xCancel, inputText: inputText)
+        } else {
+            url = try makeRunURL(name: name, inputText: inputText)
+        }
+
+        ShortcutRunnerLog.info("open url=\(url.absoluteString)")
+        let ok = openURL(url)
+        if !ok {
+            ShortcutRunnerLog.error("open_failed url=\(url.absoluteString)")
+            throw ShortcutRunnerError.openFailed
+        }
+    }
+}
+
+// Preferred Apple-supported bridge: `/usr/bin/shortcuts run <name-or-id>`.
+// Used for the pill toolbar control so execution never blocks UI animations.
+private final class ShortcutCLIRunner {
+    static let shared = ShortcutCLIRunner()
+
+    private let queue = DispatchQueue(label: "arxiv.shortcuts.cli", qos: .utility)
+
+    private init() {}
+
+    func runShortcut(nameOrIdentifier: String, inputText: String?) {
+        let trimmed = nameOrIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            ShortcutRunnerLog.error("cli_invalid_name")
+            return
+        }
+
+        queue.async {
+            let attemptID = UUID().uuidString.prefix(8)
+            ShortcutRunnerLog.info("cli_attempt id=\(attemptID) name=\(trimmed) hasInput=\(inputText != nil)")
+
+            // `shortcuts run` only supports input via file paths.
+            // We write small text payloads to a temp file off the main thread.
+            var tempInputURL: URL?
+            if let inputText {
+                let dir = FileManager.default.temporaryDirectory
+                let url = dir.appendingPathComponent("arxiv.shortcut.input.\(UUID().uuidString).txt")
+                do {
+                    try inputText.write(to: url, atomically: true, encoding: .utf8)
+                    tempInputURL = url
+                } catch {
+                    ShortcutRunnerLog.error("cli_input_write_failed id=\(attemptID) error=\(String(describing: error))")
+                }
+            }
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
+            var args: [String] = ["run", trimmed]
+            if let tempInputURL {
+                args.append(contentsOf: ["--input-path", tempInputURL.path])
+            }
+            process.arguments = args
+
+            let stdoutPipe = Pipe()
+            let stderrPipe = Pipe()
+            process.standardOutput = stdoutPipe
+            process.standardError = stderrPipe
+
+            func cleanupTempFile() {
+                guard let tempInputURL else { return }
+                try? FileManager.default.removeItem(at: tempInputURL)
+            }
+
+            process.terminationHandler = { _ in
+                // Never touch AppKit here; log and clean up on the runner queue.
+                ShortcutCLIRunner.shared.queue.async {
+                    let status = process.terminationStatus
+                    let ok = (status == 0)
+
+                    let outData = (try? stdoutPipe.fileHandleForReading.readToEnd()) ?? Data()
+                    let errData = (try? stderrPipe.fileHandleForReading.readToEnd()) ?? Data()
+                    let out = String(data: outData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    let err = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+                    if ok {
+                        ShortcutRunnerLog.info("cli_success id=\(attemptID) status=\(status) out=\(out.prefix(400))")
+                    } else {
+                        // Most common failure: missing/renamed shortcut identifier.
+                        ShortcutRunnerLog.error("cli_failed id=\(attemptID) status=\(status) err=\(err.prefix(600))")
+                    }
+                    cleanupTempFile()
+                }
+            }
+
+            do {
+                try process.run()
+            } catch {
+                ShortcutRunnerLog.error("cli_spawn_failed id=\(attemptID) error=\(String(describing: error))")
+                cleanupTempFile()
+            }
+        }
+    }
+}
+
 /*
 WHAT CHANGED (window root background refactor)
 - Removed the window-level liquid-glass/vibrancy background layer (the full-window glass view).
@@ -117,7 +360,10 @@ let PANEL_CORNER_RADIUS: CGFloat = 18
 let PANEL_INSET: CGFloat = 10
 let PANEL_BORDER_WIDTH: CGFloat = 1
 
-let INITIAL_SIDEBAR_WIDTH_FRACTION_OF_MAX: CGFloat = 0.33
+// Nominal “full width” baseline for responsive layout decisions.
+// Definition: the canonical contentRect width we consider a comfortable, non-narrow window.
+// Narrow-window mode engages when windowWidth <= nominalFullWindowWidth * 0.50.
+let NOMINAL_FULL_WINDOW_WIDTH: CGFloat = 1700
 
 let PDF_CACHE_DIR_NAME: String = "appCache/pdfs"
 let PDF_CACHE_MAX_CONCURRENT_DOWNLOADS: Int = 8
@@ -169,6 +415,22 @@ private struct AppearanceBudgets {
     var viewInvalidationsPerSwitch: Int = 2
     var redundantLayoutPasses: Int = 6
     var droppedFramesDuringSwitch: Int = 8
+}
+
+// MARK: - Panel motion / animation constants
+
+private enum AnimationConstants {
+    // “Fast but soft” durations (Apple Notes/Messages-like).
+    static let animationDurationShort: CFTimeInterval = 0.20
+    static let animationDurationStandard: CFTimeInterval = 0.28
+
+    // AppKit timing function (cubic-bezier-like). Never linear.
+    // Similar to (0.2, 0.0, 0.2, 1.0).
+    static let timingFunctionEaseInOut = CAMediaTimingFunction(controlPoints: 0.2, 0.0, 0.2, 1.0)
+
+    // Spring tuning: lightly underdamped / near-critically damped.
+    // Used as a “response/damping fraction” conceptual mapping (implemented via CASpringAnimation).
+    static let panelSpringPreset: SpringPreset = .soft
 }
 
 private struct Metrics {
@@ -553,6 +815,7 @@ private final class RightPanelContentHostView: NSView {
 
 private let launchDebugEnabled = ProcessInfo.processInfo.environment["DEBUG_LAUNCH"] == "1"
 private let launchCheckEnabled = ProcessInfo.processInfo.environment["ARXIV_LAUNCH_CHECK"] == "1"
+private let annotationDebugEnabled = ProcessInfo.processInfo.environment["ARXIV_ANNOTATION_DEBUG"] == "1"
 private let debugLayoutEnabled = ProcessInfo.processInfo.environment["DEBUG_LAYOUT"] == "1"
 
 private let chatLatencyDebugEnabled = ProcessInfo.processInfo.environment["ARXIV_CHAT_LATENCY"] == "1"
@@ -2135,6 +2398,20 @@ private class NoScrollTableView: NSTableView {
     }
 }
 
+private final class HorizontalScrollableTableView: NSTableView {
+    override func scrollWheel(with event: NSEvent) {
+        // Allow horizontal panning for the main publications table only.
+        // Keep vertical gesture scrolling disabled (selection/navigation is handled elsewhere).
+        let dx = event.scrollingDeltaX
+        guard abs(dx) > 0.01 else { return }
+        if let sv = enclosingScrollView {
+            sv.scrollWheel(with: event)
+        } else {
+            super.scrollWheel(with: event)
+        }
+    }
+}
+
 private final class MenuTableView: NoScrollTableView {
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
@@ -2151,6 +2428,48 @@ private final class MenuTableView: NoScrollTableView {
 private final class NoScrollScrollView: NSScrollView {
     override func scrollWheel(with event: NSEvent) {
         // Swallow scroll-wheel events so trackpad gestures cannot pan this scroll view.
+    }
+}
+
+private final class HorizontalOnlyScrollView: NSScrollView {
+    private var isClampingScroll: Bool = false
+
+    private func clampHorizontalOffset() {
+        guard !isClampingScroll else { return }
+        guard let doc = documentView else { return }
+        let clip = contentView
+
+        let contentW = max(doc.bounds.width, doc.frame.width)
+        let viewportW = max(1, clip.bounds.width)
+        let maxX = max(0, contentW - viewportW)
+
+        var origin = clip.bounds.origin
+        let clampedX = max(0, min(maxX, origin.x))
+        guard abs(origin.x - clampedX) > 0.01 else { return }
+        origin.x = clampedX
+
+        isClampingScroll = true
+        clip.setBoundsOrigin(origin)
+        super.reflectScrolledClipView(clip)
+        isClampingScroll = false
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        // Only allow horizontal scrolling; swallow vertical wheel/trackpad gestures.
+        let dx = event.scrollingDeltaX
+        guard abs(dx) > 0.01 else { return }
+        super.scrollWheel(with: event)
+        clampHorizontalOffset()
+    }
+
+    override func reflectScrolledClipView(_ cView: NSClipView) {
+        super.reflectScrolledClipView(cView)
+        clampHorizontalOffset()
+    }
+
+    override func layout() {
+        super.layout()
+        clampHorizontalOffset()
     }
 }
 
@@ -2211,7 +2530,7 @@ private final class ZoomablePDFView: PDFView, HitTestControlling {
 
     override var acceptsFirstResponder: Bool { true }
 
-    private func primaryScrollView() -> NSScrollView? {
+    func primaryScrollView() -> NSScrollView? {
         var found: [NSScrollView] = []
         func walk(_ v: NSView) {
             if let sv = v as? NSScrollView { found.append(sv) }
@@ -2411,13 +2730,22 @@ private final class AnnotationTextView: NSTextView {
     var onSubmit: (() -> Void)?
     var onCancel: (() -> Void)?
 
-    override func keyDown(with event: NSEvent) {
-        let isReturn = (event.keyCode == 36 || event.keyCode == 76)
-        if isReturn && !event.modifierFlags.contains(.shift) {
-            onSubmit?()
+    override func doCommand(by selector: Selector) {
+        if selector == #selector(insertNewline(_:)) {
+            if NSEvent.modifierFlags.contains(.shift) {
+                super.doCommand(by: selector) // Insert newline for Shift+Return
+            } else {
+                if annotationDebugEnabled { print("[ANNOTATION_DEBUG] insertNewline command, calling onSubmit") }
+                onSubmit?()
+            }
             return
         }
+        super.doCommand(by: selector)
+    }
+
+    override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // esc
+            if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Escape pressed in textView, calling onCancel") }
             onCancel?()
             return
         }
@@ -2428,12 +2756,13 @@ private final class AnnotationTextView: NSTextView {
 private final class AnnotationComposerViewController: NSViewController {
     var onSubmit: ((String, NSColor) -> Void)?
     var onCancel: (() -> Void)?
+    var onColorChanged: ((NSColor) -> Void)?
     var initialText: String = ""
     var initialColor: NSColor = .systemYellow
     var dropdownGlassFactory: (() -> GlassCardView)?
 
-    private let textView = AnnotationTextView()
-    private var colorButtons: [NSButton] = []
+    let textView = AnnotationTextView()
+    private var colorButtons: [ColorButtonView] = []
     private var selectedColor: NSColor = .systemYellow
 
     private func paletteColors() -> [NSColor] {
@@ -2478,23 +2807,13 @@ private final class AnnotationComposerViewController: NSViewController {
         colorStack.translatesAutoresizingMaskIntoConstraints = false
 
         for color in paletteColors() {
-            let button = NSButton()
-            button.bezelStyle = .shadowlessSquare
-            button.isBordered = false
-            button.wantsLayer = true
-            button.title = ""
-            button.layer?.cornerRadius = 9
-            button.layer?.borderWidth = 0
-            button.layer?.borderColor = nil
-            button.layer?.backgroundColor = color.cgColor
-            button.layer?.shadowColor = color.withAlphaComponent(0.7).cgColor
-            button.layer?.shadowOpacity = 0.2
-            button.layer?.shadowRadius = 4
-            button.setButtonType(.momentaryChange)
-            button.target = self
-            button.action = #selector(onSelectColor(_:))
+            let button = ColorButtonView(color: color)
+            button.translatesAutoresizingMaskIntoConstraints = false
             button.widthAnchor.constraint(equalToConstant: 30).isActive = true
             button.heightAnchor.constraint(equalToConstant: 18).isActive = true
+            button.onClick = { [weak self] in
+                self?.onSelectColor(button)
+            }
             colorStack.addArrangedSubview(button)
             colorButtons.append(button)
         }
@@ -2565,17 +2884,24 @@ private final class AnnotationComposerViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        print("[DEBUG] AnnotationComposerViewController viewDidAppear")
         selectedColor = initialColor
         textView.string = initialText
         updateColorSelection()
-        view.window?.makeFirstResponder(textView)
+        // Ensure the popover window is key and text view is first responder
+        self.view.window?.makeKeyAndOrderFront(nil)
+        self.view.window?.makeFirstResponder(textView)
+        print("[DEBUG] Made popover window key and set first responder in viewDidAppear")
     }
 
-    @objc private func onSelectColor(_ sender: NSButton) {
+    private func onSelectColor(_ sender: ColorButtonView) {
+        print("[DEBUG] Color button clicked: \(sender)")
         let palette = paletteColors()
-        guard let idx = colorButtons.firstIndex(of: sender), idx < palette.count else { return }
+        guard let idx = colorButtons.firstIndex(of: sender), idx < palette.count else { print("[DEBUG] Color button index not found"); return }
         selectedColor = palette[idx]
         updateColorSelection()
+        onColorChanged?(selectedColor)
+        print("[DEBUG] Selected color: \(selectedColor), current selection: \(String(describing: view.window?.firstResponder))")
     }
 
     private func updateColorSelection() {
@@ -2590,19 +2916,15 @@ private final class AnnotationComposerViewController: NSViewController {
                        abs(base.blueComponent - target.blueComponent) < 0.001 &&
                        abs(base.alphaComponent - target.alphaComponent) < 0.001
             }()
-            if let layer = button.layer {
-                layer.cornerRadius = layer.bounds.height / 2
-                layer.shadowOpacity = isSelected ? 0.32 : 0.12
-                layer.shadowRadius = isSelected ? 5 : 3
-            }
+            button.isSelected = isSelected
         }
     }
 
-    private func submit() {
+    func submit() {
         onSubmit?(textView.string, selectedColor)
     }
 
-    private func cancel() {
+    func cancel() {
         onCancel?()
     }
 }
@@ -2669,7 +2991,11 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
     private var observers: [NSObjectProtocol] = []
     private var scrollObserver: NSObjectProtocol?
     private var currentContext: AnnotationContext?
+    private var previewHighlight: PDFAnnotation?
+    private var keyMonitor: Any?
     private let dropdownGlassFactory: () -> GlassCardView
+
+    private let defaultAnnotationColorHexDefaultsKey = "arxivPicker.annotation.defaultColorHex"
 
     private let noteGroupKey = PDFAnnotationKey(rawValue: "NoteGroupID")
 
@@ -2683,6 +3009,14 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         attachOverlay()
         installObservers()
         refreshIcons()
+        // For debugging: automatically trigger annotation creation after 5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+            print("[DEBUG] Timer fired, triggering annotation")
+            if let pdfView = self.pdfView, let _ = self.hostView, let page = pdfView.currentPage {
+                let location = NSPoint(x: 200, y: 200) // arbitrary point in the PDF view
+                self.beginAnnotation(at: location, page: page)
+            }
+        }
     }
 
     deinit {
@@ -2791,6 +3125,42 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         tagColor.withAlphaComponent(0.45)
     }
 
+    private func loadDefaultAnnotationColor() -> NSColor {
+        guard let raw = UserDefaults.standard.string(forKey: defaultAnnotationColorHexDefaultsKey),
+              let color = colorFromHex(raw) else {
+            return .systemYellow
+        }
+        return color
+    }
+
+    private func persistDefaultAnnotationColor(_ color: NSColor) {
+        UserDefaults.standard.set(hexFromColor(color, includeAlpha: true), forKey: defaultAnnotationColorHexDefaultsKey)
+    }
+
+    private func quadrilateralPoints(for rect: CGRect) -> [NSValue] {
+        // PDF highlight quad points are in page coordinates.
+        // Order: top-left, top-right, bottom-left, bottom-right.
+        let tl = NSPoint(x: rect.minX, y: rect.maxY)
+        let tr = NSPoint(x: rect.maxX, y: rect.maxY)
+        let bl = NSPoint(x: rect.minX, y: rect.minY)
+        let br = NSPoint(x: rect.maxX, y: rect.minY)
+        return [NSValue(point: tl), NSValue(point: tr), NSValue(point: bl), NSValue(point: br)]
+    }
+
+    private func logHighlightSummary(_ label: String, page: PDFPage, groupID: String?) {
+        guard PDFAnnotationLog.isEnabled else { return }
+        let highlights = page.annotations.filter { $0.type == PDFAnnotationSubtype.highlight.rawValue }
+        let notes = page.annotations.filter { $0.type == PDFAnnotationSubtype.text.rawValue }
+        PDFAnnotationLog.info("[ANNOT] \(label) pageIndex=\(page.pageRef?.pageNumber ?? -1) highlights=\(highlights.count) notes=\(notes.count) groupID=\(groupID ?? "-")")
+
+        // Log a few highlights to confirm quad points are present.
+        for (idx, h) in highlights.prefix(6).enumerated() {
+            let quadCount = h.quadrilateralPoints?.count ?? 0
+            let gid = noteGroupID(for: h) ?? "-"
+            PDFAnnotationLog.info("[ANNOT]   hi#\(idx) gid=\(gid) bounds=\(NSStringFromRect(h.bounds)) quadPoints=\(quadCount) color=\(hexFromColor(h.color, includeAlpha: true))")
+        }
+    }
+
     private func existingGroupID(for selection: PDFSelection, on page: PDFPage) -> String? {
         let selBounds = selection.bounds(for: page)
 
@@ -2851,6 +3221,9 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         for highlight in matches {
             assignGroupID(groupID, to: highlight)
             highlight.color = highlightColor(for: color)
+            if highlight.quadrilateralPoints?.isEmpty ?? true {
+                highlight.quadrilateralPoints = quadrilateralPoints(for: highlight.bounds)
+            }
         }
     }
 
@@ -2864,28 +3237,105 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         return out
     }
 
+    private func createPreviewHighlight(for selection: PDFSelection, on page: PDFPage, color: NSColor) {
+        removePreviewHighlight()
+        guard pdfView != nil else { return }
+
+        let pieces = selection.selectionsByLine() ?? [selection]
+        for piece in pieces {
+            guard (piece.pages ?? []).contains(page) else { continue }
+            let bounds = piece.bounds(for: page)
+            guard bounds.width > 0, bounds.height > 0 else { continue }
+
+            let highlight = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
+            highlight.color = highlightColor(for: color)
+            highlight.quadrilateralPoints = quadrilateralPoints(for: bounds)
+            highlight.setValue("preview", forAnnotationKey: .contents) // Mark as preview
+            page.addAnnotation(highlight)
+            previewHighlight = highlight
+            break // Only create one preview highlight
+        }
+    }
+
+    private func updatePreviewHighlight(color: NSColor) {
+        guard let highlight = previewHighlight else { return }
+        highlight.color = highlightColor(for: color)
+    }
+
+    private func removePreviewHighlight() {
+        guard let highlight = previewHighlight, let page = highlight.page else { return }
+        page.removeAnnotation(highlight)
+        previewHighlight = nil
+    }
+
+    private func hideAnnotationMenu(reason: String) {
+        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] hideAnnotationMenu called, reason: \(reason)") }
+        removePreviewHighlight()
+        composerPopover?.close()
+        composerPopover = nil
+    }
+
+    // removed triggerAutoAnnotation() (testing helper) to avoid optional unwrap regressions
+
+    private func cancel() {
+        hideAnnotationMenu(reason: "user_cancel")
+    }
+
     private func presentComposer(context: AnnotationContext) {
+        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] presentComposer called") }
         guard composerPopover == nil else { return }
+        NSApp.activate(ignoringOtherApps: true)
         let vc = AnnotationComposerViewController()
         vc.initialText = context.existingAnnotation?.contents ?? ""
-        if let existingColor = context.existingAnnotation?.color { vc.initialColor = existingColor }
+        if let existingColor = context.existingAnnotation?.color {
+            vc.initialColor = existingColor
+        } else {
+            vc.initialColor = loadDefaultAnnotationColor()
+        }
         vc.dropdownGlassFactory = dropdownGlassFactory
         let pop = NSPopover()
         pop.contentViewController = vc
-        pop.behavior = .transient
-        pop.animates = true
+        pop.behavior = .applicationDefined
+        pop.animates = false
         pop.delegate = self
         composerPopover = pop
 
         vc.onSubmit = { [weak self] text, color in
-            self?.composerPopover?.close()
-            self?.composerPopover = nil
-            self?.commitAnnotation(text: text, color: color, context: context)
+            guard let self = self else { return }
+            print("[DEBUG] onSubmit called with text: '\(text)', color: \(color)")
+            if let existing = context.existingAnnotation {
+                let groupID = noteGroupID(for: existing) ?? UUID().uuidString
+                assignGroupID(groupID, to: existing)
+                existing.contents = text
+                existing.color = color
+                recolorHighlights(groupID: groupID, page: context.page, color: color, selection: context.selection)
+
+                logHighlightSummary("before_persist", page: context.page, groupID: groupID)
+                self.hideAnnotationMenu(reason: "submit")
+            } else {
+                self.hideAnnotationMenu(reason: "submit")
+                self.commitAnnotation(text: text, color: color, context: context)
+            }
         }
 
         vc.onCancel = { [weak self] in
-            self?.composerPopover?.close()
-            self?.composerPopover = nil
+            self?.cancel()
+        }
+
+        // Set up preview highlight for real-time color feedback (only for new annotations)
+        if let selection = context.selection, context.existingAnnotation == nil {
+            print("[DEBUG] Setting up preview highlight for selection")
+            createPreviewHighlight(for: selection, on: context.page, color: vc.initialColor)
+            pdfView?.highlightedSelections = [selection]  // Ensure selection remains visible
+            vc.onColorChanged = { [weak self] color in
+                print("[DEBUG] Color changed to: \(color)")
+                self?.updatePreviewHighlight(color: color)
+                if let selection = context.selection {
+                    self?.pdfView?.highlightedSelections = [selection]  // Preserve selection highlight
+                }
+            }
+        } else {
+            print("[DEBUG] No selection for preview highlight, existing annotation: \(context.existingAnnotation != nil)")
         }
 
         if let host = hostView, let pdfView {
@@ -2910,11 +3360,49 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
             }
 
             pop.show(relativeTo: anchorRect, of: host, preferredEdge: .maxY)
+            if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Popover shown") }
+
+            // Ensure popover window is key and text view is first responder
+            DispatchQueue.main.async {
+                if let window = self.composerPopover?.contentViewController?.view.window {
+                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Window in async: \(window), isKey: \(window.isKeyWindow)") }
+                    window.makeKeyAndOrderFront(nil)
+                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] After makeKey in async, isKey: \(window.isKeyWindow)") }
+                    if let vc = self.composerPopover?.contentViewController as? AnnotationComposerViewController {
+                        window.makeFirstResponder(vc.textView)
+                        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] First responder set to: \(window.firstResponder)") }
+                        let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                            if event.keyCode == 36 { // Return
+                                if event.modifierFlags.contains(.shift) {
+                                    return event // let textView handle for newline
+                                } else {
+                                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Return pressed globally, calling submit") }
+                                    vc.submit()
+                                    return nil
+                                }
+                            } else if event.keyCode == 53 { // Escape
+                                if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Escape pressed globally, calling cancel") }
+                                vc.cancel()
+                                return nil
+                            }
+                            return event
+                        }
+                        self.keyMonitor = monitor
+                    }
+                } else {
+                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] No window found in async") }
+                }
+            }
         }
     }
 
     func popoverDidClose(_ notification: Notification) {
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyMonitor = nil
+        }
         composerPopover = nil
+        removePreviewHighlight()
     }
 
     private func selectionForAnnotation(in pdfView: PDFView, page: PDFPage, pagePoint: NSPoint) -> PDFSelection? {
@@ -2935,7 +3423,12 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
     }
 
     private func commitAnnotation(text: String, color: NSColor, context: AnnotationContext) {
+        print("[DEBUG] commitAnnotation called with selection: \(context.selection != nil ? "present" : "nil")")
         guard let pdfView, let doc = pdfView.document else { return }
+
+        // Persist the last-used color so it becomes the default for new highlights.
+        persistDefaultAnnotationColor(color)
+
         let page = context.page
         if let selection = context.selection {
             let groupID = existingGroupID(for: selection, on: page)
@@ -2951,6 +3444,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
                     guard bounds.width > 0, bounds.height > 0 else { continue }
                     let highlight = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
                     highlight.color = highlightColor(for: color)
+                    highlight.quadrilateralPoints = quadrilateralPoints(for: bounds)
                     assignGroupID(groupID, to: highlight)
                     page.addAnnotation(highlight)
                 }
@@ -2958,6 +3452,9 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
                 for highlight in existingHighlights {
                     assignGroupID(groupID, to: highlight)
                     highlight.color = highlightColor(for: color)
+                    if highlight.quadrilateralPoints?.isEmpty ?? true {
+                        highlight.quadrilateralPoints = quadrilateralPoints(for: highlight.bounds)
+                    }
                 }
             }
 
@@ -2974,12 +3471,18 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
             note.contents = text
             note.color = color
             note.userName = NSFullUserName()
+
+            logHighlightSummary("before_persist", page: page, groupID: groupID)
         } else if let existing = context.existingAnnotation {
             let groupID = noteGroupID(for: existing) ?? UUID().uuidString
             assignGroupID(groupID, to: existing)
             existing.contents = text
             existing.color = color
             recolorHighlights(groupID: groupID, page: page, color: color, selection: context.selection)
+
+            logHighlightSummary("before_persist", page: page, groupID: groupID)
+            self.composerPopover?.close()
+            self.composerPopover = nil
         } else {
             let groupID = UUID().uuidString
             let noteRect = noteRect(for: page, anchor: context.pagePoint, selectionBounds: nil)
@@ -2989,9 +3492,12 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
             note.color = color
             note.userName = NSFullUserName()
             page.addAnnotation(note)
+
+            logHighlightSummary("before_persist", page: page, groupID: groupID)
         }
 
         persistAndReload(document: doc, focusPage: page)
+        pdfView.highlightedSelections = nil  // Clear selection highlight after committing annotation
         refreshIcons()
     }
 
@@ -3048,6 +3554,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         CATransaction.commit()
         if focusIndex != NSNotFound, focusIndex >= 0, let page = reloaded.page(at: focusIndex) {
             pdfView.go(to: page)
+            logHighlightSummary("after_reload", page: page, groupID: nil)
         }
         pdfView.scaleFactor = currentScale
         refreshIcons()
@@ -3946,10 +4453,10 @@ private class GlassToolbarButton: NSButton {
     private func updateHoverState(animated: Bool) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || !animated
         let isActive = isEnabled && (isHovering || isHighlighted)
-        let hoverTarget: Float = isHighlighted ? 0.22 : ((isHovering && isEnabled) ? 0.12 : 0.0)
+        let hoverTarget: Float = isHighlighted ? 0.22 : ((isHovering && isEnabled) ? 0.12 : 0.05)
         let glowColor = (restingGlowColor ?? NSColor.white).usingColorSpace(.deviceRGB) ?? NSColor.white
 
-        let haloTargetOpacity: Float = (isHovering && isEnabled && !isHighlighted) ? 1.0 : 0.0
+        let haloTargetOpacity: Float = 1.0
         let haloTargetShadowOpacity: Float = (isHovering && isEnabled && !isHighlighted) ? 0.55 : 0.0
         let haloTargetShadowRadius: CGFloat = (isHovering && isEnabled && !isHighlighted) ? 18 : 14
 
@@ -4012,6 +4519,119 @@ private class GlassToolbarButton: NSButton {
             state = .normal
         }
         glass.updateState(state)
+    }
+}
+
+private final class ColorButtonView: NSView {
+    private var tracking: NSTrackingArea?
+    private let backgroundLayer = CALayer()
+    private var isHovering = false
+    private var isPressed = false
+    var color: NSColor { didSet { updateAppearance() } }
+    var isSelected = false { didSet { updateAppearance() } }
+    var onClick: (() -> Void)?
+
+    init(color: NSColor) {
+        self.color = color
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.masksToBounds = false
+        layer?.backgroundColor = NSColor.clear.cgColor
+
+        backgroundLayer.backgroundColor = color.cgColor
+        backgroundLayer.opacity = 1.0
+        layer?.addSublayer(backgroundLayer)
+
+        updateAppearance()
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        backgroundLayer.frame = bounds
+        backgroundLayer.cornerRadius = bounds.height / 2
+        layer?.cornerRadius = bounds.height / 2
+        layer?.shadowPath = CGPath(roundedRect: bounds,
+                                   cornerWidth: bounds.height / 2,
+                                   cornerHeight: bounds.height / 2,
+                                   transform: nil)
+        CATransaction.commit()
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let tracking { removeTrackingArea(tracking) }
+        let opts: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways, .inVisibleRect]
+        let area = NSTrackingArea(rect: bounds, options: opts, owner: self, userInfo: nil)
+        addTrackingArea(area)
+        tracking = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovering = true
+        updateAppearance()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovering = false
+        updateAppearance()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        isPressed = true
+        updateAppearance()
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        if isPressed && bounds.contains(convert(event.locationInWindow, from: nil)) {
+            onClick?()
+        }
+        isPressed = false
+        updateAppearance()
+    }
+
+    private func updateAppearance() {
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
+        let isActive = isHovering || isPressed || isSelected
+        let targetOpacity: Float = isActive ? 0.9 : 1.0
+        let targetShadowOpacity: Float = isSelected ? 0.32 : (isActive ? 0.22 : 0.12)
+        let targetShadowRadius: CGFloat = isSelected ? 5 : (isActive ? 4 : 3)
+        let targetShadowOffset = CGSize(width: 0, height: isActive ? -1 : 0)
+        let scale: CGFloat = isPressed ? 0.95 : (isHovering ? 1.05 : 1.0)
+        let lift: CGFloat = isPressed ? 0.5 : (isHovering ? -0.8 : 0.0)
+
+        var transform = CATransform3DIdentity
+        transform = CATransform3DTranslate(transform, 0, lift, 0)
+        transform = CATransform3DScale(transform, scale, scale, 1.0)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.shadowColor = color.withAlphaComponent(0.7).cgColor
+        layer?.shadowOpacity = targetShadowOpacity
+        layer?.shadowRadius = targetShadowRadius
+        layer?.shadowOffset = targetShadowOffset
+        backgroundLayer.backgroundColor = color.cgColor
+        CATransaction.commit()
+
+        if reduceMotion {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            backgroundLayer.opacity = targetOpacity
+            layer?.transform = transform
+            CATransaction.commit()
+        } else {
+            let preset: SpringPreset = isPressed ? .microBounce : .hoverBounce
+            animateLayer(backgroundLayer, keyPath: "opacity", to: targetOpacity, preset: preset, reduceMotion: false, basicDuration: 0.12)
+            animateLayer(layer, keyPath: "transform", to: transform, preset: preset, reduceMotion: false, basicDuration: 0.14)
+            animateLayer(layer, keyPath: "shadowOpacity", to: targetShadowOpacity, preset: preset, reduceMotion: false, basicDuration: 0.14)
+            animateLayer(layer, keyPath: "shadowRadius", to: targetShadowRadius, preset: preset, reduceMotion: false, basicDuration: 0.14)
+            animateLayer(layer, keyPath: "shadowOffset", to: targetShadowOffset, preset: preset, reduceMotion: false, basicDuration: 0.14)
+        }
     }
 }
 
@@ -4468,6 +5088,76 @@ private final class GlassToolbarMenuButton: NSButton {
 }
 
 private final class MorphingGlassPillControl: NSView {
+    private final class PillCircleButton: NSButton {
+        private var tracking: NSTrackingArea?
+        private var isHoveringLocal: Bool = false
+
+        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            if let tracking { removeTrackingArea(tracking) }
+            let opts: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways, .inVisibleRect]
+            let area = NSTrackingArea(rect: bounds, options: opts, owner: self, userInfo: nil)
+            addTrackingArea(area)
+            tracking = area
+        }
+
+        override func mouseEntered(with event: NSEvent) {
+            isHoveringLocal = true
+            updateHoverBounce(animated: true)
+        }
+
+        override func mouseExited(with event: NSEvent) {
+            isHoveringLocal = false
+            updateHoverBounce(animated: true)
+        }
+
+        override func highlight(_ flag: Bool) {
+            super.highlight(flag)
+            updateHoverBounce(animated: true)
+        }
+
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            guard isPointInsideCircle(point) else { return nil }
+            return super.hitTest(point)
+        }
+
+        private func isPointInsideCircle(_ point: NSPoint) -> Bool {
+            let r = min(bounds.width, bounds.height) / 2
+            guard r > 1 else { return false }
+            let dx = point.x - bounds.midX
+            let dy = point.y - bounds.midY
+            return (dx * dx + dy * dy) <= (r * r)
+        }
+
+        private func updateHoverBounce(animated: Bool) {
+            // Only affects this button's layer transform; does not touch pill morph animations.
+            let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || !animated
+            let isActive = isEnabled && (isHoveringLocal || isHighlighted)
+
+            // Apple-like hover affordance: subtle scale + tiny lift.
+            // Deterministic constants; tuned to remain visible but restrained.
+            let hoverScale: CGFloat = 1.055
+            let hoverLift: CGFloat = -0.55
+
+            let scale: CGFloat = isActive ? hoverScale : 1.0
+            let lift: CGFloat = isActive ? hoverLift : 0.0
+            var transform = CATransform3DIdentity
+            transform = CATransform3DTranslate(transform, 0, lift, 0)
+            transform = CATransform3DScale(transform, scale, scale, 1.0)
+
+            if reduceMotion {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                layer?.transform = transform
+                CATransaction.commit()
+            } else {
+                animateLayer(layer, keyPath: "transform", to: transform, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.16)
+            }
+        }
+    }
+
     private final class OrnamentOverlayView: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
     }
@@ -4533,6 +5223,8 @@ private final class MorphingGlassPillControl: NSView {
         }
     }
     var onActivate: (() -> Void)?
+    // Expanded state: index-aware callback (0 == left-most in visual order).
+    var onCirclePressed: ((Int) -> Void)?
     var onExpansionStateChanged: ((Bool) -> Void)?
     private var symmetryDebugEnabled: Bool {
         ProcessInfo.processInfo.environment["ARXIV_PILL_SYMMETRY_DEBUG"] == "1"
@@ -4903,15 +5595,18 @@ private final class MorphingGlassPillControl: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        // Critical: don't intercept clicks in the rectangular bounds when the visible
-        // shape is smaller (capsule corners or gaps between circles).
-        guard pointIsInsideVisibleShape(point) else { return nil }
-
+        // Expanded state: prioritize the explicit circular button hit targets.
+        // This avoids missed clicks during transient mask/path animation states.
         if isExpanded {
             for b in circleButtons {
-                if b.frame.contains(point) { return b }
+                let local = b.convert(point, from: self)
+                if b.hitTest(local) != nil { return b }
             }
         }
+
+        // Collapsed (or non-button area): don't intercept clicks in the rectangular bounds when
+        // the visible shape is smaller (capsule corners).
+        guard pointIsInsideVisibleShape(point) else { return nil }
         return self
     }
 
@@ -4983,8 +5678,10 @@ private final class MorphingGlassPillControl: NSView {
         let targetShadowOpacity: Float = isActive ? (isPressed ? 0.32 : 0.22) : 0.0
         let targetShadowRadius: CGFloat = isActive ? 6 : 0
         let targetShadowOffset = CGSize(width: 0, height: isActive ? -1.0 : 0.0)
-        let scale: CGFloat = isActive ? 1.03 : 1.0
-        let lift: CGFloat = isActive ? -0.8 : 0.0
+        // Noticeable, Apple-like hover: small scale + subtle lift.
+        // This is isolated to the pill's interaction feedback and does not touch morph path animations.
+        let scale: CGFloat = isActive ? 1.055 : 1.0
+        let lift: CGFloat = isActive ? -0.9 : 0.0
         // Visually compress just this pill control uniformly (X and Y) so the capsule,
         // circular buttons, and label/icon scale together.
         let basePillScale: CGFloat = 0.8
@@ -5009,11 +5706,11 @@ private final class MorphingGlassPillControl: NSView {
             layer?.shadowOffset = targetShadowOffset
             CATransaction.commit()
         } else {
-            animateLayer(hoverLayer, keyPath: "opacity", to: hoverTarget, preset: .microBounce, reduceMotion: false, basicDuration: 0.12)
-            animateLayer(layer, keyPath: "transform", to: transform, preset: .microBounce, reduceMotion: false, basicDuration: 0.14)
-            animateLayer(layer, keyPath: "shadowOpacity", to: targetShadowOpacity, preset: .microBounce, reduceMotion: false, basicDuration: 0.14)
-            animateLayer(layer, keyPath: "shadowRadius", to: targetShadowRadius, preset: .microBounce, reduceMotion: false, basicDuration: 0.14)
-            animateLayer(layer, keyPath: "shadowOffset", to: targetShadowOffset, preset: .microBounce, reduceMotion: false, basicDuration: 0.14)
+            animateLayer(hoverLayer, keyPath: "opacity", to: hoverTarget, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.12)
+            animateLayer(layer, keyPath: "transform", to: transform, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.16)
+            animateLayer(layer, keyPath: "shadowOpacity", to: targetShadowOpacity, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.16)
+            animateLayer(layer, keyPath: "shadowRadius", to: targetShadowRadius, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.16)
+            animateLayer(layer, keyPath: "shadowOffset", to: targetShadowOffset, preset: .hoverBounce, reduceMotion: false, basicDuration: 0.16)
         }
     }
 
@@ -5075,8 +5772,8 @@ private final class MorphingGlassPillControl: NSView {
 
     private func ensureCircleButtonsIfNeeded() {
         guard circleButtons.isEmpty else { return }
-        for _ in 0..<expandedCircleCount {
-            let b = NSButton(frame: .zero)
+        for index in 0..<expandedCircleCount {
+            let b = PillCircleButton(frame: .zero)
             b.title = ""
             b.isBordered = false
             b.bezelStyle = .regularSquare
@@ -5085,6 +5782,8 @@ private final class MorphingGlassPillControl: NSView {
             b.layer?.cornerRadius = 0
             b.target = self
             b.action = #selector(circleButtonPressed(_:))
+            b.tag = index
+            b.setAccessibilityIdentifier("pill.circle.\(index)")
 
             let iv = NSImageView(frame: .zero)
             iv.imageAlignment = .alignCenter
@@ -5112,6 +5811,12 @@ private final class MorphingGlassPillControl: NSView {
     }
 
     @objc private func circleButtonPressed(_ sender: Any?) {
+        if let b = sender as? NSButton {
+            if let onCirclePressed {
+                onCirclePressed(b.tag)
+                return
+            }
+        }
         onActivate?()
     }
 
@@ -5428,6 +6133,7 @@ private final class MorphingGlassPillControl: NSView {
     // MARK: - Test hooks
     fileprivate func _test_isExpanded() -> Bool { isExpanded }
     fileprivate func _test_labelOpacity() -> Float { pillLabel.layer?.opacity ?? -1 }
+    fileprivate func _test_circleButtons() -> [NSButton] { circleButtons }
     fileprivate func _test_hasMorphAnimation() -> Bool {
         if shapeMaskLayer.animation(forKey: "basic_path") != nil { return true }
         if shapeMaskLayer.animation(forKey: "spring_path") != nil { return true }
@@ -5563,6 +6269,73 @@ private final class PillAnimationStabilityTests: XCTestCase {
     }
 }
 
+private final class ToolbarGapClampMathTests: XCTestCase {
+    func testMinRightCardWidthSatisfiesGapAtBoundary() {
+        // Use the app's current sizing relationships.
+        let minGap: CGFloat = 6
+        let baseHeight: CGFloat = 32 * 1.3
+        let buttonWidth: CGFloat = max(24, 30 * 1.3)
+        let edgeInset: CGFloat = 6
+        let leftClusterMaxX: CGFloat = (2 * buttonWidth) + (2 * edgeInset)
+        let pillOffset: CGFloat = 0
+
+        let minW = PickerWindowController.ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxX,
+            pillCenterOffsetFromCardMidX: pillOffset
+        )
+        XCTAssertGreaterThan(minW, 0)
+
+        let gapAt = PickerWindowController.ToolbarGapClampMath.pillToRightClusterGap(
+            forRightCardWidth: minW,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            pillCenterOffsetFromCardMidX: pillOffset
+        )
+        XCTAssertGreaterThanOrEqual(gapAt, minGap - 0.25)
+
+        let smallerW = max(1, minW - 20)
+        let gapSmaller = PickerWindowController.ToolbarGapClampMath.pillToRightClusterGap(
+            forRightCardWidth: smallerW,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            pillCenterOffsetFromCardMidX: pillOffset
+        )
+        XCTAssertLessThan(gapSmaller, minGap + 0.25)
+    }
+
+    func testRightShiftedPillRequiresMoreWidth() {
+        let minGap: CGFloat = 6
+        let baseHeight: CGFloat = 32 * 1.3
+        let buttonWidth: CGFloat = max(24, 30 * 1.3)
+        let edgeInset: CGFloat = 6
+        let leftClusterMaxX: CGFloat = (2 * buttonWidth) + (2 * edgeInset)
+
+        let w0 = PickerWindowController.ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxX,
+            pillCenterOffsetFromCardMidX: 0
+        )
+        let wShifted = PickerWindowController.ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxX,
+            pillCenterOffsetFromCardMidX: 14
+        )
+        XCTAssertGreaterThanOrEqual(wShifted, w0)
+    }
+}
+
 private final class SettingsNonRegressionTests: XCTestCase {
     private func spinRunLoop(seconds: TimeInterval) {
         let deadline = Date().addingTimeInterval(seconds)
@@ -5639,6 +6412,85 @@ private final class SettingsNonRegressionTests: XCTestCase {
         let afterHash = snapshotPNGHash(of: root)
 
         XCTAssertEqual(baselineHash, afterHash)
+    }
+}
+
+private final class ShortcutPillButtonUITests: XCTestCase {
+    private var priorOpen: ShortcutOpenURLHooks.OpenURLHandler?
+
+    override func setUp() {
+        super.setUp()
+        priorOpen = ShortcutOpenURLHooks.openURL
+    }
+
+    override func tearDown() {
+        if let priorOpen {
+            ShortcutOpenURLHooks.openURL = priorOpen
+        }
+        super.tearDown()
+    }
+
+    func testLeftMostCircleAttemptsToOpenShortcutURL() {
+        // Arrange settings.
+        AppSettingsStore.shared.update { s in
+            s.shortcuts.shortcutName = "Brigada Dictionary"
+            s.shortcuts.useXCallback = false
+            s.shortcuts.inputTextMode = false
+        }
+
+        var opened: URL?
+        ShortcutOpenURLHooks.openURL = { url in
+            opened = url
+            return true
+        }
+
+        let _ = NSApplication.shared
+        let controller = PickerWindowController(payloadPathToWatch: nil)
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.2))
+
+        // Expand the pill and click left-most circle.
+        let pill = controller.window?.contentView?.subviews.compactMap { $0 as? MorphingGlassPillControl }.first
+            ?? controller.window?.contentViewController?.view.subviews.compactMap { $0 as? MorphingGlassPillControl }.first
+        XCTAssertNotNil(pill)
+
+        pill?.setExpanded(true, animated: false)
+        pill?.layoutSubtreeIfNeeded()
+        guard let leftMost = pill?._test_circleButtons().first else {
+            XCTFail("missing_circle_buttons")
+            return
+        }
+        leftMost.performClick(nil)
+
+        XCTAssertEqual(opened?.absoluteString, "shortcuts://run-shortcut?name=Unit%20Test%20Shortcut")
+    }
+}
+
+private final class ShortcutRunnerURLTests: XCTestCase {
+    func testRunURLNameOnly() throws {
+        let runner = ShortcutRunner(config: .init(useXCallback: false))
+        let url = try runner.makeRunURL(name: "My Shortcut")
+        XCTAssertEqual(url.absoluteString, "shortcuts://run-shortcut?name=My%20Shortcut")
+    }
+
+    func testRunURLWithInputText() throws {
+        let runner = ShortcutRunner(config: .init(useXCallback: false))
+        let url = try runner.makeRunURL(name: "S", inputText: "https://example.com/a b")
+        XCTAssertEqual(url.absoluteString, "shortcuts://run-shortcut?name=S&input=text&text=https://example.com/a%20b")
+    }
+
+    func testXCallbackURL() throws {
+        let runner = ShortcutRunner(config: .init(useXCallback: true))
+        let url = try runner.makeXCallbackURL(
+            name: "My Shortcut",
+            xSuccess: URL(string: "shortcuts://")!,
+            xError: URL(string: "shortcuts://")!,
+            xCancel: URL(string: "shortcuts://")!,
+            inputText: nil
+        )
+        XCTAssertEqual(url.absoluteString, "shortcuts://x-callback-url/run-shortcut?name=My%20Shortcut&x-success=shortcuts://&x-error=shortcuts://&x-cancel=shortcuts://")
     }
 }
 
@@ -5736,6 +6588,84 @@ private struct PillAnimationDeterministicTests {
 
         if t.failures == 0 {
             NSLog("[PILL_TESTS] OK")
+        }
+        return t.failures
+    }
+}
+
+private struct ToolbarGapClampDeterministicTests {
+    private struct TestRunner {
+        private(set) var failures: Int = 0
+        mutating func assertTrue(_ condition: Bool, _ message: String) {
+            if !condition {
+                failures += 1
+                NSLog("[TOOLBAR_GAP_TESTS] FAIL: \(message)")
+            }
+        }
+        mutating func assertGE(_ a: Double, _ b: Double, eps: Double = 0.25, _ message: String) {
+            if a + eps < b {
+                failures += 1
+                NSLog("[TOOLBAR_GAP_TESTS] FAIL: \(message) (\(a) < \(b))")
+            }
+        }
+        mutating func assertLE(_ a: Double, _ b: Double, eps: Double = 0.25, _ message: String) {
+            if a > b + eps {
+                failures += 1
+                NSLog("[TOOLBAR_GAP_TESTS] FAIL: \(message) (\(a) > \(b))")
+            }
+        }
+    }
+
+    static func run() -> Int {
+        var t = TestRunner()
+
+        let minGap: CGFloat = 6
+        let baseHeight: CGFloat = 32 * 1.3
+        let buttonWidth: CGFloat = max(24, 30 * 1.3)
+        let edgeInset: CGFloat = 6
+        let leftClusterMaxX: CGFloat = (2 * buttonWidth) + (2 * edgeInset)
+
+        let w0 = PickerWindowController.ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxX,
+            pillCenterOffsetFromCardMidX: 0
+        )
+        t.assertTrue(w0.isFinite && w0 > 0, "min_width_finite")
+
+        let gapAt = PickerWindowController.ToolbarGapClampMath.pillToRightClusterGap(
+            forRightCardWidth: w0,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            pillCenterOffsetFromCardMidX: 0
+        )
+        t.assertGE(Double(gapAt), Double(minGap), "gap_at_boundary")
+
+        let smaller = max(1, w0 - 20)
+        let gapSmaller = PickerWindowController.ToolbarGapClampMath.pillToRightClusterGap(
+            forRightCardWidth: smaller,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            pillCenterOffsetFromCardMidX: 0
+        )
+        t.assertLE(Double(gapSmaller), Double(minGap), "gap_below_boundary")
+
+        let wShifted = PickerWindowController.ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxX,
+            pillCenterOffsetFromCardMidX: 14
+        )
+        t.assertTrue(wShifted + 0.5 >= w0, "shifted_requires_more_width")
+
+        if t.failures == 0 {
+            NSLog("[TOOLBAR_GAP_TESTS] OK")
         }
         return t.failures
     }
@@ -5977,8 +6907,8 @@ private final class SidebarAnimator {
 
         owner.cancelSplitDividerSpringAnimation()
 
-        // Views that must move in lock-step: glass card, background underlay, edge glow, search bar.
-        var leftViews: [NSView] = [owner.leftContainer, owner.searchContainer]
+        // Views that must move in lock-step: glass card, background underlay, edge glow.
+        var leftViews: [NSView] = []
         if let bg = owner.leftCardBackgroundImageView { leftViews.append(bg) }
         if let glow = owner.leftCardGlowView { leftViews.append(glow) }
         leftViews.forEach { $0.wantsLayer = true }
@@ -5989,7 +6919,7 @@ private final class SidebarAnimator {
         let toTransform: CATransform3D = show ? identity : offscreen
 
         let hidePreset: SpringPreset = .panelTransition   // near-critical, no overshoot
-        let showPreset: SpringPreset = .hoverBounce       // gentle, slightly lively
+        let showPreset: SpringPreset = .hoverBounce       //  gentle, slightly lively
         let transformPreset = show ? showPreset : hidePreset
         let spec = springSpec(for: transformPreset)
         let settle = spec.settleCap
@@ -6048,6 +6978,9 @@ private final class SidebarAnimator {
                 owner.splitView.setPosition(targetWidth, ofDividerAt: 0)
                 owner.splitView.adjustSubviews()
                 owner.updateSplitDividerHandleFrame()
+                owner.layoutViewerAnchoredHeaderControls()
+                owner.layoutToolbarControls()
+
                 applyTransform(identity)
             }
             CATransaction.commit()
@@ -6058,28 +6991,12 @@ private final class SidebarAnimator {
         }
     }
 
-    private func animateTransform(_ layer: CALayer?,
-                                  from: CATransform3D,
-                                  to: CATransform3D,
-                                  preset: SpringPreset,
-                                  reduceMotion: Bool,
-                                  key: String) {
-        guard let layer else { return }
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        layer.transform = to
-        CATransaction.commit()
-
-        layer.removeAnimation(forKey: key)
-
+    private func animateTransform(_ layer: CALayer?, from: CATransform3D, to: CATransform3D, preset: SpringPreset, reduceMotion: Bool, key: String) {
         if reduceMotion {
-            let basic = CABasicAnimation(keyPath: "transform")
-            basic.fromValue = NSValue(caTransform3D: from)
-            basic.toValue = NSValue(caTransform3D: to)
-            basic.duration = 0.16
-            basic.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            layer.add(basic, forKey: key)
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer?.transform = to
+            CATransaction.commit()
             return
         }
 
@@ -6092,7 +7009,7 @@ private final class SidebarAnimator {
         spring.fromValue = NSValue(caTransform3D: from)
         spring.toValue = NSValue(caTransform3D: to)
         spring.duration = min(spring.settlingDuration, spec.settleCap)
-        layer.add(spring, forKey: key)
+        layer?.add(spring, forKey: key)
     }
 }
 
@@ -6318,7 +7235,7 @@ private func activateMailAppForShare() {
 private func mailActivateAndMinimizeViewerOnceAppleScript(subject: String) -> String {
     // One-shot stabilization script:
     // - activates Mail (to guarantee the compose window is visible)
-    // - waits a beat so the compose window exists
+    // - waits (briefly) so the compose window exists (first press can be slow)
     // - minimizes all Mail windows except the compose window ("New Message" / subject)
     let subj = appleScriptStringLiteral(subject)
     return """
@@ -6327,17 +7244,24 @@ private func mailActivateAndMinimizeViewerOnceAppleScript(subject: String) -> St
             launch
         end if
         activate
-        delay 0.08
-
+        
+        -- Wait for the compose window to exist. On first use, NSSharingService may take
+        -- a while to create/show the "New Message" window, and minimizing too early is a no-op.
         set composeWin to missing value
-        try
-            set composeWin to first window whose name contains \"New Message\"
-        end try
-        if composeWin is missing value then
+        set deadline to (current date) + 2.0
+        repeat while composeWin is missing value and (current date) < deadline
             try
-                set composeWin to first window whose name contains \(subj)
+                set composeWin to first window whose name contains \"New Message\"
             end try
-        end if
+            if composeWin is missing value then
+                try
+                    set composeWin to first window whose name contains \(subj)
+                end try
+            end if
+            if composeWin is missing value then
+                delay 0.05
+            end if
+        end repeat
 
         repeat with w in windows
             if composeWin is not missing value and w is not composeWin then
@@ -6778,6 +7702,18 @@ private func cssRGBA(_ color: NSColor) -> String {
                   (c.greenComponent * 255.0),
                   (c.blueComponent * 255.0),
                   c.alphaComponent)
+}
+
+private func hexFromColor(_ color: NSColor, includeAlpha: Bool) -> String {
+    let c = (color.usingColorSpace(.deviceRGB) ?? color)
+    let r = Int(round(max(0.0, min(1.0, c.redComponent)) * 255.0))
+    let g = Int(round(max(0.0, min(1.0, c.greenComponent)) * 255.0))
+    let b = Int(round(max(0.0, min(1.0, c.blueComponent)) * 255.0))
+    if includeAlpha {
+        let a = Int(round(max(0.0, min(1.0, c.alphaComponent)) * 255.0))
+        return String(format: "#%02X%02X%02X%02X", r, g, b, a)
+    }
+    return String(format: "#%02X%02X%02X", r, g, b)
 }
 
 private func colorFromHex(_ hex: String) -> NSColor? {
@@ -9185,6 +10121,7 @@ final class PickerWindowController: NSWindowController,
 	    private var keywordsFromAppleScript: [String] = []
         private var recipientNameFromAppleScript: String?
         private var recipientEmailFromAppleScript: String?
+	    private var payloadPostLayoutReflowWorkItem: DispatchWorkItem?
 	    private let pdfCache = PDFCacheManager()
 	    private var pdfLoadToken: Int = 0
 	    private var rightHorizontalScrollLocks: [ObjectIdentifier: HorizontalScrollLock] = [:]
@@ -9200,6 +10137,7 @@ final class PickerWindowController: NSWindowController,
     private var listRenderLogged: Bool = false
     private enum PDFCacheCleanupState { case idle, cleaning, cleaned }
     private var pdfCacheCleanupState: PDFCacheCleanupState = .idle
+    private var pdfPositions: [String: (pageIndex: Int, scrollY: CGFloat, scale: CGFloat)] = [:]
     private var didLogDebugPDFOverride: Bool = false
 
     private var allItems: [Paper] { publicationStore.all }
@@ -9290,8 +10228,12 @@ final class PickerWindowController: NSWindowController,
     private let rightSplitDividerSpringLayer = CALayer()
     private var rightSplitDividerSpringToken: Int = 0
     private var rightAuxPanelVisible: Bool = false
-    private var lastRightAuxPanelWidth: CGFloat = 420
-    private let minRightAuxPanelWidth: CGFloat = 260
+    // Persisted last-known width for the Chat Session (right aux) panel.
+    // Start at 0 so the first-ever open falls back to the absolute minimum.
+    private var lastRightAuxPanelWidth: CGFloat = 0
+    // First-ever open in this app session should match the sidebar's initial width.
+    private var didOpenRightAuxInThisSession: Bool = false
+    private var rightSplitDividerDragActive: Bool = false
     private var rightAuxContainer: NSView = NSView(frame: .zero)
     private let rightAuxContentView = NSView(frame: .zero)
 
@@ -9327,8 +10269,8 @@ final class PickerWindowController: NSWindowController,
     private let leftHeaderLabel = NSTextField(labelWithString: "")
     private let leftHeaderRule = NSView(frame: .zero)
 
-    private let tableView = NoScrollTableView(frame: .zero)
-    private let tableScroll = NoScrollScrollView(frame: .zero)
+    private let tableView = HorizontalScrollableTableView(frame: .zero)
+    private let tableScroll = HorizontalOnlyScrollView(frame: .zero)
     private let pageStepperContainer = NSView(frame: .zero)
     private var pageStepperBackground: NSView = PassthroughView(frame: .zero)
     private let pagePrevButton = GlassToolbarButton(frame: .zero)
@@ -9377,6 +10319,7 @@ final class PickerWindowController: NSWindowController,
     private let pdfFindHighlightLayer = CAGradientLayer()
     private let pdfFindFalloffLayer = CAGradientLayer()
     private let pdfFindField = NSSearchField(frame: .zero)
+    private let pdfFindClearButton = NSButton(frame: .zero)
     private let pdfFindCountLabel = NSTextField(labelWithString: "")
     private let pdfFindPrevButton = GlassToolbarButton(frame: .zero)
     private let pdfFindNextButton = GlassToolbarButton(frame: .zero)
@@ -9464,6 +10407,7 @@ final class PickerWindowController: NSWindowController,
 
     private var keywordColumnTabX: CGFloat = 320
     private var cachedMaxLeftTextWidth: CGFloat = 0
+    private var cachedMaxKeywordTextWidth: CGFloat = 0
     private var cachedRowNumberDigits: Int = 1
     private var headerFramesFrozen = false
     private var cachedHeaderBarFrame = NSRect.zero
@@ -9481,6 +10425,7 @@ final class PickerWindowController: NSWindowController,
     private var hitTestMoveMonitor: Any?
     private var hitTestDownMonitor: Any?
     private var hitTestUpMonitor: Any?
+    private var panelActivationDownMonitor: Any?
     private var pdfSelectDownMonitor: Any?
     private var pdfSelectDragMonitor: Any?
     private var pdfSelectUpMonitor: Any?
@@ -9500,6 +10445,10 @@ final class PickerWindowController: NSWindowController,
 	    private var windowFocusObservers: [Any] = []
 	    private var windowLiveResizeEndObserver: Any?
 	    private var windowScreenObserver: Any?
+
+        // Baseline minimum content size (captured at init). We temporarily raise this when
+        // Chat is hidden to enforce the toolbar gap as a hard stop during window resizing.
+        private var baseWindowContentMinSize: NSSize?
 	    private var dividerSettleWorkItem: DispatchWorkItem?
         private var splitDividerSpringTimer: Timer?
         private let splitDividerSpringLayer = CALayer()
@@ -9514,11 +10463,154 @@ final class PickerWindowController: NSWindowController,
     private var didApplyInitialSidebarLayout = false
     private var allowSidebarCollapse = false
     private var sidebarTransitionInProgress = false
-    private let minSidebarWidth: CGFloat = 220
-    private let maxSidebarWidthFraction: CGFloat = 0.6 // Limit left card growth to 60% of feasible span.
-    private let minRightPanelWidth: CGFloat = 260
+    // Derived minimum width for the left sidebar.
+    // Definition: the width at which the "Author & Year" header label can be perfectly centered
+    // within the left glass card with no clipping/compression under dynamic layout.
+    // NOTE: This is a hard lower bound for all resize paths except the explicit sidebar-toggle collapse.
+    private var sidebarHardMinWidthCache: CGFloat = 0
+    private var sidebarHardMinWidthCacheScale: CGFloat = 0
+    // After we populate the publications table, we switch the sidebar sizing rule to be
+    // table-content-driven (so the sidebar expands to the max internal scroll width).
+    // This preserves the existing initial-launch sizing behavior.
+    private var didAdoptTableDrivenSidebarWidth: Bool = false
+        // Panel sizing: intentionally unconstrained (no min/max clamps) per UX requirement.
+        private let maxSidebarWidthFraction: CGFloat = 1.0
+        private let minRightPanelWidth: CGFloat = 0
     private var suppressRowAnimations = false
     private var selectionChangeFromCode = false
+
+    // Narrow-window mode state (responsive behavior).
+    private enum LastUserActivatedPanel: String {
+        case chatSession
+        case leftContainer
+        case none
+    }
+    private var lastUserActivatedPanel: LastUserActivatedPanel = .none
+    private var isNarrowWindowModeCached: Bool = false
+    private var preNarrowSidebarVisible: Bool = true
+    private var preNarrowChatVisible: Bool = false
+    private var preNarrowSidebarWidth: CGFloat = 0
+    private var preNarrowChatWidth: CGFloat = 0
+
+    private var panelDebugAssertionsEnabled: Bool {
+        debugLayoutEnabled || (ProcessInfo.processInfo.environment["ARXIV_LAYOUT_ASSERT"] == "1")
+    }
+
+    private func currentBackingScale() -> CGFloat {
+        max(1.0,
+            window?.backingScaleFactor
+            ?? window?.screen?.backingScaleFactor
+            ?? NSScreen.main?.backingScaleFactor
+            ?? 2.0)
+    }
+
+    private func ceilToDevicePixels(_ value: CGFloat, scale: CGFloat) -> CGFloat {
+        guard value.isFinite, value > 0, scale.isFinite, scale > 0 else { return max(0, value) }
+        return ceil(value * scale) / scale
+    }
+
+    private func floorToDevicePixels(_ value: CGFloat, scale: CGFloat) -> CGFloat {
+        guard value.isFinite, value > 0, scale.isFinite, scale > 0 else { return max(0, value) }
+        return floor(value * scale) / scale
+    }
+
+    private func attributedSingleLineTypographicWidth(_ s: NSAttributedString) -> CGFloat {
+        let line = CTLineCreateWithAttributedString(s)
+        let w = CTLineGetTypographicBounds(line, nil, nil, nil)
+        return CGFloat(w)
+    }
+
+    private func leftAuthorYearHeaderAttributes(paragraphStyle: NSParagraphStyle) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.systemFont(ofSize: 12.5, weight: .medium),
+            .foregroundColor: NSColor.white,
+            .kern: -0.15,
+            .paragraphStyle: paragraphStyle
+        ]
+    }
+
+    private func invalidateSidebarHardMinWidthCache() {
+        sidebarHardMinWidthCache = 0
+        sidebarHardMinWidthCacheScale = 0
+    }
+
+    private func sidebarHardMinWidth() -> CGFloat {
+        let scale = currentBackingScale()
+        if sidebarHardMinWidthCache.isFinite,
+           sidebarHardMinWidthCache > 0,
+           sidebarHardMinWidthCacheScale.isFinite,
+           abs(sidebarHardMinWidthCacheScale - scale) < 0.01 {
+            return sidebarHardMinWidthCache
+        }
+
+        let pstyle = NSMutableParagraphStyle()
+        pstyle.lineBreakMode = .byClipping
+
+        // Match the exact typography used by the real sidebar header label
+        // (`updateLeftHeaderText()`), otherwise the computed minimum can be
+        // a few points too small and appear slightly off-center.
+        applyTwoColumnTabStops(to: pstyle)
+        let attr = NSAttributedString(
+            string: "Author & Year",
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+                .foregroundColor: leftHeaderTextColor(),
+                .paragraphStyle: pstyle
+            ]
+        )
+        let labelW = attributedSingleLineTypographicWidth(attr)
+
+        // Enclosing glass card bezel: PANEL_INSET (card inset) + leftRowTextInset (list text inset).
+        // Apply symmetrically so the centering constraint is exact.
+        let bezelX = PANEL_INSET + leftRowTextInset
+        var needed = labelW + (2 * bezelX)
+        needed = ceilToDevicePixels(needed, scale: scale)
+
+        sidebarHardMinWidthCache = max(0, needed)
+        sidebarHardMinWidthCacheScale = scale
+        return sidebarHardMinWidthCache
+    }
+
+    private func sidebarTableContentDrivenWidth(maxLeft: CGFloat) -> CGFloat? {
+        guard didAdoptTableDrivenSidebarWidth else { return nil }
+        guard maxLeft.isFinite, maxLeft > 0 else { return nil }
+        guard !filtered.isEmpty else { return nil }
+
+        // We want the sidebar width to match the publications table's *actual* horizontal document width
+        // (i.e. the width at which horizontal scrolling is not needed).
+        // Use the real table column width whenever available to avoid drifting from `leftPreferredColumnWidth()`.
+        let existingColumnWidth = tableView.tableColumns.first?.width ?? 0
+        let computedColumnWidth = leftPreferredColumnWidth()
+        let rawColumnWidth: CGFloat = {
+            let existingOk = existingColumnWidth.isFinite && existingColumnWidth > 0
+            let computedOk = computedColumnWidth.isFinite && computedColumnWidth > 0
+            switch (existingOk, computedOk) {
+            case (true, true):
+                // Prefer whichever is larger so we don't lock the sidebar to the default/stale
+                // column width during the first layout pass.
+                return max(existingColumnWidth, computedColumnWidth)
+            case (true, false):
+                return existingColumnWidth
+            case (false, true):
+                return computedColumnWidth
+            case (false, false):
+                return 0
+            }
+        }()
+
+        guard rawColumnWidth.isFinite, rawColumnWidth > 0 else {
+            return min(maxLeft, sidebarHardMinWidth())
+        }
+
+        let scale = currentBackingScale()
+        let neededColumnWidth = ceilToDevicePixels(rawColumnWidth, scale: scale)
+
+        // Convert from table content width (scrollable document width) to the outer left panel width.
+        // `layoutLeftContainerSubviews()` sets `tableScroll.frame.width = leftContentView.width - (2 * PANEL_INSET)`.
+        let neededSidebarWidth = neededColumnWidth + (2 * PANEL_INSET)
+
+        return min(maxLeft, max(sidebarHardMinWidth(), neededSidebarWidth))
+    }
 
     // SidebarAnimator (left sidebar slide)
     private lazy var sidebarAnimator: SidebarAnimator = SidebarAnimator(owner: self)
@@ -9728,6 +10820,9 @@ final class PickerWindowController: NSWindowController,
     private let legacySidebarWidthDefaultsKey = "arxivPicker.sidebarWidth"
     private let legacySidebarVisibleDefaultsKey = "arxivPicker.sidebarVisible"
 
+    private let rightAuxWidthDefaultsKey = "astroStack.chatWidth"
+    private let legacyRightAuxWidthDefaultsKey = "arxivPicker.chatWidth"
+
     private let rowMenu = NSMenu(title: "Row Menu")
 
     private struct SelectionHistoryEntry: Equatable {
@@ -9772,6 +10867,13 @@ final class PickerWindowController: NSWindowController,
 
     fileprivate var shouldReduceMotion: Bool {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+
+    // Temporarily disable the pill-shaped toolbar animations.
+    // Default is disabled; set ARXIV_DISABLE_PILL_TOOLBAR_ANIMATIONS=0 to re-enable.
+    private var disablePillToolbarAnimations: Bool {
+        let v = ProcessInfo.processInfo.environment["ARXIV_DISABLE_PILL_TOOLBAR_ANIMATIONS"] ?? "1"
+        return v != "0"
     }
 
     private func isWindowActiveForAppearance() -> Bool {
@@ -10126,7 +11228,7 @@ final class PickerWindowController: NSWindowController,
                               placeholderColor: searchForeground,
                               iconColor: searchForeground)
 
-        leftHeaderLabel.textColor = resolvedSystemColor(.secondaryLabelColor)
+        leftHeaderLabel.textColor = NSColor.white
         updateRightAuxAskSeparatorStyle()
         leftHeaderRule.layer?.backgroundColor = resolvedSystemColor(.separatorColor).cgColor
         rightContainer.layer?.borderColor = resolvedSystemColor(.separatorColor).cgColor
@@ -11072,6 +12174,23 @@ final class PickerWindowController: NSWindowController,
         guard samplePDFEnabled else { return }
         let doc = makeSampleTextPDFDocument()
         pdfView.document = doc
+        pdfView.displayBox = .mediaBox
+        // Restore position or go to top
+        if let position = pdfPositions["sample"], let page = doc.page(at: position.pageIndex) {
+            pdfView.scaleFactor = position.scale
+            pdfView.go(to: page)
+            if let scrollView = pdfView.primaryScrollView() {
+                var origin = scrollView.contentView.bounds.origin
+                origin.y = position.scrollY
+                scrollView.contentView.setBoundsOrigin(origin)
+            }
+        } else {
+            pdfView.autoScales = true
+            pdfView.goToFirstPage(nil)
+            if let scrollView = pdfView.primaryScrollView() {
+                scrollView.contentView.setBoundsOrigin(.zero)
+            }
+        }
         hideLoading()
         hidePDFFindHUD()
         showPDFPanel(animated: false)
@@ -11112,11 +12231,11 @@ The quick brown fox jumps over the lazy dog.
         )
 
         ctx.saveGState()
-        ctx.textMatrix = .identity
-        ctx.translateBy(x: 0, y: mediaBox.height)
-        ctx.scaleBy(x: 1, y: -1)
+        // ctx.textMatrix = .identity
+        // ctx.translateBy(x: 0, y: mediaBox.height)
+        // ctx.scaleBy(x: 1, y: -1)
 
-        let frameRect = mediaBox.insetBy(dx: 72, dy: 72)
+        let frameRect = CGRect(x: 72, y: mediaBox.height - 72 - 200, width: 468, height: 200)
         let path = CGPath(rect: frameRect, transform: nil)
         let framesetter = CTFramesetterCreateWithAttributedString(attr as CFAttributedString)
         let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: attr.length), path, nil)
@@ -11126,7 +12245,10 @@ The quick brown fox jumps over the lazy dog.
         ctx.endPDFPage()
         ctx.closePDF()
 
-        return PDFDocument(data: data as Data) ?? PDFDocument()
+        let doc = PDFDocument(data: data as Data) ?? PDFDocument()
+        let url = URL(fileURLWithPath: "/tmp/sample.pdf")
+        try? doc.write(to: url)
+        return doc
     }
 
     private var viewModeTransitionDebugEnabled: Bool {
@@ -11436,6 +12558,7 @@ The quick brown fox jumps over the lazy dog.
 
 	        super.init(window: window)
 	        window.delegate = self
+            baseWindowContentMinSize = window.contentMinSize
 
 	        configureWindowAppearance()
         launchLog("configureWindowAppearance done")
@@ -11468,6 +12591,7 @@ The quick brown fox jumps over the lazy dog.
         if let hitTestMoveMonitor { NSEvent.removeMonitor(hitTestMoveMonitor) }
         if let hitTestDownMonitor { NSEvent.removeMonitor(hitTestDownMonitor) }
         if let hitTestUpMonitor { NSEvent.removeMonitor(hitTestUpMonitor) }
+        if let panelActivationDownMonitor { NSEvent.removeMonitor(panelActivationDownMonitor) }
         if let pdfSelectDownMonitor { NSEvent.removeMonitor(pdfSelectDownMonitor) }
         if let pdfSelectDragMonitor { NSEvent.removeMonitor(pdfSelectDragMonitor) }
         if let pdfSelectUpMonitor { NSEvent.removeMonitor(pdfSelectUpMonitor) }
@@ -11942,7 +13066,7 @@ The quick brown fox jumps over the lazy dog.
             ?? (defaults.object(forKey: legacySidebarWidthDefaultsKey) as? Double)
             ?? 0
         if storedWidthValue.isFinite, storedWidthValue > 0 {
-            lastSidebarWidth = max(minSidebarWidth, CGFloat(storedWidthValue))
+            lastSidebarWidth = CGFloat(storedWidthValue)
         }
 
         var forcedToVisible = false
@@ -11978,29 +13102,35 @@ The quick brown fox jumps over the lazy dog.
         UserDefaults.standard.set(visible, forKey: legacySidebarVisibleDefaultsKey)
     }
 
+    private func restoreRightAuxWidthFromDefaults() {
+        let defaults = UserDefaults.standard
+        let storedWidthValue = (defaults.object(forKey: rightAuxWidthDefaultsKey) as? Double)
+            ?? (defaults.object(forKey: legacyRightAuxWidthDefaultsKey) as? Double)
+            ?? 0
+        if storedWidthValue.isFinite, storedWidthValue > 0 {
+            lastRightAuxPanelWidth = CGFloat(storedWidthValue)
+        }
+    }
+
+    private func persistRightAuxWidth(_ width: CGFloat) {
+        UserDefaults.standard.set(Double(width), forKey: rightAuxWidthDefaultsKey)
+        UserDefaults.standard.set(Double(width), forKey: legacyRightAuxWidthDefaultsKey)
+    }
+
     private var sidebarClampInProgress = false
 
+    private var toolbarGapCachedParams: (minGap: CGFloat, baseHeight: CGFloat, buttonWidth: CGFloat, edgeInset: CGFloat, leftClusterMaxX: CGFloat, pillOffset: CGFloat, insetDelta: CGFloat)?
+    private var toolbarGapCachedMinOuterRightWidth: CGFloat = 0
+
     private func desiredMinSidebarWidthForCurrentPage(maxLeft: CGFloat) -> CGFloat {
-        guard sidebarVisible else { return 0 }
+        // Absolute minimum for the leftContainer when visible.
+        // Default (initial launch): match the exact width used to center "Author & Year".
+        // After the publications table is populated: use the table's max internal scroll width.
         guard maxLeft.isFinite, maxLeft > 0 else { return 0 }
-
-        // Use current page rows when pagination is ready; otherwise fall back to the early-launch slice.
-        let range: Range<Int>
-        if paginator.pageCount > 0 {
-            range = paginator.range(forPage: currentPageIndex)
-        } else {
-            range = launchPageRangeForSidebarSizing()
+        if let tableDriven = sidebarTableContentDrivenWidth(maxLeft: maxLeft) {
+            return tableDriven
         }
-
-        let authorW = maxAuthorYearWidthForLaunchRows(range)
-
-        // Symmetric bezel around the Author&Year text:
-        // - PANEL_INSET is the card's left/right inset.
-        // - leftRowTextInset is the list's internal leading inset to where the Author&Year text starts.
-        // Apply the same combined inset on both sides so the text isn't flush to either edge.
-        let bezelX = PANEL_INSET + leftRowTextInset
-        let needed = authorW + (2 * bezelX)
-        return min(maxLeft, max(minSidebarWidth, needed))
+        return min(maxLeft, sidebarHardMinWidth())
     }
 
     private func enforceSidebarWidthBounds(reason: String) {
@@ -12014,16 +13144,12 @@ The quick brown fox jumps over the lazy dog.
         let divider = splitView.dividerThickness
         let maxLeftPotential = total - divider - minOuterRightContainerWidth()
         let maxLeft = cappedSidebarMaxWidth(forPotential: maxLeftPotential)
+        let minLeft = sidebarVisible ? desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft) : 0
         let current = leftContainer.frame.width
 
-        let desired: CGFloat
-        if sidebarVisible {
-            let minLeft = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
-            desired = min(max(current, minLeft), maxLeft)
-        } else {
-            // When hidden, allow full collapse (override min width) but never exceed max.
-            desired = 0
-        }
+        let desired: CGFloat = sidebarVisible
+            ? min(maxLeft, max(minLeft, current))
+            : 0
 
         if abs(desired - current) < 0.5 { return }
 
@@ -12043,9 +13169,7 @@ The quick brown fox jumps over the lazy dog.
         layoutLeftContainerSubviews()
 
         if sidebarVisible {
-            // If we restored or persisted an out-of-range width, fix it once bounds are real.
-            let persistedMin = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
-            let clampedStored = min(max(lastSidebarWidth, persistedMin), maxLeft)
+            let clampedStored = min(maxLeft, max(minLeft, lastSidebarWidth))
             if abs(clampedStored - lastSidebarWidth) >= 0.5 {
                 lastSidebarWidth = clampedStored
                 persistSidebarWidth(clampedStored)
@@ -12061,6 +13185,19 @@ The quick brown fox jumps over the lazy dog.
     private let toolbarControlScaleMin: CGFloat = 1.05
     private let toolbarBaseSpacing: CGFloat = 8
     private let toolbarMinSpacing: CGFloat = 4
+
+    // Hard constraint: when Chat Session (right aux) is hidden, enforce a minimum horizontal
+    // edge-to-edge gap between the right-panel pill and the adjacent gray edge buttons.
+    // This value also bounds button↔button spacing (currently `horizontalInset` in
+    // `layoutRightPanelEdgeButtons`).
+    private let minToolbarGap: CGFloat = 6
+    private var toolbarGapDebugEnabled: Bool {
+        ProcessInfo.processInfo.environment["ARXIV_TOOLBAR_GAP_DEBUG"] == "1"
+    }
+    private func toolbarGapLog(_ message: String) {
+        guard toolbarGapDebugEnabled else { return }
+        NSLog("[ToolbarGap] \(message)")
+    }
     private let pageStepperButtonSpacing: CGFloat = 12
     private let pageStepperHorizontalPadding: CGFloat = 8
     private let pageStepperBottomInset: CGFloat = 10
@@ -12550,11 +13687,11 @@ The quick brown fox jumps over the lazy dog.
             (pageControlBackground as? NSGlassEffectView)?.cornerRadius = metrics.cornerRadius
         }
 
-        sidebarToggleButton.setCornerRadius(metrics.cornerRadius)
-        sidebarMenuButton.setCornerRadius(metrics.cornerRadius)
-        backButton.setCornerRadius(metrics.cornerRadius, maskedCorners: [.layerMinXMinYCorner, .layerMinXMaxYCorner])
-        forwardButton.setCornerRadius(metrics.cornerRadius, maskedCorners: [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
-        pageMenuButton.setCornerRadius(metrics.cornerRadius)
+        sidebarToggleButton.setCornerRadius(metrics.controlHeight / 2)
+        sidebarMenuButton.setCornerRadius(metrics.controlHeight / 2)
+        backButton.setCornerRadius(metrics.controlHeight / 2, maskedCorners: [.layerMinXMinYCorner, .layerMinXMaxYCorner])
+        forwardButton.setCornerRadius(metrics.controlHeight / 2, maskedCorners: [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
+        pageMenuButton.setCornerRadius(metrics.controlHeight / 2)
 
         // Border thickness scaling for the pill’s glass rim/lines (s^0.65).
         var pillConfig = GlassCardKit.GlassCardConfig()
@@ -12774,14 +13911,26 @@ The quick brown fox jumps over the lazy dog.
             self?.captureWindowBackgroundRegion(in: rectInWindow, scale: scale)
         }
         rightPanelPillControl.reduceMotionProvider = { [weak self] in
-            self?.shouldReduceMotion ?? false
+            guard let self else { return true }
+            return self.disablePillToolbarAnimations || self.shouldReduceMotion
         }
         rightPanelPillControl.mirroredHorizontally = true
         rightPanelPillControl.pathAnimationPreset = .microBounce
-        rightPanelPillControl.pathAnimationDuration = 0.5
+        rightPanelPillControl.pathAnimationDuration = disablePillToolbarAnimations ? 0.0 : 0.5
         rightPanelPillControl.translatesAutoresizingMaskIntoConstraints = true
         rightPanelPillControl.onActivate = { [weak self] in
+            // Pill press: always attempt user shortcut, then preserve existing transition behavior.
+            self?.runUserShortcutFromToolbar()
             self?.triggerRightPanelPillTransition()
+        }
+        rightPanelPillControl.onCirclePressed = { [weak self] index in
+            // All pill-related buttons trigger the same user shortcut.
+            self?.runUserShortcutFromToolbar()
+
+            // Preserve existing behavior: non-left-most circles keep the prior transition action.
+            if index != 0 {
+                self?.triggerRightPanelPillTransition()
+            }
         }
         rightPanelPillControl.backgroundThemeApplier = { [weak self] background in
             guard let self else { return }
@@ -12842,11 +13991,13 @@ The quick brown fox jumps over the lazy dog.
         pageControlContainer.translatesAutoresizingMaskIntoConstraints = false
 
         if ToolbarAutoScale.isEnabled {
-            // New left cluster: [sidebar, back, forward] as a true NSStackView cluster.
+            // New left cluster: [sidebar, divider, back, divider, forward] as a true NSStackView cluster.
             // Keep legacy containers intact for rollback.
             sidebarMenuButton.isHidden = true
             leftToolbarCluster.addArrangedSubview(sidebarToggleButton)
+            leftToolbarCluster.addArrangedSubview(sidebarDivider)
             leftToolbarCluster.addArrangedSubview(backButton)
+            leftToolbarCluster.addArrangedSubview(navDivider)
             leftToolbarCluster.addArrangedSubview(forwardButton)
         } else {
             // Legacy left controls: pill groups with dividers.
@@ -12949,6 +14100,11 @@ The quick brown fox jumps over the lazy dog.
         forwardButton.action = #selector(navigateForward)
         backButton.updateTint()
         forwardButton.updateTint()
+
+        sidebarToggleButton.restingGlowColor = NSColor.systemGray
+        sidebarMenuButton.restingGlowColor = NSColor.systemGray
+        backButton.restingGlowColor = NSColor.systemGray
+        forwardButton.restingGlowColor = NSColor.systemGray
 
         pageMenuButton.title = "Page 1"
         pageMenuButton.font = NSFont.systemFont(ofSize: 12.5, weight: .medium)
@@ -13080,6 +14236,11 @@ The quick brown fox jumps over the lazy dog.
                 backHeightConstraint!,
                 forwardWidthConstraint!,
                 forwardHeightConstraint!,
+
+                sidebarDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
+                sidebarDivider.heightAnchor.constraint(equalToConstant: 18),
+                navDivider.widthAnchor.constraint(equalToConstant: navDividerWidth),
+                navDivider.heightAnchor.constraint(equalToConstant: 18),
 
                 pageMenuLeadingConstraint!,
                 pageMenuTrailingConstraint!,
@@ -13364,10 +14525,21 @@ The quick brown fox jumps over the lazy dog.
             self.updateRightSplitDividerHandleFrame()
         }
         handle.onDragBegin = { [weak self] in
-            self?.cancelRightSplitDividerSpringAnimation()
+            guard let self else { return }
+            self.cancelRightSplitDividerSpringAnimation()
+            self.rightSplitDividerDragActive = true
         }
         handle.onDragEnd = { [weak self] in
-            self?.schedulePanelSettle()
+            guard let self else { return }
+            self.rightSplitDividerDragActive = false
+            if self.rightAuxPanelVisible {
+                let w = self.rightAuxPanelWidth()
+                if w.isFinite, w > 0 {
+                    self.lastRightAuxPanelWidth = w
+                    self.persistRightAuxWidth(w)
+                }
+            }
+            self.schedulePanelSettle()
         }
         root.addSubview(handle, positioned: .above, relativeTo: splitView)
         rightSplitDividerHandle = handle
@@ -13535,6 +14707,7 @@ The quick brown fox jumps over the lazy dog.
 	        setupWindowBackgroundImage(in: content)
 	        setupWindowBackgroundMaterial(in: content)
         restoreSidebarStateFromDefaults()
+        restoreRightAuxWidthFromDefaults()
 
 	        searchField.delegate = self
 	        searchField.target = self
@@ -13686,10 +14859,11 @@ The quick brown fox jumps over the lazy dog.
             DispatchQueue.main.async { [weak self] in
                 self?.layoutViewerAnchoredHeaderControls()
             }
+            guard let self, !self.disablePillToolbarAnimations else { return }
             // Also re-center after the morph animation fully settles; the bounce preset can drift
             // slightly while its transform scales, so schedule a second layout after the animation
             // duration has elapsed.
-            DispatchQueue.main.asyncAfter(deadline: .now() + ((self?.rightPanelPillControl.pathAnimationDuration ?? 0.5) + 0.05)) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + (self.rightPanelPillControl.pathAnimationDuration + 0.05)) { [weak self] in
                 self?.layoutViewerAnchoredHeaderControls()
             }
         }
@@ -13709,6 +14883,23 @@ The quick brown fox jumps over the lazy dog.
         installHitTestDebugging(in: root)
         installPDFSelectionDebuggingIfNeeded()
         updateLayoutDebugOverlay(reason: "setup")
+
+        // Track explicit mouse-initiated panel activation ordering.
+        // This is the single source of truth used to resolve narrow-window entry decisions.
+        if panelActivationDownMonitor == nil {
+            panelActivationDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                guard let self else { return event }
+                guard event.window === self.window else { return event }
+                guard let rootView = self.window?.contentView else { return event }
+                let hit = rootView.hitTest(event.locationInWindow)
+                if let hit, (hit === self.leftContainer || hit.isDescendant(of: self.leftContainer)) {
+                    self.lastUserActivatedPanel = .leftContainer
+                } else if let hit, (hit === self.rightAuxContainer || hit.isDescendant(of: self.rightAuxContainer)) {
+                    self.lastUserActivatedPanel = .chatSession
+                }
+                return event
+            }
+        }
 
 	        logSearchDebug("searchField placeholder=\(searchField.placeholderString ?? "") textColor=\(String(describing: searchField.textColor)) wantsLayer=\(searchField.wantsLayer)")
 	        if let cell = searchField.cell as? NSSearchFieldCell {
@@ -13752,6 +14943,7 @@ The quick brown fox jumps over the lazy dog.
 	            object: window,
 	            queue: .main
 	        ) { [weak self] _ in
+                self?.updateNarrowWindowModeIfNeeded(reason: "window_resize")
 	            self?.installTitlebarTintBackground()
 	            self?.scheduleRootGlassTintApply(reason: "window_resize", delay: 0.12)
             self?.updateToolbarScaleForWindowSize(reason: "window_resize")
@@ -13765,6 +14957,7 @@ The quick brown fox jumps over the lazy dog.
             self?.updateSearchCapsuleGeometry()
             self?.updateSearchDepth(animated: true)
             self?.layoutToolbarControls()
+	        self?.updateWindowMinSizeForToolbarGapIfNeeded(reason: "window_resize")
             self?.enforceSidebarWidthBounds(reason: "window_resize")
                 self?.updateLayoutDebugOverlay(reason: "window_resize")
                 self?.updateRightSplitDividerHandleFrame()
@@ -13778,6 +14971,7 @@ The quick brown fox jumps over the lazy dog.
             self?.updateLeftCardBackgroundFrame()
             self?.updateRightCardBackgroundFrame()
             self?.updateWindowBackgroundBackingScale()
+            self?.invalidateSidebarHardMinWidthCache()
         }
 
         splitWillResizeObserver = NotificationCenter.default.addObserver(
@@ -13818,6 +15012,7 @@ The quick brown fox jumps over the lazy dog.
             object: splitView,
             queue: .main
         ) { [weak self] _ in
+	        self?.updateNarrowWindowModeIfNeeded(reason: "split_resize")
             // During live divider drags, do the minimum work possible.
             // Constraint/layout churn here can fight AppKit’s interactive divider updates and
             // make dragging feel “stuck” (especially with nested split views + glass cards).
@@ -13854,6 +15049,25 @@ The quick brown fox jumps over the lazy dog.
                     self.logDividerState("drag_end_system")
                     layoutLog("drag_end_system left=\(Int(self.leftContainer.frame.width)) right=\(Int(self.rightSplitContainer.frame.width))")
                     self.schedulePanelSettle()
+
+                    // If the user dragged the (previously hidden) sidebar open while Chat is hidden,
+                    // treat that as an explicit unhide intent before clamping. Otherwise the clamp
+                    // path would force the sidebar back to 0 (snap-back).
+                    if !self.sidebarVisible,
+                       !self.rightAuxPanelVisible {
+                        let w = self.leftContainer.frame.width
+                        if w.isFinite, w > 12 {
+                            self.sidebarVisible = true
+                            self.lastUserActivatedPanel = .leftContainer
+                            self.lastSidebarWidth = w
+                            self.persistSidebarVisibility(true)
+                            self.persistSidebarWidth(w)
+                            self.updateSidebarToggleIcon()
+                            self.leftContainer.setAccessibilityHidden(false)
+                            uiLog("sidebar_unhide_via_divider_drag width=\(Int(w))")
+                        }
+                    }
+
                     self.enforceSidebarWidthBounds(reason: "drag_end")
                     self.debugDumpViewHierarchy(reason: "divider_drag_end")
                     self.debugProbeDividerHitTest(reason: "divider_drag_end")
@@ -13900,13 +15114,20 @@ The quick brown fox jumps over the lazy dog.
                 queue: .main
             ) { [weak self] _ in
                 guard let self else { return }
+                self.updateNarrowWindowModeIfNeeded(reason: "right_split_resize")
                 self.updateToolbarScaleForWindowSize(reason: "right_split_resize")
                 self.scheduleRootGlassTintApply(reason: "right_split_resize", delay: 0.12)
                 self.layoutRightPanelSubviews()
                 self.layoutViewerAnchoredHeaderControls()
                 self.updateRightSplitDividerHandleFrame()
-                if self.rightAuxPanelVisible {
-                    self.lastRightAuxPanelWidth = self.rightAuxPanelWidth()
+                self.enforceRightAuxMinWidthIfNeeded(reason: "right_split_resize")
+                self.enforceRightAuxTargetWidthIfNeeded(reason: "right_split_resize")
+
+                if self.panelDebugAssertionsEnabled {
+                    if self.isNarrowWindowModeCached {
+                        assert(!(self.sidebarVisible && self.rightAuxPanelVisible), "Invariant: narrow mode must not show both leftContainer and chatSession")
+                    }
+                    // No min/max sizing invariants enforced.
                 }
             }
 
@@ -13963,19 +15184,15 @@ The quick brown fox jumps over the lazy dog.
                 return
             }
 
-            // On some runs a previously persisted sidebar width can be wildly too large (e.g. from a prior
-            // regression). If we apply it verbatim, the viewer panel launches effectively "closed".
-            // For initial layout, keep a more comfortable minimum for the viewer.
             let total = self.splitView.bounds.width
             let divider = self.splitView.dividerThickness
-            let minRightComfort = max(self.minOuterRightContainerWidth(), self.minRightPanelWidth * 2)
-            let maxLeft = self.cappedSidebarMaxWidth(forPotential: total - divider - minRightComfort)
+            let maxLeft = self.cappedSidebarMaxWidth(forPotential: total - divider - self.minOuterRightContainerWidth())
 
             // Always launch with the left panel visible.
-            // Bootstrap with a conservative width (so the table can compute row/pagination metrics),
-            // then tighten to a content-fit width (Author&Year + 2 keywords).
+            // Initial sidebar width should be the exact width required to center "Author & Year"
+            // within the left glass card header.
             self.sidebarVisible = true
-            let bootstrapLeft = min(maxLeft, max(self.minSidebarWidth, maxLeft * INITIAL_SIDEBAR_WIDTH_FRACTION_OF_MAX))
+            let bootstrapLeft = min(maxLeft, self.sidebarHardMinWidth())
             self.splitView.setPosition(bootstrapLeft, ofDividerAt: 0)
             self.splitView.adjustSubviews()
 
@@ -14010,6 +15227,7 @@ The quick brown fox jumps over the lazy dog.
             self.updateCardEdgeGlowIntensity()
             self.layoutToolbarControls()
             self.updateToolbarScaleForWindowSize(reason: "initial", immediate: true)
+	        self.updateWindowMinSizeForToolbarGapIfNeeded(reason: "initial")
                 self.enforceSidebarWidthBounds(reason: "initial")
                 self.didApplyInitialSidebarLayout = true
             self.updateSidebarStateFromSplit()
@@ -14164,17 +15382,17 @@ The quick brown fox jumps over the lazy dog.
 
     private func targetRightPanelWidthForSplit() -> CGFloat {
         let total = rightCompositeContainer.bounds.width
-        let fallback = max(minRightPanelWidth, total > 1 ? total * 0.6 : minRightPanelWidth)
+        let fallback = max(0, total > 1 ? total * 0.6 : 0)
         let stored = lastRightPanelWidth > 0 ? lastRightPanelWidth : fallback
-        let maxPrimary = max(minRightPanelWidth, total - 1)
-        return min(max(stored, minRightPanelWidth), maxPrimary)
+        let maxPrimary = max(0, total - 1)
+        return max(0, min(stored, maxPrimary))
     }
 
     private func clampRightPanelWidthForSplit() {
         guard rightPanelSplitModeActive,
               let constraint = rightPrimaryWidthConstraint,
               constraint.isActive else { return }
-        let maxPrimary = max(minRightPanelWidth, rightCompositeContainer.bounds.width - 1)
+        let maxPrimary = max(0, rightCompositeContainer.bounds.width - 1)
         if constraint.constant > maxPrimary {
             constraint.constant = maxPrimary
             rightCompositeContainer.layoutSubtreeIfNeeded()
@@ -14258,40 +15476,312 @@ The quick brown fox jumps over the lazy dog.
 
     // MARK: Split view sizing
 
-    private func minOuterRightContainerWidth() -> CGFloat {
-        // Outer split view's right side must be wide enough for the HTML/PDF panel,
-        // plus the third panel (and its divider) when it is open.
-        if rightAuxPanelVisible {
-            return minRightPanelWidth + rightSplitView.dividerThickness + minRightAuxPanelWidth
+    fileprivate enum ToolbarGapClampMath {
+        // Computes the pill width from `layoutRightPanelPillControl` given a candidate right-card width.
+        static func pillWidth(forRightCardWidth w: CGFloat, baseHeight: CGFloat) -> CGFloat? {
+            let inset: CGFloat = 12
+            let availableWidth = max(0, w - (2 * inset))
+            guard availableWidth > 24 else { return nil }
+
+            let scale = max(0.86, min(1.15, w / 720))
+            let height = baseHeight * scale
+            let minWidth = height * 4.4
+            let maxWidth = height * 8.0
+            let targetWidth = min(w * 0.6, maxWidth)
+            let width = min(availableWidth, max(minWidth, targetWidth))
+            return (width.isFinite && width > 0) ? width : nil
         }
-        return minRightPanelWidth
+
+        // Computes edge-to-edge gap (in points) between the pill and the left edge of the right cluster
+        // (Zotero button). `pillCenterOffsetFromCardMidX` is measured from the currently rendered frames.
+        static func pillToRightClusterGap(forRightCardWidth w: CGFloat,
+                                         baseHeight: CGFloat,
+                                         buttonWidth: CGFloat,
+                                         edgeInset: CGFloat,
+                                         pillCenterOffsetFromCardMidX: CGFloat) -> CGFloat {
+            guard let pillW = pillWidth(forRightCardWidth: w, baseHeight: baseHeight) else {
+                return -CGFloat.greatestFiniteMagnitude
+            }
+            let pillMaxX = (w / 2) + pillCenterOffsetFromCardMidX + (pillW / 2)
+            let zoteroMinX = w - (2 * buttonWidth) - (2 * edgeInset)
+            return zoteroMinX - pillMaxX
+        }
+
+        // Computes edge-to-edge gap (in points) between the right edge of the left cluster
+        // (Settings button) and the pill.
+        static func leftClusterToPillGap(forRightCardWidth w: CGFloat,
+                                         baseHeight: CGFloat,
+                                         leftClusterMaxXFromCardMinX: CGFloat,
+                                         pillCenterOffsetFromCardMidX: CGFloat) -> CGFloat {
+            guard let pillW = pillWidth(forRightCardWidth: w, baseHeight: baseHeight) else {
+                return -CGFloat.greatestFiniteMagnitude
+            }
+            let pillMinX = (w / 2) + pillCenterOffsetFromCardMidX - (pillW / 2)
+            return pillMinX - leftClusterMaxXFromCardMinX
+        }
+
+        static func minRightCardWidthForGap(minGap: CGFloat,
+                                            baseHeight: CGFloat,
+                                            buttonWidth: CGFloat,
+                                            edgeInset: CGFloat,
+                                            leftClusterMaxXFromCardMinX: CGFloat,
+                                            pillCenterOffsetFromCardMidX: CGFloat) -> CGFloat {
+            let requiredForButtons = (4 * buttonWidth) + (4 * edgeInset)
+            // Start from the strictest obvious lower bound.
+            var lo = max(1, requiredForButtons)
+            var hi = max(lo + 1, 720)
+
+            func satisfies(_ w: CGFloat) -> Bool {
+                if w < requiredForButtons { return false }
+                let gapRight = pillToRightClusterGap(forRightCardWidth: w,
+                                                     baseHeight: baseHeight,
+                                                     buttonWidth: buttonWidth,
+                                                     edgeInset: edgeInset,
+                                                     pillCenterOffsetFromCardMidX: pillCenterOffsetFromCardMidX)
+                if gapRight < minGap { return false }
+
+                let gapLeft = leftClusterToPillGap(forRightCardWidth: w,
+                                                  baseHeight: baseHeight,
+                                                  leftClusterMaxXFromCardMinX: leftClusterMaxXFromCardMinX,
+                                                  pillCenterOffsetFromCardMidX: pillCenterOffsetFromCardMidX)
+                return gapLeft >= minGap
+            }
+
+            // Ensure `hi` is a satisfying bound.
+            var guardIters = 0
+            while !satisfies(hi) && guardIters < 24 {
+                hi = min(5200, hi * 1.18 + 24)
+                guardIters += 1
+            }
+            if !satisfies(hi) {
+                return hi
+            }
+
+            // Binary search for the minimum satisfying width.
+            for _ in 0..<36 {
+                let mid = (lo + hi) / 2
+                if satisfies(mid) {
+                    hi = mid
+                } else {
+                    lo = mid
+                }
+            }
+            return hi
+        }
+    }
+
+    private func recomputeToolbarGapMinOuterRightWidthIfNeeded(reason: String) {
+        guard !rightAuxPanelVisible else {
+            toolbarGapCachedParams = nil
+            toolbarGapCachedMinOuterRightWidth = 0
+            return
+        }
+        guard let root = headerControlsContainer.superview else { return }
+
+        let rightFrameInRoot = rightContainer.convert(rightContainer.bounds, to: root)
+        guard rightFrameInRoot.width.isFinite, rightFrameInRoot.width > 1 else { return }
+
+        let baseHeight = toolbarControlHeight > 0 ? toolbarControlHeight : (32 * toolbarControlScaleCurrent)
+        let buttonWidth: CGFloat = max(toolbarMinHitSize, 30 * toolbarControlScaleCurrent)
+        let edgeInset: CGFloat = 6
+        let insetDelta = (rightSplitContainer.frame.width.isFinite && rightContainer.frame.width.isFinite)
+            ? max(0, rightSplitContainer.frame.width - rightContainer.frame.width)
+            : 0
+        let pillFrameInRoot = rightPanelPillControl.frame
+        let pillOffset = pillFrameInRoot.isEmpty ? 0 : (pillFrameInRoot.midX - rightFrameInRoot.midX)
+
+        // Measure the rendered right edge of the left cluster (Settings button) relative to the card.
+        // This captures any additional left-cluster push-right when the sidebar is collapsed.
+        let leftClusterMaxXFromCardMinX: CGFloat = {
+            if rightPanelSettingsEdgeButton.isHidden == false {
+                return max(0, rightPanelSettingsEdgeButton.frame.maxX - rightFrameInRoot.minX)
+            }
+            // Baseline (no push): leftX=edgeInset, settings is the second button.
+            return (2 * buttonWidth) + (2 * edgeInset)
+        }()
+
+        let nextParams = (minGap: minToolbarGap,
+                  baseHeight: baseHeight,
+                  buttonWidth: buttonWidth,
+                  edgeInset: edgeInset,
+                  leftClusterMaxX: leftClusterMaxXFromCardMinX,
+                  pillOffset: pillOffset,
+                  insetDelta: insetDelta)
+
+        if let last = toolbarGapCachedParams {
+            let eps: CGFloat = 0.25
+            if abs(last.minGap - nextParams.minGap) < eps,
+               abs(last.baseHeight - nextParams.baseHeight) < eps,
+               abs(last.buttonWidth - nextParams.buttonWidth) < eps,
+               abs(last.edgeInset - nextParams.edgeInset) < eps,
+               abs(last.leftClusterMaxX - nextParams.leftClusterMaxX) < 1.0,
+               abs(last.pillOffset - nextParams.pillOffset) < eps,
+               abs(last.insetDelta - nextParams.insetDelta) < 1.0,
+               toolbarGapCachedMinOuterRightWidth.isFinite,
+               toolbarGapCachedMinOuterRightWidth > 0 {
+                return
+            }
+        }
+
+        let minRightCardW = ToolbarGapClampMath.minRightCardWidthForGap(
+            minGap: minToolbarGap,
+            baseHeight: baseHeight,
+            buttonWidth: buttonWidth,
+            edgeInset: edgeInset,
+            leftClusterMaxXFromCardMinX: leftClusterMaxXFromCardMinX,
+            pillCenterOffsetFromCardMidX: pillOffset
+        )
+        let minOuterRightW = max(0, minRightCardW + insetDelta)
+        toolbarGapCachedParams = nextParams
+        toolbarGapCachedMinOuterRightWidth = minOuterRightW
+
+        if toolbarGapDebugEnabled {
+            let gapNow = ToolbarGapClampMath.pillToRightClusterGap(
+                forRightCardWidth: rightFrameInRoot.width,
+                baseHeight: baseHeight,
+                buttonWidth: buttonWidth,
+                edgeInset: edgeInset,
+                pillCenterOffsetFromCardMidX: pillOffset
+            )
+            let leftGapNow = ToolbarGapClampMath.leftClusterToPillGap(
+                forRightCardWidth: rightFrameInRoot.width,
+                baseHeight: baseHeight,
+                leftClusterMaxXFromCardMinX: leftClusterMaxXFromCardMinX,
+                pillCenterOffsetFromCardMidX: pillOffset
+            )
+            toolbarGapLog(String(format: "cache_update reason=%@ minOuterRightW=%.1f (cardMin=%.1f insetDelta=%.1f) cardW=%.1f gapNow=%.1f minGap=%.1f offset=%.1f",
+                                reason, minOuterRightW, minRightCardW, insetDelta, rightFrameInRoot.width, min(gapNow, leftGapNow), minToolbarGap, pillOffset))
+        }
+    }
+
+    private func minOuterRightContainerWidth() -> CGFloat {
+        // Only enforce the toolbar gap rule when the Chat Session panel is hidden.
+        guard !rightAuxPanelVisible else { return 0 }
+        recomputeToolbarGapMinOuterRightWidthIfNeeded(reason: "min_outer_right")
+        return max(0, toolbarGapCachedMinOuterRightWidth)
+    }
+
+    private func updateWindowMinSizeForToolbarGapIfNeeded(reason: String) {
+        guard let window else { return }
+        if baseWindowContentMinSize == nil {
+            baseWindowContentMinSize = window.contentMinSize
+        }
+        let base = baseWindowContentMinSize ?? .zero
+
+        var next = base
+        // The split view is inset inside the root by `WINDOW_BEZEL_INSET` on both sides.
+        // Always enforce the sidebar hard minimum while the sidebar is visible.
+        //
+        // When the chat session (right aux) is hidden, `minOuterRightContainerWidth()` adds an
+        // additional constraint (toolbar-gap rule). When chat is visible, the right side is
+        // intentionally unconstrained, so we only enforce the left minimum.
+        let divider = splitView.dividerThickness
+        let minLeft: CGFloat = sidebarVisible ? sidebarHardMinWidth() : 0
+        let minRight: CGFloat = rightAuxPanelVisible ? 0 : minOuterRightContainerWidth()
+        let minSplitWidth = max(0, minLeft + divider + minRight)
+        let minContentWidth = minSplitWidth + (2 * WINDOW_BEZEL_INSET)
+        next.width = max(next.width, minContentWidth)
+
+        if abs(window.contentMinSize.width - next.width) >= 0.5 || abs(window.contentMinSize.height - next.height) >= 0.5 {
+            window.contentMinSize = next
+            if toolbarGapDebugEnabled {
+                toolbarGapLog("contentMinSize_update reason=\(reason) chatHidden=\(!rightAuxPanelVisible) minW=\(Int(next.width))")
+            }
+        }
+    }
+
+    private func isSidebarEffectivelyCollapsed() -> Bool {
+        !sidebarVisible || leftContainer.frame.width <= 12
+    }
+
+    private func rightAuxMaxWidthAllowable(innerTotalWidth: CGFloat? = nil) -> CGFloat {
+        let total = innerTotalWidth ?? rightSplitView.bounds.width
+        let divider = rightSplitView.dividerThickness
+        guard total.isFinite, total > 0, divider.isFinite else { return 0 }
+
+        // No explicit maximum; only bounded by available space.
+        return max(0, total - divider)
+    }
+
+    private func rightAuxMinWidthAllowable(innerTotalWidth: CGFloat? = nil) -> CGFloat {
+        let total = innerTotalWidth ?? rightSplitView.bounds.width
+        let divider = rightSplitView.dividerThickness
+        guard total.isFinite, total > 0, divider.isFinite else { return 0 }
+
+        // Match the sidebar's hard minimum width definition (Author & Year header centering).
+        // Clamp to what is physically possible for the current inner split width.
+        let available = max(0, total - divider)
+        return min(sidebarHardMinWidth(), available)
+    }
+
+    private func balancedLeftWidthForThreePanelEquality() -> CGFloat {
+        // When Chat is visible and the sidebar is visible, enforce a three-way balance:
+        // left = viewer = chat. With an outer divider and an inner divider, this implies:
+        // (outerTotal - outerDivider - innerDivider) = 3 * L.
+        let outerTotal = splitView.bounds.width
+        let outerDivider = splitView.dividerThickness
+        let innerDivider = rightSplitView.dividerThickness
+        guard outerTotal.isFinite, outerTotal > 0, outerDivider.isFinite, innerDivider.isFinite else { return 0 }
+        let available = max(0, outerTotal - outerDivider - innerDivider)
+        let scale = currentBackingScale()
+        return ceilToDevicePixels(available / 3, scale: scale)
     }
 
     private func cappedSidebarMaxWidth(forPotential potential: CGFloat) -> CGFloat {
         guard potential.isFinite else { return 0 }
-        return max(0, potential * maxSidebarWidthFraction)
+        _ = maxSidebarWidthFraction
+        return max(0, potential)
     }
 
     private func clampSidebarWidth(_ proposedPosition: CGFloat) -> CGFloat {
         let total = splitView.bounds.width
         let divider = splitView.dividerThickness
-        let maxLeftPotential = total - divider - minOuterRightContainerWidth()
+        let minRight = minOuterRightContainerWidth()
+        let maxLeftPotential = total - divider - minRight
         let maxLeft = cappedSidebarMaxWidth(forPotential: maxLeftPotential)
-        let minLeft = min(minSidebarWidth, maxLeft)
-        if allowSidebarCollapse {
+
+        if toolbarGapDebugEnabled, !rightAuxPanelVisible, proposedPosition > maxLeft + 0.5 {
+            toolbarGapLog("divider_clamp proposed=\(Int(proposedPosition)) maxLeft=\(Int(maxLeft)) total=\(Int(total)) minRight=\(Int(minRight))")
+        }
+        if !sidebarVisible {
             return max(0, min(proposedPosition, maxLeft))
         }
-        return min(max(proposedPosition, minLeft), maxLeft)
+
+        let minLeft = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
+        if allowSidebarCollapse {
+            // Still permit a fully-collapsed sidebar when explicitly hidden, but when visible
+            // the divider must not cross the absolute minimum.
+            return min(maxLeft, max(minLeft, proposedPosition))
+        }
+        return min(maxLeft, max(minLeft, proposedPosition))
     }
 
     func splitView(_ splitView: NSSplitView,
                    constrainSplitPosition proposedPosition: CGFloat,
                    ofSubviewAt dividerIndex: Int) -> CGFloat {
         if splitView === self.splitView {
-            return clampSidebarWidth(proposedPosition)
+            let clamped = clampSidebarWidth(proposedPosition)
+            // Record last user-driven sidebar width while dragging.
+            if sidebarVisible, clamped > 12 {
+                lastSidebarWidth = clamped
+            }
+            return clamped
         }
         if splitView === rightSplitView {
-            return clampRightAuxDividerPosition(proposedPosition)
+            let clamped = clampRightAuxDividerPosition(proposedPosition)
+            // Record last user-driven chat width only while the user is actively dragging
+            // the right divider handle. Do not treat programmatic layout passes (e.g. open/close
+            // animations, window resizes, split-view relayout) as updates to the remembered width.
+            if rightAuxPanelVisible, rightSplitDividerDragActive {
+                let total = rightSplitView.bounds.width
+                let divider = rightSplitView.dividerThickness
+                let available = max(0, total - divider)
+                let auxW = max(0, available - clamped)
+                if auxW.isFinite, auxW > 0 {
+                    lastRightAuxPanelWidth = auxW
+                }
+            }
+            return clamped
         }
         return proposedPosition
     }
@@ -14322,11 +15812,11 @@ The quick brown fox jumps over the lazy dog.
             let total = splitView.bounds.width
             let divider = splitView.dividerThickness
             let maxLeft = cappedSidebarMaxWidth(forPotential: total - divider - minOuterRightContainerWidth())
-            if allowSidebarCollapse || !sidebarVisible {
+            if !sidebarVisible {
                 return max(0, min(proposedMin, maxLeft))
             }
-            let minLeft = min(minSidebarWidth, maxLeft)
-            return min(max(proposedMin, minLeft), maxLeft)
+            let minLeft = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
+            return min(maxLeft, max(minLeft, proposedMin))
         }
         if splitView === rightSplitView, dividerIndex == 0 {
             return max(0, clampRightAuxDividerPosition(proposedMin))
@@ -14343,6 +15833,37 @@ The quick brown fox jumps over the lazy dog.
             return subview === rightAuxContainer
         }
         return false
+    }
+
+    func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        // Keep `contentMinSize` in sync (AppKit consults it during live resize).
+        updateWindowMinSizeForToolbarGapIfNeeded(reason: "window_will_resize")
+
+        // Compute the minimum required *content* width, then translate to a frame-width clamp.
+        //
+        // NOTE: We must clamp even when chat is visible; otherwise the window can shrink to a
+        // width where the split view cannot satisfy `sidebarHardMinWidth()`, and AppKit will
+        // squeeze `leftContainer` below its hard minimum during live resize.
+        let divider = splitView.dividerThickness
+        let minLeft: CGFloat = sidebarVisible ? sidebarHardMinWidth() : 0
+        let minRight: CGFloat = rightAuxPanelVisible ? 0 : minOuterRightContainerWidth()
+        let minSplitWidth = max(0, minLeft + divider + minRight)
+        let desiredContentMinWidth = max(baseWindowContentMinSize?.width ?? 0,
+                                        minSplitWidth + (2 * WINDOW_BEZEL_INSET))
+
+        let proposedContentWidth = sender.contentRect(forFrameRect: NSRect(origin: .zero, size: frameSize)).width
+        if proposedContentWidth + 0.5 >= desiredContentMinWidth {
+            return frameSize
+        }
+
+        let currentFrame = sender.frame
+        let currentContentWidth = sender.contentRect(forFrameRect: currentFrame).width
+        let decorationDelta = max(0, currentFrame.width - currentContentWidth)
+        let requiredFrameWidth = desiredContentMinWidth + decorationDelta
+        if toolbarGapDebugEnabled {
+            toolbarGapLog("window_will_resize_clamp proposedContent=\(Int(proposedContentWidth)) minContent=\(Int(desiredContentMinWidth)) -> frameW>=\(Int(requiredFrameWidth))")
+        }
+        return NSSize(width: max(frameSize.width, requiredFrameWidth), height: frameSize.height)
     }
 
     private enum PanelMotionReason { case focus, resize, settle }
@@ -14395,7 +15916,7 @@ The quick brown fox jumps over the lazy dog.
         leftHeaderLabel.translatesAutoresizingMaskIntoConstraints = true
         leftHeaderLabel.autoresizingMask = []
         leftHeaderLabel.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        leftHeaderLabel.textColor = leftHeaderTextColor()
+        leftHeaderLabel.textColor = NSColor.white
         leftHeaderLabel.alignment = .left
         leftHeaderLabel.backgroundColor = .clear
         leftHeaderLabel.lineBreakMode = .byTruncatingTail
@@ -15191,14 +16712,14 @@ The quick brown fox jumps over the lazy dog.
         let leftFrameInRoot = leftContainer.convert(leftContainer.bounds, to: root)
         var size = toolbarControls.fittingSize
         if !size.width.isFinite || size.width <= 0 {
-            size.width = max(0, root.bounds.width - leftFrameInRoot.minX - WINDOW_BEZEL_INSET)
+            size.width = max(0, root.bounds.width - WINDOW_BEZEL_INSET * 2)
         } else {
-            let availableWidth = max(0, root.bounds.width - leftFrameInRoot.minX - WINDOW_BEZEL_INSET)
+            let availableWidth = max(0, root.bounds.width - WINDOW_BEZEL_INSET * 2)
             if availableWidth > 0 {
                 size.width = min(size.width, availableWidth)
             }
         }
-        let x = max(root.bounds.minX, min(leftFrameInRoot.minX, root.bounds.maxX - size.width))
+        let x = root.bounds.minX + WINDOW_BEZEL_INSET
         let y = root.bounds.maxY - headerControlsTopInset - size.height
         headerControlsContainer.frame = NSRect(x: x, y: y, width: size.width, height: size.height)
         headerControlsContainer.layoutSubtreeIfNeeded()
@@ -15264,7 +16785,7 @@ The quick brown fox jumps over the lazy dog.
         rightPanelPillControl.needsLayout = true
         // Important: if the pill moves under a stationary cursor (e.g. after opening the
         // Chat Session panel), AppKit won't send a new mouseEntered. Re-sync hover now.
-        rightPanelPillControl.syncHoverFromCurrentMouseLocation(animated: true)
+        rightPanelPillControl.syncHoverFromCurrentMouseLocation(animated: !disablePillToolbarAnimations)
         layoutRightPanelEdgeButtons(in: root)
     }
 
@@ -15381,7 +16902,7 @@ The quick brown fox jumps over the lazy dog.
         rightPanelSettingsEdgeButton.needsLayout = true
     }
 
-    private func layoutViewerAnchoredHeaderControls() {
+    func layoutViewerAnchoredHeaderControls() {
         guard let root = headerControlsContainer.superview else { return }
         root.layoutSubtreeIfNeeded()
         layoutRightPanelPillControl(in: root)
@@ -15651,7 +17172,7 @@ The quick brown fox jumps over the lazy dog.
         }
     }
 
-    private func layoutToolbarControls() {
+    fileprivate func layoutToolbarControls() {
         applyLeftToolbarClusterAutoScaleIfNeeded()
 
         if ToolbarAutoScale.isEnabled {
@@ -15908,12 +17429,155 @@ The quick brown fox jumps over the lazy dog.
         setSidebarVisible(false, animated: true, style: .pill)
     }
 
+    private func presentNonBlockingAlert(message: String, informative: String) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = informative
+        alert.addButton(withTitle: "OK")
+        if let w = window {
+            alert.beginSheetModal(for: w, completionHandler: nil)
+        } else {
+            DispatchQueue.main.async {
+                _ = alert.runModal()
+            }
+        }
+    }
+
+    private func selectedPaperURLStringIfAvailable() -> String? {
+        guard let idx = selectedFilteredIndex(), idx >= 0, idx < filtered.count else { return nil }
+        let paper = filtered[idx]
+        let canonical = ArxivShareURL.canonicalAbsURL(from: paper.url)
+        let urlString = (canonical?.absoluteString ?? paper.url).trimmingCharacters(in: .whitespacesAndNewlines)
+        return urlString.isEmpty ? nil : urlString
+    }
+
+    // Isolated action handler used by the left-most pill circle.
+    private func runUserShortcutFromToolbar() {
+        let settings = AppSettingsStore.shared.current
+        let name = settings.shortcuts.shortcutName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Pill requirement: fail gracefully, never block UI/animations.
+        // Missing/renamed/unavailable shortcuts are handled via CLI exit status logging.
+        guard !name.isEmpty else {
+            ShortcutRunnerLog.error("pill_shortcut_missing_name")
+            return
+        }
+
+        let inputText: String? = {
+            guard settings.shortcuts.inputTextMode else { return nil }
+            return selectedPaperURLStringIfAvailable()
+        }()
+
+        // Prefer the Apple-supported Shortcuts CLI. Non-blocking (runs off main thread).
+        ShortcutCLIRunner.shared.runShortcut(nameOrIdentifier: name, inputText: inputText)
+    }
+
+    private func isNarrowWindowMode(windowWidth: CGFloat) -> Bool {
+        guard windowWidth.isFinite else { return false }
+        return windowWidth <= (NOMINAL_FULL_WINDOW_WIDTH * 0.50)
+    }
+
+    private func updateNarrowWindowModeIfNeeded(reason: String) {
+        guard let window else { return }
+        let w = window.frame.width
+        let next = isNarrowWindowMode(windowWidth: w)
+        if next == isNarrowWindowModeCached { return }
+
+        layoutLog("narrow_mode_transition from=\(isNarrowWindowModeCached) to=\(next) windowW=\(Int(w)) threshold=\(Int(NOMINAL_FULL_WINDOW_WIDTH * 0.50)) reason=\(reason)")
+
+        if next {
+            // Capture pre-narrow state so we can restore on exit.
+            preNarrowSidebarVisible = sidebarVisible
+            preNarrowChatVisible = rightAuxPanelVisible
+            preNarrowSidebarWidth = leftContainer.frame.width
+            preNarrowChatWidth = rightAuxPanelWidth()
+
+            // If both side panels are visible, hide the non-last-activated one.
+            if sidebarVisible && rightAuxPanelVisible {
+                let keep: LastUserActivatedPanel = (lastUserActivatedPanel == .leftContainer || lastUserActivatedPanel == .chatSession)
+                    ? lastUserActivatedPanel
+                    : .leftContainer
+                if keep == .leftContainer {
+                    layoutLog("narrow_mode_enter_hide target=chatSession basis=\(lastUserActivatedPanel.rawValue) fallback=hide_chat")
+                    // Critical invariant: in narrow mode, never allow a rendered state with both visible.
+                    // Collapse the hidden panel immediately, then allow subsequent animations.
+                    setRightAuxPanelVisible(false, animated: false)
+                } else {
+                    layoutLog("narrow_mode_enter_hide target=leftContainer basis=\(lastUserActivatedPanel.rawValue)")
+                    setSidebarVisible(false, animated: false)
+                }
+            }
+        } else {
+            // Restore pre-narrow visibility, respecting global mutual exclusivity.
+            if preNarrowSidebarVisible && preNarrowChatVisible {
+                let keep: LastUserActivatedPanel = (lastUserActivatedPanel == .leftContainer || lastUserActivatedPanel == .chatSession)
+                    ? lastUserActivatedPanel
+                    : .leftContainer
+                if keep == .leftContainer {
+                    if rightAuxPanelVisible { setRightAuxPanelVisible(false, animated: true) }
+                    if !sidebarVisible { setSidebarVisible(true, animated: true) }
+                } else {
+                    if sidebarVisible { setSidebarVisible(false, animated: true) }
+                    if !rightAuxPanelVisible { setRightAuxPanelVisible(true, animated: true) }
+                }
+            } else {
+                if preNarrowSidebarVisible != sidebarVisible {
+                    setSidebarVisible(preNarrowSidebarVisible, animated: true)
+                }
+                if preNarrowChatVisible != rightAuxPanelVisible {
+                    setRightAuxPanelVisible(preNarrowChatVisible, animated: true)
+                }
+            }
+
+            // Restore widths proportionally relative to last-known sizes.
+            // Sidebar width is persisted through `lastSidebarWidth`; chat through `lastRightAuxPanelWidth`.
+            if preNarrowSidebarWidth.isFinite, preNarrowSidebarWidth > 1 {
+                lastSidebarWidth = preNarrowSidebarWidth
+            }
+            if preNarrowChatWidth.isFinite, preNarrowChatWidth > 1 {
+                lastRightAuxPanelWidth = preNarrowChatWidth
+            }
+            enforceSidebarWidthBounds(reason: "narrow_exit")
+            if rightAuxPanelVisible {
+                let total = rightSplitView.bounds.width
+                let divider = rightSplitView.dividerThickness
+                let targetAux = rightAuxTargetWidth()
+                let targetPos = clampRightAuxDividerPosition(max(0, total - divider - targetAux))
+                animateRightSplitDivider(to: targetPos, preset: AnimationConstants.panelSpringPreset, animated: true, completion: nil)
+            }
+        }
+
+        isNarrowWindowModeCached = next
+
+        if panelDebugAssertionsEnabled {
+            // In narrow mode, never allow both side panels simultaneously.
+            if isNarrowWindowModeCached {
+                assert(!(sidebarVisible && rightAuxPanelVisible), "Invariant: narrow mode must not show both leftContainer and chatSession")
+            }
+        }
+    }
+
     @objc private func toggleSidebar() {
         let beforeLeft = Int(leftContainer.frame.width)
         let beforeRight = Int(rightSplitContainer.frame.width)
         uiLog("sidebar_button_click visible=\(sidebarVisible)")
         layoutLog("sidebar_toggle_enter visible=\(sidebarVisible) left=\(beforeLeft) right=\(beforeRight)")
-        setSidebarVisible(!sidebarVisible, animated: true)
+        // User-initiated activation updates ordering.
+        lastUserActivatedPanel = .leftContainer
+        if isNarrowWindowModeCached {
+            // Narrow mode: keep mutual exclusivity, but still behave as a *toggle*.
+            // - If sidebar is visible, hide it.
+            // - If sidebar is hidden, show it (and collapse chat first).
+            if sidebarVisible {
+                setSidebarVisible(false, animated: true)
+            } else {
+                // Collapse chat immediately so we never render both side panels at once.
+                setRightAuxPanelVisible(false, animated: false)
+                setSidebarVisible(true, animated: true)
+            }
+        } else {
+            setSidebarVisible(!sidebarVisible, animated: true)
+        }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             layoutLog("sidebar_toggle_exit visible=\(self.sidebarVisible) left=\(Int(self.leftContainer.frame.width)) right=\(Int(self.rightSplitContainer.frame.width))")
@@ -15924,8 +17588,22 @@ The quick brown fox jumps over the lazy dog.
     @objc private func toggleRightPanel() {
         let opening = !rightAuxPanelVisible
         ChatLatencyProbe.shared.markButtonAction(opening: opening)
-        // No animations for the Chat Session panel toggle: this should feel instantaneous.
-        setRightAuxPanelVisible(opening, animated: false)
+        // User-initiated activation updates ordering.
+        lastUserActivatedPanel = .chatSession
+        if isNarrowWindowModeCached {
+            // Narrow mode: keep mutual exclusivity, but still behave as a *toggle*.
+            // - If chat is visible, hide it.
+            // - If chat is hidden, show it (and collapse sidebar first).
+            if rightAuxPanelVisible {
+                setRightAuxPanelVisible(false, animated: true)
+            } else {
+                // Collapse sidebar immediately so we never render both side panels at once.
+                setSidebarVisible(false, animated: false)
+                setRightAuxPanelVisible(true, animated: true)
+            }
+        } else {
+            setRightAuxPanelVisible(opening, animated: true)
+        }
     }
 
     @objc private func saveCurrentPaperToZotero() {
@@ -16060,22 +17738,20 @@ The quick brown fox jumps over the lazy dog.
 
     private func clampRightAuxDividerPosition(_ proposedPosition: CGFloat) -> CGFloat {
         // Divider between [rightCompositeContainer] and [rightAuxContainer].
+        // When the chat panel is visible, enforce a minimum width equal to the sidebar's
+        // Author&Year centering minimum. Otherwise allow full collapse.
         let total = rightSplitView.bounds.width
         let divider = rightSplitView.dividerThickness
-        let maxPrimaryNoNegativeAux = max(0, total - divider)
-        let minPrimary = min(minRightPanelWidth, maxPrimaryNoNegativeAux)
-        let minAux = minRightAuxPanelWidth
+        let available = max(0, total - divider)
 
-        // If the window is too small to satisfy both mins simultaneously, prioritize
-        // non-negative widths (aux can shrink below its nominal min).
-        let maxPrimaryFromAuxMin = total - divider - minAux
-        let maxPrimary: CGFloat
-        if maxPrimaryFromAuxMin >= minPrimary {
-            maxPrimary = min(maxPrimaryNoNegativeAux, maxPrimaryFromAuxMin)
-        } else {
-            maxPrimary = maxPrimaryNoNegativeAux
+        if !rightAuxPanelVisible {
+            // Chat hidden: allow the divider to move anywhere within non-negative bounds.
+            return max(0, min(proposedPosition, available))
         }
-        return min(max(proposedPosition, minPrimary), maxPrimary)
+
+        let minAux = rightAuxMinWidthAllowable(innerTotalWidth: total)
+        let maxPrimary = max(0, available - minAux)
+        return max(0, min(proposedPosition, maxPrimary))
     }
 
     private func rightAuxPanelWidth() -> CGFloat {
@@ -16089,12 +17765,60 @@ The quick brown fox jumps over the lazy dog.
     private func rightAuxTargetWidth() -> CGFloat {
         let total = rightSplitView.bounds.width
         let divider = rightSplitView.dividerThickness
-        let maxAux = max(0, total - divider - minRightPanelWidth)
-        if maxAux <= 0 { return 0 }
-        // Default open width: ~20% of the maximum possible aux width.
-        // This keeps the chat panel consistently sized on open.
-        let desired = max(minRightAuxPanelWidth, maxAux * 0.20)
-        return min(desired, maxAux)
+        guard total.isFinite, total > 0, divider.isFinite else { return 0 }
+
+        let available = max(0, total - divider)
+        let minAux = rightAuxPanelVisible ? rightAuxMinWidthAllowable(innerTotalWidth: total) : 0
+        // Open to the last-known width when possible; otherwise fall back to the absolute minimum.
+        let stored = lastRightAuxPanelWidth > 0 ? lastRightAuxPanelWidth : minAux
+        let desired = max(minAux, stored)
+        return max(0, min(desired, available))
+    }
+
+    private func enforceRightAuxMinWidthIfNeeded(reason: String) {
+        guard rightAuxPanelVisible else { return }
+        let total = rightSplitView.bounds.width
+        let divider = rightSplitView.dividerThickness
+        guard total.isFinite, total > 0, divider.isFinite else { return }
+
+        let available = max(0, total - divider)
+        let minAux = rightAuxMinWidthAllowable(innerTotalWidth: total)
+        guard minAux > 0, available > 0 else { return }
+
+        let currentAux = rightAuxPanelWidth()
+        if currentAux + 0.5 < minAux {
+            let targetPrimary = max(0, available - minAux)
+            let clamped = clampRightAuxDividerPosition(targetPrimary)
+            rightSplitView.setPosition(clamped, ofDividerAt: 0)
+            rightSplitView.adjustSubviews()
+            updateRightSplitDividerHandleFrame()
+            layoutLog("right_aux_enforce_min reason=\(reason) auxW=\(Int(currentAux))->\(Int(rightAuxPanelWidth())) min=\(Int(minAux))")
+        }
+    }
+
+    private func enforceRightAuxTargetWidthIfNeeded(reason: String) {
+        guard rightAuxPanelVisible else { return }
+        guard !rightSplitDividerDragActive else { return }
+        // Avoid fighting the spring animation; it will land on its target.
+        guard rightSplitDividerSpringTimer == nil else { return }
+
+        let total = rightSplitView.bounds.width
+        let divider = rightSplitView.dividerThickness
+        guard total.isFinite, total > 0, divider.isFinite else { return }
+
+        let targetAux = rightAuxTargetWidth()
+        let available = max(0, total - divider)
+        guard available > 0 else { return }
+
+        let currentAux = rightAuxPanelWidth()
+        if abs(currentAux - targetAux) >= 0.75 {
+            let targetPrimary = max(0, available - targetAux)
+            let clamped = clampRightAuxDividerPosition(targetPrimary)
+            rightSplitView.setPosition(clamped, ofDividerAt: 0)
+            rightSplitView.adjustSubviews()
+            updateRightSplitDividerHandleFrame()
+            layoutLog("right_aux_enforce_target reason=\(reason) auxW=\(Int(currentAux))->\(Int(rightAuxPanelWidth())) target=\(Int(targetAux))")
+        }
     }
 
     private func ensureRightAuxCollapsedIfHidden() {
@@ -16120,21 +17844,28 @@ The quick brown fox jumps over the lazy dog.
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
 
-        layoutLog("right_aux_toggle visible=\(visible) before outerLeft=\(Int(leftContainer.frame.width)) outerRight=\(Int(rightSplitContainer.frame.width)) innerTotal=\(Int(rightSplitView.bounds.width)) innerPrimary=\(Int(rightCompositeContainer.frame.width)) auxMounted=\(rightAuxContainer.superview != nil)")
+        layoutLog("right_aux_toggle visible=\(visible) animated=\(animated) before outerLeft=\(Int(leftContainer.frame.width)) outerRight=\(Int(rightSplitContainer.frame.width)) innerTotal=\(Int(rightSplitView.bounds.width)) innerPrimary=\(Int(rightCompositeContainer.frame.width)) auxMounted=\(rightAuxContainer.superview != nil)")
+
+        let reduce = shouldReduceMotion || !animated
 
         if visible {
-            // Auto-hide the sidebar if opening chat would push it below its minimum width.
-            let outerTotal = splitView.bounds.width
-            let outerDivider = splitView.dividerThickness
-            let requiredRightWhenChatOpen = minRightPanelWidth + rightSplitView.dividerThickness + minRightAuxPanelWidth
-            let maxLeftIfChatOpens = cappedSidebarMaxWidth(forPotential: outerTotal - outerDivider - requiredRightWhenChatOpen)
-            if sidebarVisible && maxLeftIfChatOpens < minSidebarWidth {
-                layoutLog("right_aux_autohide_left maxLeft=\(Int(maxLeftIfChatOpens)) min=\(Int(minSidebarWidth))")
+            // Mutual exclusivity: opening chat always hides the sidebar.
+            if sidebarVisible {
+                // Collapse the sidebar synchronously so the chat's first-open sizing
+                // is computed using the final available width.
                 setSidebarVisible(false, animated: false)
             }
 
+            let outerTotal = splitView.bounds.width
+            let outerDivider = splitView.dividerThickness
+
             rightAuxPanelVisible = true
-            rightAuxContainer.alphaValue = 1
+	        updateWindowMinSizeForToolbarGapIfNeeded(reason: "right_aux_open")
+            if reduce {
+                rightAuxContainer.alphaValue = 1
+            } else {
+                rightAuxContainer.alphaValue = 0
+            }
             updateRightAuxToggleButtonAppearance()
 
             // Ensure the outer split view leaves enough space for the viewer + third panel.
@@ -16148,18 +17879,42 @@ The quick brown fox jumps over the lazy dog.
 
             let total = rightSplitView.bounds.width
             let divider = rightSplitView.dividerThickness
-            let targetAux = rightAuxTargetWidth()
+
+            // First toggle after launch: open chat at twice the sidebar's initial visible width
+            // (the Author&Year centering minimum). Seed `lastRightAuxPanelWidth` to this target
+            // so resize observers enforcing `rightAuxTargetWidth()` do not momentarily snap to
+            // the old minimum-width fallback.
+            let available = max(0, total - divider)
+            let firstOpenAux = min(available, rightAuxMinWidthAllowable(innerTotalWidth: total) * 2)
+            if !didOpenRightAuxInThisSession {
+                lastRightAuxPanelWidth = firstOpenAux
+            }
+            let targetAux = (!didOpenRightAuxInThisSession)
+                ? firstOpenAux
+                : rightAuxTargetWidth()
+            didOpenRightAuxInThisSession = true
             let targetPos = clampRightAuxDividerPosition(max(0, total - divider - targetAux))
-            // Force non-animated updates for the rightmost panel toggle.
-            animateRightSplitDivider(to: targetPos, preset: .soft, animated: false) { [weak self] in
+            animateRightSplitDivider(to: targetPos, preset: AnimationConstants.panelSpringPreset, animated: !reduce) { [weak self] in
                 guard let self else { return }
                 self.lastRightAuxPanelWidth = self.rightAuxPanelWidth()
+                if self.lastRightAuxPanelWidth.isFinite, self.lastRightAuxPanelWidth > 0 {
+                    self.persistRightAuxWidth(self.lastRightAuxPanelWidth)
+                }
                 // Do the heavier follow-up work on the next tick so the divider move can present immediately.
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
+                    self.enforceRightAuxTargetWidthIfNeeded(reason: "open_fixup")
                     self.layoutViewerAnchoredHeaderControls()
                     self.updateRightSplitDividerHandleFrame()
                     layoutLog("right_aux_open_done innerPrimary=\(Int(self.rightCompositeContainer.frame.width)) auxW=\(Int(self.rightAuxPanelWidth()))")
+                }
+            }
+
+            if !reduce {
+                NSAnimationContext.runAnimationGroup { ctx in
+                    ctx.duration = AnimationConstants.animationDurationShort
+                    ctx.timingFunction = AnimationConstants.timingFunctionEaseInOut
+                    self.rightAuxContainer.animator().alphaValue = 1
                 }
             }
             return
@@ -16169,17 +17924,28 @@ The quick brown fox jumps over the lazy dog.
 	    // Capture width before collapse so reopening restores it.
 	    let preCloseWidth = rightAuxPanelWidth()
 	    if preCloseWidth.isFinite, preCloseWidth > 0 {
-	        lastRightAuxPanelWidth = max(minRightAuxPanelWidth, preCloseWidth)
+            // Persist the user's chosen width (reopen will clamp to current min/max).
+            lastRightAuxPanelWidth = preCloseWidth
+            persistRightAuxWidth(preCloseWidth)
 	    }
         rightAuxPanelVisible = false
-        rightAuxContainer.alphaValue = 0
+	    updateWindowMinSizeForToolbarGapIfNeeded(reason: "right_aux_close")
+        if reduce {
+            rightAuxContainer.alphaValue = 0
+        } else {
+            // Fade out quickly while collapsing; collapse is the authoritative visibility.
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = AnimationConstants.animationDurationShort
+                ctx.timingFunction = AnimationConstants.timingFunctionEaseInOut
+                self.rightAuxContainer.animator().alphaValue = 0
+            }
+        }
         updateRightAuxToggleButtonAppearance()
 
         let total = rightSplitView.bounds.width
         let divider = rightSplitView.dividerThickness
         let collapsedPos = max(0, total - divider)
-        // Force non-animated updates for the rightmost panel toggle.
-        animateRightSplitDivider(to: collapsedPos, preset: .soft, animated: false) { [weak self] in
+        animateRightSplitDivider(to: collapsedPos, preset: AnimationConstants.panelSpringPreset, animated: !reduce) { [weak self] in
             guard let self else { return }
             // Do the heavier follow-up work on the next tick so the collapse can present immediately.
             DispatchQueue.main.async { [weak self] in
@@ -16203,6 +17969,7 @@ The quick brown fox jumps over the lazy dog.
                                          animated: Bool,
                                          completion: (() -> Void)? = nil) {
         cancelRightSplitDividerSpringAnimation()
+        ensureDividerSpringDriverLayersAttached()
         let reduce = shouldReduceMotion || !animated
         if reduce {
             rightSplitView.setPosition(targetPosition, ofDividerAt: 0)
@@ -16435,10 +18202,43 @@ The quick brown fox jumps over the lazy dog.
         splitDividerSpringLayer.removeAllAnimations()
     }
 
+    // Divider motion is driven by sampling a CALayer's presentation state.
+    // That only advances reliably if the layer is attached to a live render tree.
+    // If it's detached, `presentation()` can be nil and the divider/handle can appear
+    // to move late (often snapping only at the end).
+    private func ensureDividerSpringDriverLayersAttached() {
+        guard let root = window?.contentView else { return }
+
+        // Ensure we have a host layer to attach to.
+        if root.layer == nil {
+            root.wantsLayer = true
+        }
+        guard let host = root.layer else { return }
+
+        if splitDividerSpringLayer.superlayer !== host {
+            splitDividerSpringLayer.removeFromSuperlayer()
+            splitDividerSpringLayer.bounds = CGRect(x: 0, y: 0, width: 1, height: 1)
+            splitDividerSpringLayer.position = CGPoint(x: leftContainer.frame.width, y: 0)
+            splitDividerSpringLayer.backgroundColor = NSColor.clear.cgColor
+            splitDividerSpringLayer.opacity = 0
+            host.addSublayer(splitDividerSpringLayer)
+        }
+
+        if rightSplitDividerSpringLayer.superlayer !== host {
+            rightSplitDividerSpringLayer.removeFromSuperlayer()
+            rightSplitDividerSpringLayer.bounds = CGRect(x: 0, y: 0, width: 1, height: 1)
+            rightSplitDividerSpringLayer.position = CGPoint(x: rightCompositeContainer.frame.width, y: 0)
+            rightSplitDividerSpringLayer.backgroundColor = NSColor.clear.cgColor
+            rightSplitDividerSpringLayer.opacity = 0
+            host.addSublayer(rightSplitDividerSpringLayer)
+        }
+    }
+
     fileprivate func animateSplitViewDivider(to targetWidth: CGFloat,
                                             preset: SpringPreset,
                                             completion: (() -> Void)? = nil) {
         cancelSplitDividerSpringAnimation()
+        ensureDividerSpringDriverLayersAttached()
         let reduce = shouldReduceMotion
         if reduce {
             splitView.setPosition(targetWidth, ofDividerAt: 0)
@@ -16497,6 +18297,20 @@ The quick brown fox jumps over the lazy dog.
                                    style: SidebarTransitionStyle = .standard) {
         let wasVisible = sidebarVisible
 
+        // Capture the current width before closing so reopen restores the last resized size.
+        if !visible, wasVisible {
+            let preCloseWidth = leftContainer.frame.width
+            if preCloseWidth.isFinite, preCloseWidth > 12 {
+                lastSidebarWidth = preCloseWidth
+                persistSidebarWidth(preCloseWidth)
+            }
+        }
+
+        // Mutual exclusivity: showing sidebar always hides chat.
+        if visible, rightAuxPanelVisible {
+            setRightAuxPanelVisible(false, animated: animated)
+        }
+
         if !visible, style == .pill, sidebarVisible {
             let width = rightContainer.frame.width
             if width > 0 { lastRightPanelWidth = width }
@@ -16516,8 +18330,16 @@ The quick brown fox jumps over the lazy dog.
         let total = splitView.bounds.width
         let divider = splitView.dividerThickness
         let maxLeft = cappedSidebarMaxWidth(forPotential: total - divider - minOuterRightContainerWidth())
-        let contentMin = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
-        let targetWidth: CGFloat = visible ? min(maxLeft, max(contentMin, lastSidebarWidth)) : 0
+        if visible, !wasVisible {
+            // Toggle-open sizing: use last remembered width, clamped to the absolute minimum.
+            let minLeft = desiredMinSidebarWidthForCurrentPage(maxLeft: maxLeft)
+            if lastSidebarWidth <= 12 {
+                lastSidebarWidth = minLeft
+            } else {
+                lastSidebarWidth = max(lastSidebarWidth, minLeft)
+            }
+        }
+        let targetWidth: CGFloat = visible ? max(0, min(lastSidebarWidth, maxLeft)) : 0
         if visible {
             persistSidebarWidth(targetWidth)
             updatePageStepperState(triggerLayout: false)
@@ -16612,7 +18434,7 @@ The quick brown fox jumps over the lazy dog.
 	            updateSearchDepth(animated: true)
 	            updateSuggestions(for: normalizedSearchQuery(searchField.stringValue))
 	            if let editor = window?.fieldEditor(false, for: searchField) as? NSTextView {
-	                let text = mainSearchForegroundColor()
+                    let text = mainSearchForegroundColor()
 	                editor.textColor = text
 	                editor.insertionPointColor = text
 	                var attrs = editor.typingAttributes
@@ -16640,6 +18462,7 @@ The quick brown fox jumps over the lazy dog.
 	        } else if obj.object as? NSSearchField === pdfFindField {
             pdfFindFocused = true
             updatePDFFindDepth(animated: true)
+            updatePDFFindClearButtonLayout()
         }
     }
 
@@ -16657,6 +18480,7 @@ The quick brown fox jumps over the lazy dog.
         } else if obj.object as? NSSearchField === pdfFindField {
             pdfFindFocused = false
             updatePDFFindDepth(animated: true)
+            updatePDFFindClearButtonLayout()
         }
     }
 
@@ -16909,7 +18733,7 @@ The quick brown fox jumps over the lazy dog.
         // Keep the row “glass tabs” aligned to the same right edge as the search bar by avoiding
         // any reserved scroller gutter in the left panel.
         tableScroll.hasVerticalScroller = false
-        tableScroll.autohidesScrollers = true
+        tableScroll.autohidesScrollers = false
         tableScroll.scrollerStyle = .overlay
         tableScroll.usesPredominantAxisScrolling = true
         tableScroll.automaticallyAdjustsContentInsets = false
@@ -17412,8 +19236,6 @@ The quick brown fox jumps over the lazy dog.
     private func enforceWhitePDFBackground() {
         let bg = NSColor.white
 
-        pdfView.wantsLayer = true
-        pdfView.layer?.backgroundColor = bg.cgColor
         pdfView.backgroundColor = bg
 
         // IMPORTANT: Avoid forcing layer-backing on PDFKit's internal document/page views.
@@ -17424,11 +19246,6 @@ The quick brown fox jumps over the lazy dog.
         // use KVC backgroundColor where available without changing wantsLayer elsewhere.
         func paint(_ view: NSView) {
             if view is NSScroller { return }
-
-            if view === pdfView {
-                view.wantsLayer = true
-                view.layer?.backgroundColor = bg.cgColor
-            }
 
             if let scroll = view as? NSScrollView {
                 scroll.drawsBackground = true
@@ -17584,15 +19401,30 @@ The quick brown fox jumps over the lazy dog.
         }
         detailsWebView.lockedX = 0
 
-        // PDFView embeds its own scroll view; clamp horizontal panning there too.
-        for sv in descendantScrollViews(in: pdfView) {
-            // PDFKit uses custom clip view subclasses for selection/interaction.
-            // Swapping the clip view can break text drag-selection.
-            ensureHorizontalLock(for: sv, lockedX: 0, swapClipView: false)
-            sv.verticalScrollElasticity = .none // no rubber-banding on PDF pane
-        }
+        // PDF pane: do not constrain scrolling (allow both horizontal + vertical).
+        releasePDFScrollRestrictions()
 
         installPDFScrollDebuggingIfNeeded()
+    }
+
+    private func releasePDFScrollRestrictions() {
+        for sv in descendantScrollViews(in: pdfView) {
+            // Remove any previously-installed horizontal locks so scroll wheel gestures and
+            // trackpad panning work normally in both axes.
+            rightHorizontalScrollLocks[ObjectIdentifier(sv)] = nil
+
+            // Restore default scroll behavior.
+            sv.hasVerticalScroller = true
+            sv.hasHorizontalScroller = true
+            sv.verticalScrollElasticity = .automatic
+            sv.horizontalScrollElasticity = .automatic
+            sv.usesPredominantAxisScrolling = true
+
+            if let clip = sv.contentView as? HorizontalLockClipView {
+                clip.locksHorizontal = false
+                clip.clampsVertical = false
+            }
+        }
     }
 
     private func installPDFScrollDebuggingIfNeeded() {
@@ -17673,6 +19505,8 @@ The quick brown fox jumps over the lazy dog.
 
         if isShowingPDF {
             enforceWhitePDFBackground()
+            // Keep the minimum zoom (max zoom-out) aligned to fit-to-view during resizes.
+            updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: !rightContentView.inLiveResize)
         }
         layoutPDFScrollDebugOverlay()
         recordRightPanelWidthIfNeeded()
@@ -17887,6 +19721,21 @@ The quick brown fox jumps over the lazy dog.
     }
 
     private func pdfURL(for paper: Paper) -> URL? {
+        // If ARXIV_SAMPLE_PDF=1, always load a local sample PDF for debugging.
+        if ProcessInfo.processInfo.environment["ARXIV_SAMPLE_PDF"] == "1" {
+            // Try workspace-local sample first, then fallback to /tmp/sample.pdf
+            let candidates = [
+                "sample.pdf",
+                "Docs/sample.pdf",
+                "/tmp/sample.pdf"
+            ]
+            for path in candidates {
+                let url = URL(fileURLWithPath: path)
+                if FileManager.default.fileExists(atPath: url.path) {
+                    return url
+                }
+            }
+        }
         if let override = debugPDFOverrideURL() { return override }
         guard let pdfURLStr = arxivPDFFromAbs(url: paper.url),
               let pdfURL = URL(string: pdfURLStr) else {
@@ -17914,6 +19763,9 @@ The quick brown fox jumps over the lazy dog.
     }
 
     private func arxivIDFromPDFURL(_ url: URL) -> String? {
+        if url.path == "/tmp/sample.pdf" {
+            return "sample"
+        }
         guard let host = url.host?.lowercased(), host.hasSuffix("arxiv.org") else { return nil }
         guard url.path.lowercased().hasPrefix("/pdf/") else { return nil }
         var identifier = url.path.dropFirst("/pdf/".count)
@@ -17970,6 +19822,17 @@ The quick brown fox jumps over the lazy dog.
 	                                  cacheKey: String) {
 	        guard pdfLoadToken == token else { return }
 
+        // Save current PDF position before switching
+        if let currentDoc = pdfView.document, let currentPage = pdfView.currentPage, let scrollView = pdfView.primaryScrollView() {
+            let pageIndex = currentDoc.index(for: currentPage)
+            let scrollY = scrollView.contentView.bounds.origin.y
+            let scale = pdfView.scaleFactor
+            let saveStableID = arxivIDFromPDFURL(currentDoc.documentURL ?? URL(fileURLWithPath: "")) ?? (currentDoc.documentURL == nil ? "sample" : nil)
+            if let saveStableID {
+                pdfPositions[saveStableID] = (pageIndex, scrollY, scale)
+            }
+        }
+
         // Deterministic PDFView reset (single persistent PDFView):
         // Clear selection/state, then swap documents atomically without blanking the view.
         pdfView.highlightedSelections = nil
@@ -17979,8 +19842,31 @@ The quick brown fox jumps over the lazy dog.
         CATransaction.setDisableActions(true)
         pdfView.document = doc
 	        CATransaction.commit()
-	        pdfView.autoScales = true
-	        pdfView.goToFirstPage(nil)
+	        pdfView.displayBox = .mediaBox
+
+        // Restore position or go to top
+        if let stableID = arxivIDFromPDFURL(doc.documentURL ?? URL(fileURLWithPath: "")), let position = pdfPositions[stableID], let page = doc.page(at: position.pageIndex) {
+            pdfView.scaleFactor = position.scale
+            pdfView.go(to: page)
+            if let scrollView = pdfView.primaryScrollView() {
+                var origin = scrollView.contentView.bounds.origin
+                origin.y = position.scrollY
+                scrollView.contentView.setBoundsOrigin(origin)
+            }
+        } else {
+            // New PDF: fit to width and scroll to top
+            pdfView.autoScales = true
+            pdfView.goToFirstPage(nil)
+            if let scrollView = pdfView.primaryScrollView() {
+                scrollView.contentView.setBoundsOrigin(.zero)
+            }
+        }
+
+        // Enforce max zoom-out: the minimum scale is the “fit to viewer” scale.
+        // Do this after the document is installed so `scaleFactorForSizeToFit` is valid.
+        DispatchQueue.main.async {
+            self.updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: true)
+        }
         resetPDFMagnifyState()
 	        installRightPanelScrollRestrictions()
 	        enforceWhitePDFBackground()
@@ -17989,10 +19875,12 @@ The quick brown fox jumps over the lazy dog.
             self.installRightPanelScrollRestrictions()
             self.enforceWhitePDFBackground()
             self.annotationController?.refreshIcons()
+            self.updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: true)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.enforceWhitePDFBackground()
             self.annotationController?.refreshIcons()
+            self.updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: false)
         }
         hideLoading()
 
@@ -18058,6 +19946,24 @@ The quick brown fox jumps over the lazy dog.
             cell.cancelButtonCell = nil
         }
 
+        // Small clear (x) button that follows the end of the typed text.
+        pdfFindClearButton.translatesAutoresizingMaskIntoConstraints = true
+        pdfFindClearButton.isBordered = false
+        pdfFindClearButton.bezelStyle = .regularSquare
+        pdfFindClearButton.title = ""
+        pdfFindClearButton.target = self
+        pdfFindClearButton.action = #selector(pdfFindClearPressed)
+        pdfFindClearButton.imagePosition = .imageOnly
+        let clearConfig = NSImage.SymbolConfiguration(pointSize: 11.5, weight: .regular)
+        let clearImage = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Clear")?
+            .withSymbolConfiguration(clearConfig)
+        if let clearImage {
+            pdfFindClearButton.image = tintedImage(clearImage, color: pdfFindForeground.withAlphaComponent(0.92))
+        }
+        pdfFindClearButton.contentTintColor = pdfFindForeground.withAlphaComponent(0.92)
+        pdfFindClearButton.toolTip = "Clear"
+        pdfFindClearButton.isHidden = true
+
         pdfFindCountLabel.font = NSFont.monospacedDigitSystemFont(ofSize: searchTheme.secondaryFont.pointSize,
                                                                   weight: .regular)
         pdfFindCountLabel.textColor = pdfFindForeground
@@ -18087,6 +19993,7 @@ The quick brown fox jumps over the lazy dog.
         pdfFindHUD.addSubview(pdfFindBackgroundView)
         pdfFindHUD.addSubview(pdfFindContentView)
         pdfFindContentView.addSubview(pdfFindField)
+        pdfFindContentView.addSubview(pdfFindClearButton)
         pdfFindContentView.addSubview(pdfFindCountLabel)
         pdfFindContentView.addSubview(pdfFindPrevGlass)
         pdfFindContentView.addSubview(pdfFindNextGlass)
@@ -18144,6 +20051,8 @@ The quick brown fox jumps over the lazy dog.
         pdfFindPrevButton.needsLayout = true
         pdfFindNextButton.needsLayout = true
 
+        updatePDFFindClearButtonLayout()
+
         let radius = hudH / 2
         if let card = pdfFindBackgroundView as? GlassCardView {
             card.cornerRadius = radius
@@ -18170,6 +20079,61 @@ The quick brown fox jumps over the lazy dog.
         installPDFFindTracking()
         updatePDFFindCapsuleGeometry()
         updatePDFFindDepth(animated: false)
+    }
+
+    @objc private func pdfFindClearPressed() {
+        pdfFindField.stringValue = ""
+        resetPDFFindResults(clearHighlights: true)
+        updatePDFFindClearButtonLayout()
+        window?.makeFirstResponder(pdfFindField)
+    }
+
+    private func updatePDFFindClearButtonLayout() {
+        guard pdfFindHUD.isHidden == false else {
+            pdfFindClearButton.isHidden = true
+            return
+        }
+
+        let q = pdfFindField.stringValue
+        let hasText = !q.isEmpty
+        pdfFindClearButton.isHidden = !hasText
+        guard hasText else { return }
+
+        let buttonSize: CGFloat = 14
+        let padAfterText: CGFloat = 4
+        let insetX: CGFloat = 6
+        let fieldFrame = pdfFindField.frame
+        let minX = fieldFrame.minX + insetX
+        let maxX = fieldFrame.maxX - insetX - buttonSize
+
+        var endX: CGFloat?
+        if let w = window,
+           let editor = w.fieldEditor(false, for: pdfFindField) as? NSTextView,
+           w.firstResponder === editor {
+            let end = (editor.string as NSString).length
+            editor.scrollRangeToVisible(NSRange(location: end, length: 0))
+            let rectOnScreen = editor.firstRect(forCharacterRange: NSRange(location: end, length: 0), actualRange: nil)
+            let rectInWindow = w.convertFromScreen(NSRect(origin: rectOnScreen.origin, size: rectOnScreen.size))
+            let rectInContent = pdfFindContentView.convert(rectInWindow, from: nil)
+            endX = rectInContent.minX
+        }
+
+        if endX == nil {
+            let font = pdfFindField.font ?? currentSearchBarTheme().font
+            let attr = NSAttributedString(string: q, attributes: [.font: font])
+            let textW = attributedSingleLineTypographicWidth(attr)
+            if let cell = pdfFindField.cell as? NSSearchFieldCell {
+                let textRect = cell.searchTextRect(forBounds: pdfFindField.bounds)
+                endX = fieldFrame.minX + textRect.minX + textW
+            } else {
+                endX = fieldFrame.minX + insetX + textW
+            }
+        }
+
+        let rawX = (endX ?? minX) + padAfterText
+        let clampedX = max(minX, min(maxX, rawX))
+        let y = round(fieldFrame.midY - buttonSize / 2)
+        pdfFindClearButton.frame = NSRect(x: clampedX, y: y, width: buttonSize, height: buttonSize)
     }
 
     private func showPDFFindHUD() {
@@ -18213,9 +20177,11 @@ The quick brown fox jumps over the lazy dog.
         let q = normalizedPDFFindQuery(pdfFindField.stringValue)
         guard !q.isEmpty else {
             resetPDFFindResults(clearHighlights: true)
+            updatePDFFindClearButtonLayout()
             return
         }
         rebuildPDFFindResults(for: q)
+        updatePDFFindClearButtonLayout()
     }
 
     private func resetPDFFindResults(clearHighlights: Bool) {
@@ -18352,7 +20318,32 @@ The quick brown fox jumps over the lazy dog.
                 self.systemDividerDragPendingSplitModeExit = false
                 self.logDividerState("drag_end_mouse_up")
                 self.schedulePanelSettle()
+
+                // If the user dragged the (previously hidden) sidebar open while Chat is hidden,
+                // treat that as an explicit unhide intent before clamping.
+                if !self.sidebarVisible,
+                   !self.rightAuxPanelVisible {
+                    let w = self.leftContainer.frame.width
+                    if w.isFinite, w > 12 {
+                        self.sidebarVisible = true
+                        self.lastUserActivatedPanel = .leftContainer
+                        self.lastSidebarWidth = w
+                        self.persistSidebarVisibility(true)
+                        self.persistSidebarWidth(w)
+                        self.updateSidebarToggleIcon()
+                        self.leftContainer.setAccessibilityHidden(false)
+                        uiLog("sidebar_unhide_via_divider_drag width=\(Int(w))")
+                    }
+                }
+
                 self.enforceSidebarWidthBounds(reason: "drag_end_mouse_up")
+                if self.rightAuxPanelVisible {
+                    let w = self.rightAuxPanelWidth()
+                    if w.isFinite, w > 0 {
+                        self.lastRightAuxPanelWidth = w
+                        self.persistRightAuxWidth(w)
+                    }
+                }
                 if debugLayoutEnabled {
                     self.updateLayoutDebugOverlay(reason: "drag_end_mouse_up")
                 }
@@ -18375,6 +20366,17 @@ The quick brown fox jumps over the lazy dog.
     }
 
     // MARK: Key handling (Enter / Cmd-F / Esc / Cmd-Shift-E)
+
+    private func currentViewerPaperRowForToggle() -> Int? {
+        if let idx = selectedFilteredIndex() {
+            return idx
+        }
+        guard selectionHistoryIndex >= 0, selectionHistoryIndex < selectionHistory.count else {
+            return nil
+        }
+        let key = selectionHistory[selectionHistoryIndex].key
+        return filteredIndex(for: key)
+    }
 
     private func setupKeyHandling() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
@@ -18492,7 +20494,7 @@ The quick brown fox jumps over the lazy dog.
 
             if mods.contains(.command) && (key == "=" || key == "+") {
                 if self.isShowingPDF {
-                    self.zoomPDFStep(increase: true)
+                    self.zoomPDFStep(increase: true, event: e)
                     return nil
                 }
                 return e
@@ -18500,7 +20502,7 @@ The quick brown fox jumps over the lazy dog.
 
             if mods.contains(.command) && (key == "-" || key == "_") {
                 if self.isShowingPDF {
-                    self.zoomPDFStep(increase: false)
+                    self.zoomPDFStep(increase: false, event: e)
                     return nil
                 }
                 return e
@@ -18521,9 +20523,20 @@ The quick brown fox jumps over the lazy dog.
                 }
                 return nil
             case 36, 76: // Return / Enter
-                if let dataRow = self.selectedFilteredIndex() {
+                // When both left + chat panels are hidden, the table selection can be nil even
+                // though we're still viewing a concrete paper. Fall back to the current history entry
+                // so Enter toggles to PDF exactly like the normal (sidebar-visible) case.
+                let isViewerOnly = (!self.sidebarVisible && !self.rightAuxPanelVisible)
+                let targetRow: Int?
+                if isViewerOnly {
+                    targetRow = self.currentViewerPaperRowForToggle()
+                } else {
+                    targetRow = self.selectedFilteredIndex()
+                }
+
+                if let dataRow = targetRow {
                     // Enter-key PDF switching uses the same canonical presenter as details-panel PDF link clicks.
-                    self.openPDFInRightPanel(forRow: dataRow, trigger: "keyboard-enter")
+                    self.openPDFInRightPanel(forRow: dataRow, trigger: isViewerOnly ? "keyboard-enter-viewer-only" : "keyboard-enter")
                 }
                 return nil
             default:
@@ -19299,6 +21312,27 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         pdfMagnifyAnchorPage = nil
     }
 
+    private func updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: Bool) {
+        guard isShowingPDF, pdfView.document != nil else { return }
+
+        // Ensure layout is up-to-date so PDFKit computes a stable fit scale.
+        pdfView.layoutSubtreeIfNeeded()
+
+        let fit = pdfView.scaleFactorForSizeToFit
+        guard fit.isFinite, fit > 0 else { return }
+
+        // Max zoom-out is fit-to-view.
+        pdfView.minScaleFactor = fit
+
+        if clampCurrentScaleIfNeeded {
+            let current = pdfView.scaleFactor
+            if current.isFinite, current + 0.0001 < fit {
+                let anchor = pdfCenterAnchor(visibleRect: pdfVisibleRectInView())
+                applyPDFScale(fit, anchor: anchor.point, page: anchor.page)
+            }
+        }
+    }
+
     private func pdfPrimaryScrollView() -> NSScrollView? {
         let scrollViews = descendantScrollViews(in: pdfView)
         if scrollViews.count == 1 {
@@ -19328,19 +21362,77 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
     }
 
     private func pdfZoomAnchor(for event: NSEvent?, allowMouseLocation: Bool) -> (point: NSPoint, page: PDFPage?) {
+        // Prefer the explicit event point (for keyboard shortcuts with an event),
+        // otherwise prefer the current mouse location. Even if the reported point
+        // lies slightly outside the page area, find the nearest page and clamp the
+        // anchor to within that page's bounds so zoom focuses where the pointer is.
         let visibleRect = pdfVisibleRectInView()
+
+        func logAnchor(_ source: String, _ p: NSPoint, _ page: PDFPage?) {
+            guard pdfZoomDebugEnabled else { return }
+            NSLog(
+                "[PDFZoomAnchor] src=%@ p=(%.2f,%.2f) vis=(%.2f,%.2f %.1fx%.1f) page=%@ event=%@",
+                source,
+                p.x, p.y,
+                visibleRect.origin.x, visibleRect.origin.y, visibleRect.size.width, visibleRect.size.height,
+                pdfZoomDebugPageLabel(page),
+                event.map { String(describing: $0.type) } ?? "none"
+            )
+        }
+
+        var candidatePoint: NSPoint? = nil
         if let event {
-            let point = pdfView.convert(event.locationInWindow, from: nil)
-            if visibleRect.contains(point) {
-                return (point, pdfView.page(for: point, nearest: false))
+            // Use event location for explicit events (keyboard-backed flows). Skip magnify
+            // events here; pinch gestures should be anchored by the gesture recognizer path.
+            if event.type != .magnify {
+                candidatePoint = pdfView.convert(event.locationInWindow, from: nil)
             }
         }
-        if allowMouseLocation, let point = pdfMouseLocationInView() {
-            if visibleRect.contains(point) {
-                return (point, pdfView.page(for: point, nearest: false))
+
+        if candidatePoint == nil, allowMouseLocation {
+            candidatePoint = pdfMouseLocationInView()
+        }
+
+        if pdfZoomDebugEnabled {
+            NSLog("[PDFZoomAnchor] candidatePoint=(%.2f,%.2f) event=%@", candidatePoint?.x ?? -1, candidatePoint?.y ?? -1, event.map { String(describing: $0.type) } ?? "none")
+        }
+
+        if let pt = candidatePoint {
+            if pdfZoomDebugEnabled {
+                NSLog("[PDFZoomAnchor] using pt=(%.2f,%.2f)", pt.x, pt.y)
+            }
+            // Resolve nearest page and clamp to page bounds in PDFView coords.
+            if let page = pdfView.page(for: pt, nearest: true) {
+                var pagePt = pdfView.convert(pt, to: page)
+                var bounds = page.bounds(for: pdfView.displayBox)
+                if pdfZoomDebugEnabled {
+                    NSLog("[PDFZoomAnchor] pagePt=(%.2f,%.2f) bounds=(%.2f,%.2f %.1fx%.1f)", pagePt.x, pagePt.y, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height)
+                }
+                // Clamp to page bounds with a tiny epsilon to avoid edge cases.
+                // let eps: CGFloat = 0.0001
+                // pagePt.x = min(max(pagePt.x, bounds.minX + eps), bounds.maxX - eps)
+                // pagePt.y = min(max(pagePt.y, bounds.minY + eps), bounds.maxY - eps)
+                if pdfZoomDebugEnabled {
+                    NSLog("[PDFZoomAnchor] unclamped pagePt=(%.2f,%.2f)", pagePt.x, pagePt.y)
+                }
+                // Convert the clamped page-local point back to PDFView coordinates.
+                let anchoredInView = pdfView.convert(pagePt, from: page)
+                if pdfZoomDebugEnabled {
+                    NSLog("[PDFZoomAnchor] anchoredInView=(%.2f,%.2f)", anchoredInView.x, anchoredInView.y)
+                }
+                logAnchor("mouse-or-event", anchoredInView, page)
+                return (anchoredInView, page)
+            } else {
+                // No page found; fall back to using the raw point.
+                logAnchor("raw", pt, nil)
+                return (pt, nil)
             }
         }
-        return pdfCenterAnchor(visibleRect: visibleRect)
+
+        // Fall back to center anchor.
+        let center = pdfCenterAnchor(visibleRect: visibleRect)
+        logAnchor("center", center.point, center.page)
+        return center
     }
 
     /// Recalculate and record the current visible center so subsequent zooms keep referencing the latest geometry.
@@ -19545,7 +21637,12 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         }
 
         let clip = scrollView.contentView
-        let lock = rightHorizontalScrollLocks[ObjectIdentifier(scrollView)]
+
+        // PDF pane should not be horizontally locked. Ensure any previously swapped clip view
+        // (used for the HTML pane) is not constraining X during anchored zoom.
+        if let lockClip = clip as? HorizontalLockClipView {
+            lockClip.locksHorizontal = false
+        }
 
         // Resolve a page deterministically; using nearest=false can return nil when anchored in whitespace.
         let resolvedPage = page
@@ -19569,8 +21666,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         let offsetInViewport = NSPoint(x: anchorDocBefore.x - visibleDocRectBefore.origin.x,
                                        y: anchorDocBefore.y - visibleDocRectBefore.origin.y)
 
-        // During zoom, allow PDFKit/AppKit to adjust both X and Y to preserve the anchor.
-        lock?.setLocksHorizontal(false)
+        let clipOriginBefore = clip.bounds.origin
 
         // Snapshot the anchor in page coordinates, then re-find it after scaling.
         let pagePoint = pdfView.convert(anchor, to: resolvedPage)
@@ -19590,19 +21686,43 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         let targetOriginDoc = NSPoint(x: anchorDocAfter.x - offsetInViewport.x,
                                       y: anchorDocAfter.y - offsetInViewport.y)
 
-        clip.scroll(to: targetOriginDoc)
-        scrollView.reflectScrolledClipView(clip)
+        // Clamp and apply scroll origin in document coordinates.
+        var originClamped = clampPDFScrollOrigin(targetOriginDoc, clip: clip, docView: docViewAfter)
+        // Pixel-align to reduce subpixel drift/jitter.
+        if let window = pdfView.window {
+            let s = max(1.0, window.backingScaleFactor)
+            func align(_ v: CGFloat) -> CGFloat { (v * s).rounded() / s }
+            originClamped = NSPoint(x: align(originClamped.x), y: align(originClamped.y))
+        }
 
-        // Re-lock horizontal at the post-zoom X so gestures don't pan horizontally,
-        // while preserving the new anchor-consistent X (fixes "zoom drifts left").
-        let postZoomOrigin = clip.bounds.origin
-        lock?.updateLockedX(postZoomOrigin.x, clamp: false)
-        lock?.setLocksHorizontal(true)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        clip.setBoundsOrigin(originClamped)
+        scrollView.reflectScrolledClipView(clip)
+        CATransaction.commit()
+
+        // Debug: measure where the anchored document point ended up in view coordinates.
+        let anchorFinalInView = docViewAfter.convert(anchorDocAfter, to: pdfView)
+        pdfZoomDebugLog(
+            step: "apply",
+            sOld: currentScale,
+            sNew: clamped,
+            clip: clip,
+            docView: docViewAfter,
+            anchorView: anchor,
+            page: resolvedPage,
+            pagePoint: pagePoint,
+            clipOriginBefore: clipOriginBefore,
+            clipOriginAfterTarget: targetOriginDoc,
+            clipOriginAfterClamp: originClamped,
+            anchorAfterScale: anchorViewAfter,
+            anchorFinal: anchorFinalInView
+        )
 
         recalculatePDFZoomCenterAnchor()
     }
 
-    private func zoomPDFStep(increase: Bool) {
+    private func zoomPDFStep(increase: Bool, event: NSEvent?) {
         guard isShowingPDF, pdfView.document != nil else { return }
         let step = pdfZoomStep
         let current = pdfView.scaleFactor
@@ -19615,7 +21735,10 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             let prev = ceil((current - epsilon) / step) - 1
             target = prev * step
         }
-        let anchor = pdfZoomAnchor(for: nil, allowMouseLocation: false)
+
+        // Preview-like keyboard zoom: prefer the current cursor position when it's inside the
+        // visible PDF viewport; otherwise fall back to the viewport center.
+        let anchor = pdfZoomAnchor(for: event, allowMouseLocation: true)
         applyPDFScale(target, anchor: anchor.point, page: anchor.page)
     }
 
@@ -19625,6 +21748,9 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         if phase == [] {
             let anchor = pdfZoomAnchor(for: event, allowMouseLocation: true)
             let target = pdfView.scaleFactor * (1 + event.magnification)
+            if pdfZoomDebugEnabled {
+                NSLog("[PDFZoomMagnify] phase=[] anchor=(%.2f,%.2f) target=%.4f", anchor.point.x, anchor.point.y, target)
+            }
             applyPDFScale(target, anchor: anchor.point, page: anchor.page)
             return true
         }
@@ -19653,10 +21779,14 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         case .began:
             pdfGestureMagnifyBaseScale = pdfView.scaleFactor
             let anchor = gr.location(in: pdfView)
+            if pdfZoomDebugEnabled {
+                NSLog("[PDFZoomGesture] began anchor=(%.2f,%.2f)", anchor.x, anchor.y)
+            }
             pdfMagnifyAnchorPoint = anchor
             pdfMagnifyAnchorPage = pdfView.page(for: anchor, nearest: true)
             pdfMagnifyActive = true
             pdfView.suppressMagnifyEvents = true
+            pdfView.minScaleFactor = 0  // Allow zoom out beyond fit during gesture
 
         case .changed:
             guard pdfMagnifyActive else { return }
@@ -19667,6 +21797,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             pdfMagnifyActive = false
             pdfView.suppressMagnifyEvents = false
             gr.magnification = 0
+            updatePDFMinZoomToFit(clampCurrentScaleIfNeeded: true)
 
         default:
             break
@@ -20154,10 +22285,22 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
     // MARK: Left layout
 
         private func leftPreferredColumnWidth() -> CGFloat {
-            // Ensure the column can grow beyond the viewport so users can pan horizontally.
+            // Ensure the column can grow beyond the viewport so users can pan horizontally,
+            // but only as far as there is real text content (longest row).
+            if cachedMaxLeftTextWidth <= 0 {
+                rebuildLeftRowContentMetrics()
+            }
+
             let visible = max(220, tableScroll.contentSize.width)
-            let contentFit = max(220, desiredMinSidebarWidthForCurrentPage(maxLeft: .greatestFiniteMagnitude) - (2 * PANEL_INSET))
-            return max(visible, contentFit)
+            let contentFit = max(220, sidebarHardMinWidth() - (2 * PANEL_INSET))
+
+            // Content extent: leading inset + left column + gap + keyword text + trailing inset.
+            // Use the same gutter constant as recomputeKeywordTabX() so both calculations agree.
+            let gutter: CGFloat = 10
+            let leftColumn = max(180, cachedMaxLeftTextWidth + gutter)
+            let contentExtent = leftRowTextInset + leftColumn + keywordSeparatorGap + cachedMaxKeywordTextWidth + leftRowTextInset
+
+            return max(visible, contentFit, max(220, contentExtent))
         }
 
         private func reflowLeft() {
@@ -20165,6 +22308,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             layoutLeftContainerSubviews()
             leftContainer.layoutSubtreeIfNeeded()
             tableScroll.layoutSubtreeIfNeeded()
+            rebuildLeftRowContentMetrics()
             if let col = tableView.tableColumns.first {
                 col.width = leftPreferredColumnWidth()
             }
@@ -20205,6 +22349,46 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             options: [.usesLineFragmentOrigin, .usesFontLeading]
         )
         return ceil(max(0, rect.width))
+    }
+
+    private func rebuildLeftRowContentMetrics() {
+        // Measure the actual rendered text extents so horizontal scrolling can be clamped
+        // to real content (prevents "infinite" panning into empty space).
+        let total = max(1, filtered.count)
+        cachedRowNumberDigits = String(total).count
+
+        let pstyle = NSMutableParagraphStyle()
+        pstyle.lineBreakMode = .byClipping
+        let colors = leftRowTextColors(isSelected: false, isActive: true)
+
+        var maxLeftWidth: CGFloat = 0
+        var maxKeywordWidth: CGFloat = 0
+
+        for (i, paper) in filtered.enumerated() {
+            let leftAttr = leftAttributedAuthorText(
+                for: paper,
+                rowNumber: i + 1,
+                paragraphStyle: pstyle,
+                titleFont: leftRowTitleFont,
+                secondaryFont: leftRowSecondaryFont,
+                titleColor: colors.title,
+                secondaryColor: colors.secondary
+            )
+            maxLeftWidth = max(maxLeftWidth, measureSingleLineWidth(leftAttr))
+
+            if let kwAttr = leftAttributedKeywordsText(
+                for: paper,
+                paragraphStyle: pstyle,
+                secondaryFont: leftRowSecondaryFont,
+                secondaryEmphasisFont: leftRowSecondaryEmphasisFont,
+                secondaryColor: colors.secondary
+            ) {
+                maxKeywordWidth = max(maxKeywordWidth, measureSingleLineWidth(kwAttr))
+            }
+        }
+
+        cachedMaxLeftTextWidth = maxLeftWidth
+        cachedMaxKeywordTextWidth = maxKeywordWidth
     }
 
     private func maxAuthorYearWidthForLaunchRows(_ range: Range<Int>) -> CGFloat {
@@ -20287,38 +22471,13 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
     }
 
     private func desiredLaunchSidebarWidth(maxLeft: CGFloat) -> CGFloat {
-        // Tight launch sizing: fit all Author&Year strings from the populated rows,
-        // and reserve width for up to 2 keywords (but do not size to fit more).
-        let range = launchPageRangeForSidebarSizing()
-        let authorW = maxAuthorYearWidthForLaunchRows(range)
-        let kw2W = maxTwoKeywordWidthForLaunchRows(range)
-
-        let gutter: CGFloat = 10
-        let tabX = max(180, authorW + gutter)
-        let keywordHeaderMin = ("Keyword(s)" as NSString).size(withAttributes: [.font: leftRowSecondaryFont]).width
-        let rightW = max(keywordHeaderMin + 10, kw2W)
-
-        let neededColumnWidth = leftRowTextInset + tabX + keywordSeparatorGap + rightW + leftRowTextInset
-        let neededLeftContainerWidth = neededColumnWidth + (2 * PANEL_INSET)
-
-        return min(maxLeft, max(minSidebarWidth, neededLeftContainerWidth))
+        // Launch sizing: match the exact width required to center "Author & Year" in the
+        // left header relative to its glass card container.
+        return min(maxLeft, sidebarHardMinWidth())
     }
 
     private func rebuildLeftColumnMetrics() {
-        let total = max(1, allItems.count)
-        cachedRowNumberDigits = String(total).count
-
-        var maxLeftWidth: CGFloat = 0
-        let attrs: [NSAttributedString.Key: Any] = [.font: leftRowTitleFont]
-
-        for (i, p) in allItems.enumerated() {
-            let prefix = "\(i + 1). "
-            let leftText = prefix + decodeTeXAccents(leftAuthorYearText(paper: p))
-            let w = (leftText as NSString).size(withAttributes: attrs).width
-            if w > maxLeftWidth { maxLeftWidth = w }
-        }
-
-        cachedMaxLeftTextWidth = maxLeftWidth
+        rebuildLeftRowContentMetrics()
     }
 
     private func stableRowNumberDigits() -> Int {
@@ -20373,7 +22532,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             string: headerString,
             attributes: [
                 .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
-                .foregroundColor: leftHeaderTextColor(),
+                .foregroundColor: NSColor.white,
                 .paragraphStyle: pstyle
             ]
         )
@@ -20393,6 +22552,11 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
         private var rightTop: NSLayoutConstraint!
         private var rightBottomMax: NSLayoutConstraint!
         private var rightTrailing: NSLayoutConstraint!
+
+        private var lastLeadingInset: CGFloat = 0
+        private var lastTrailingInset: CGFloat = 0
+        private var lastLeftColumnWidth: CGFloat = 200
+        private var lastGap: CGFloat = 0
 
         override init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -20447,12 +22611,38 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             fatalError("init(coder:) has not been implemented")
         }
 
+        override func layout() {
+            super.layout()
+            // Critical: when cells are created/reused, `updateLayout(...)` may be called
+            // before the table has assigned a final width. If we freeze the preferredMaxLayoutWidth
+            // at that moment (often ~0), the keyword column can remain effectively invisible until
+            // some unrelated relayout (e.g., hiding/showing the sidebar) happens.
+            // Re-apply using the current bounds so the keywords appear immediately.
+            applyPreferredMaxLayoutWidths()
+        }
+
+        private func applyPreferredMaxLayoutWidths() {
+            let leadingInset = lastLeadingInset
+            let trailingInset = lastTrailingInset
+            let leftColumnWidth = max(1, lastLeftColumnWidth)
+            let gap = lastGap
+
+            leftField.preferredMaxLayoutWidth = max(1, leftColumnWidth)
+            let rightW = max(1, bounds.width - (leadingInset + leftColumnWidth + gap) - trailingInset)
+            rightField.preferredMaxLayoutWidth = rightW
+        }
+
         func updateLayout(leadingInset: CGFloat,
                           trailingInset: CGFloat,
                           topInset: CGFloat,
                           bottomInset: CGFloat,
                           leftColumnWidth: CGFloat,
                           gap: CGFloat) {
+            lastLeadingInset = leadingInset
+            lastTrailingInset = trailingInset
+            lastLeftColumnWidth = leftColumnWidth
+            lastGap = gap
+
             leftLeading.constant = leadingInset
             leftTop.constant = topInset
             leftBottomMax.constant = -bottomInset
@@ -20463,9 +22653,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             rightBottomMax.constant = -bottomInset
             rightTrailing.constant = -trailingInset
 
-            leftField.preferredMaxLayoutWidth = max(1, leftColumnWidth)
-            let rightW = max(1, bounds.width - (leadingInset + max(1, leftColumnWidth) + gap) - trailingInset)
-            rightField.preferredMaxLayoutWidth = rightW
+            applyPreferredMaxLayoutWidths()
         }
     }
 
@@ -20905,12 +23093,7 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
             pstyle.lineBreakMode = (row == 0) ? .byClipping : .byTruncatingTail
 
 	        if row == 0 {
-	            let headerAttrs: [NSAttributedString.Key: Any] = [
-	                .font: NSFont.systemFont(ofSize: 12.5, weight: .medium),
-	                .foregroundColor: leftHeaderTextColor(),
-	                .kern: -0.15,
-	                .paragraphStyle: pstyle
-	            ]
+                let headerAttrs = leftAuthorYearHeaderAttributes(paragraphStyle: pstyle)
 	            cell.leftField.attributedStringValue = NSAttributedString(string: "Author & Year", attributes: headerAttrs)
 	            cell.rightField.attributedStringValue = NSAttributedString(string: "Keyword(s)", attributes: headerAttrs)
 	            applyHoverBounce(to: cell.leftField, hovered: false, animated: false, reduceMotion: shouldReduceMotion)
@@ -21180,11 +23363,35 @@ private func buildDetailsStatusHTML(_ message: String, paperIndex: Int? = nil, p
 
         rebuildLeftColumnMetrics()
 
+        // Preserve initial-launch sizing behavior, but once rows exist, size the sidebar to the
+        // publications table's max internal scroll width.
+        didAdoptTableDrivenSidebarWidth = !payload.papers.isEmpty
+
         hideLoading()
 
         layoutLeftContainerSubviews()
         layoutRightPanelSubviews()
         reflowLeft()
+
+        // IMPORTANT: When launched in wait-for-file mode, the payload can arrive before
+        // the split view / table have fully finalized their first layout pass. In that state,
+        // the keyword column can be computed with a near-zero width and remain visually empty
+        // until a later user interaction forces another layout (e.g. toggling the sidebar).
+        // Schedule a one-shot post-layout reflow to make keyword rendering deterministic.
+        payloadPostLayoutReflowWorkItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.layoutLeftContainerSubviews()
+            self.reflowLeft()
+        }
+        payloadPostLayoutReflowWorkItem = work
+        DispatchQueue.main.async(execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+            guard let self else { return }
+            // A second tick helps when split-view frames settle one runloop later.
+            self.layoutLeftContainerSubviews()
+            self.reflowLeft()
+        }
 
         if !filtered.isEmpty {
             selectFilteredIndex(0, scroll: true, reason: "payload-first")
@@ -21287,6 +23494,15 @@ struct AppSettings: Codable, Equatable {
         var reserved: Bool = false
     }
 
+    struct Shortcuts: Codable, Equatable {
+        // Name must match exactly as shown in the Shortcuts app.
+        var shortcutName: String = "My Shortcut"
+        // Advanced: use x-callback-url variant.
+        var useXCallback: Bool = false
+        // Optional: include input=text&text=<payload> when available.
+        var inputTextMode: Bool = false
+    }
+
     struct AdvancedDeveloper: Codable, Equatable {
         // Defensive: defaults reproduce current behavior exactly.
         // These flags are read once at controller init, so changes require relaunch.
@@ -21301,7 +23517,46 @@ struct AppSettings: Codable, Equatable {
     var documentsPDF: DocumentsPDF = DocumentsPDF()
     var search: Search = Search()
     var sharingExport: SharingExport = SharingExport()
+    var shortcuts: Shortcuts = Shortcuts()
     var advancedDeveloper: AdvancedDeveloper = AdvancedDeveloper()
+
+    // Backward-compatible decoding: allows additive fields without breaking users' stored settings.
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case appearance
+        case layoutPanels
+        case documentsPDF
+        case search
+        case sharingExport
+        case shortcuts
+        case advancedDeveloper
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? AppSettings.currentSchemaVersion
+        appearance = try c.decodeIfPresent(Appearance.self, forKey: .appearance) ?? Appearance()
+        layoutPanels = try c.decodeIfPresent(LayoutPanels.self, forKey: .layoutPanels) ?? LayoutPanels()
+        documentsPDF = try c.decodeIfPresent(DocumentsPDF.self, forKey: .documentsPDF) ?? DocumentsPDF()
+        search = try c.decodeIfPresent(Search.self, forKey: .search) ?? Search()
+        sharingExport = try c.decodeIfPresent(SharingExport.self, forKey: .sharingExport) ?? SharingExport()
+        shortcuts = try c.decodeIfPresent(Shortcuts.self, forKey: .shortcuts) ?? Shortcuts()
+        advancedDeveloper = try c.decodeIfPresent(AdvancedDeveloper.self, forKey: .advancedDeveloper) ?? AdvancedDeveloper()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(schemaVersion, forKey: .schemaVersion)
+        try c.encode(appearance, forKey: .appearance)
+        try c.encode(layoutPanels, forKey: .layoutPanels)
+        try c.encode(documentsPDF, forKey: .documentsPDF)
+        try c.encode(search, forKey: .search)
+        try c.encode(sharingExport, forKey: .sharingExport)
+        try c.encode(shortcuts, forKey: .shortcuts)
+        try c.encode(advancedDeveloper, forKey: .advancedDeveloper)
+    }
 }
 
 final class AppSettingsStore {
@@ -21690,11 +23945,64 @@ private final class SettingsPaneViewController: NSViewController {
             stack.addArrangedSubview(note)
 
         case .sharingExport:
-            let label = NSTextField(labelWithString: "Sharing")
+            let label = NSTextField(labelWithString: "Shortcuts")
             label.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
             stack.addArrangedSubview(label)
 
-            let note = NSTextField(wrappingLabelWithString: "No sharing/export tunables are exposed yet; defaults remain unchanged to avoid altering disk retention behavior.")
+            let settings = AppSettingsStore.shared.current
+
+            let nameRow = NSStackView()
+            nameRow.orientation = .horizontal
+            nameRow.alignment = .centerY
+            nameRow.distribution = .fill
+            nameRow.spacing = 10
+            nameRow.translatesAutoresizingMaskIntoConstraints = false
+
+            let nameLabel = NSTextField(labelWithString: "Shortcut to run")
+            nameLabel.font = NSFont.systemFont(ofSize: 12.5, weight: .regular)
+            nameLabel.setContentHuggingPriority(.required, for: .horizontal)
+            nameRow.addArrangedSubview(nameLabel)
+
+            let nameField = NSTextField(string: settings.shortcuts.shortcutName)
+            nameField.placeholderString = "My Shortcut"
+            nameField.identifier = NSUserInterfaceItemIdentifier("shortcut.name")
+            nameField.target = self
+            nameField.action = #selector(onShortcutNameField(_:))
+            nameField.translatesAutoresizingMaskIntoConstraints = false
+            nameField.widthAnchor.constraint(equalToConstant: 320).isActive = true
+            nameRow.addArrangedSubview(nameField)
+
+            stack.addArrangedSubview(nameRow)
+
+            let helper = NSTextField(wrappingLabelWithString: "Enter the exact Shortcut name from the Shortcuts app.")
+            helper.textColor = resolvedSystemColor(.tertiaryLabelColor)
+            helper.font = NSFont.systemFont(ofSize: 11)
+            stack.addArrangedSubview(helper)
+
+            let xcb = NSButton(checkboxWithTitle: "Use x-callback-url (advanced)", target: self, action: #selector(onToggleShortcutCheckbox(_:)))
+            xcb.identifier = NSUserInterfaceItemIdentifier("shortcut.xcallback")
+            xcb.state = settings.shortcuts.useXCallback ? .on : .off
+            stack.addArrangedSubview(xcb)
+
+            let input = NSButton(checkboxWithTitle: "Include selected paper URL as input text (optional)", target: self, action: #selector(onToggleShortcutCheckbox(_:)))
+            input.identifier = NSUserInterfaceItemIdentifier("shortcut.input")
+            input.state = settings.shortcuts.inputTextMode ? .on : .off
+            stack.addArrangedSubview(input)
+
+            stack.setCustomSpacing(14, after: input)
+
+            let testRow = NSStackView()
+            testRow.orientation = .horizontal
+            testRow.alignment = .centerY
+            testRow.distribution = .fill
+            testRow.spacing = 10
+            testRow.translatesAutoresizingMaskIntoConstraints = false
+
+            let test = NSButton(title: "Test Run", target: self, action: #selector(onTestRunShortcut(_:)))
+            testRow.addArrangedSubview(test)
+            stack.addArrangedSubview(testRow)
+
+            let note = NSTextField(wrappingLabelWithString: "Test Run launches the Shortcuts URL scheme. If the Shortcut name is wrong, Shortcuts may show an error.")
             note.textColor = resolvedSystemColor(.secondaryLabelColor)
             note.font = NSFont.systemFont(ofSize: 12)
             stack.addArrangedSubview(note)
@@ -21722,6 +24030,59 @@ private final class SettingsPaneViewController: NSViewController {
 
             let reset = NSButton(title: "Reset All Settings…", target: self, action: #selector(onResetAllSettings(_:)))
             stack.addArrangedSubview(reset)
+        }
+    }
+
+    private func presentNonBlockingAlert(message: String, informative: String) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = informative
+        alert.addButton(withTitle: "OK")
+        if let w = view.window {
+            alert.beginSheetModal(for: w, completionHandler: nil)
+        } else {
+            // Fallback (should be rare): avoid crashing; still avoid long-lived blocks.
+            DispatchQueue.main.async {
+                _ = alert.runModal()
+            }
+        }
+    }
+
+    @objc private func onShortcutNameField(_ sender: NSTextField) {
+        let trimmed = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        AppSettingsStore.shared.update { s in
+            s.shortcuts.shortcutName = trimmed
+        }
+    }
+
+    @objc private func onToggleShortcutCheckbox(_ sender: NSButton) {
+        let isOn = (sender.state == .on)
+        AppSettingsStore.shared.update { s in
+            switch sender.identifier?.rawValue {
+            case "shortcut.xcallback":
+                s.shortcuts.useXCallback = isOn
+            case "shortcut.input":
+                s.shortcuts.inputTextMode = isOn
+            default:
+                break
+            }
+        }
+    }
+
+    @objc private func onTestRunShortcut(_ sender: Any?) {
+        let settings = AppSettingsStore.shared.current
+        let name = settings.shortcuts.shortcutName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            presentNonBlockingAlert(message: "No Shortcut set", informative: "Please set a Shortcut name in Settings.")
+            return
+        }
+
+        let cfg = ShortcutRunner.Configuration(useXCallback: settings.shortcuts.useXCallback)
+        let runner = ShortcutRunner(config: cfg)
+        do {
+            try runner.runShortcut(name: name, payload: nil)
+        } catch {
+            presentNonBlockingAlert(message: "Could not run Shortcut", informative: (error as? LocalizedError)?.errorDescription ?? String(describing: error))
         }
     }
 
@@ -21833,10 +24194,29 @@ if ProcessInfo.processInfo.environment["ARXIV_RUN_PILL_ANIMATION_TESTS"] == "1" 
     #endif
 }
 
+if ProcessInfo.processInfo.environment["ARXIV_RUN_TOOLBAR_GAP_TESTS"] == "1" {
+    #if canImport(XCTest)
+    let _ = NSApplication.shared
+    let suite = XCTestSuite(forTestCaseClass: ToolbarGapClampMathTests.self)
+    suite.run()
+    let run = suite.testRun as? XCTestSuiteRun
+    let failures = (run?.totalFailureCount ?? 0)
+    let unexpected = (run?.unexpectedExceptionCount ?? 0)
+    NSLog("[TOOLBAR_GAP_TESTS] failures=\(failures) unexpected=\(unexpected)")
+    Darwin.exit((failures == 0 && unexpected == 0) ? 0 : 3)
+    #else
+    let failures = ToolbarGapClampDeterministicTests.run()
+    Darwin.exit(failures == 0 ? 0 : 3)
+    #endif
+}
+
 if ProcessInfo.processInfo.environment["ARXIV_RUN_SETTINGS_TESTS"] == "1" {
     #if canImport(XCTest)
     let _ = NSApplication.shared
-    let suite = XCTestSuite(forTestCaseClass: SettingsNonRegressionTests.self)
+    let suite = XCTestSuite(name: "SettingsAndShortcutsTests")
+    suite.addTest(XCTestSuite(forTestCaseClass: SettingsNonRegressionTests.self))
+    suite.addTest(XCTestSuite(forTestCaseClass: ShortcutRunnerURLTests.self))
+    suite.addTest(XCTestSuite(forTestCaseClass: ShortcutPillButtonUITests.self))
     suite.run()
     let run = suite.testRun as? XCTestSuiteRun
     let failures = (run?.totalFailureCount ?? 0)
