@@ -817,6 +817,15 @@ private let launchDebugEnabled = ProcessInfo.processInfo.environment["DEBUG_LAUN
 private let launchCheckEnabled = ProcessInfo.processInfo.environment["ARXIV_LAUNCH_CHECK"] == "1"
 private let annotationDebugEnabled = ProcessInfo.processInfo.environment["ARXIV_ANNOTATION_DEBUG"] == "1"
 private let debugLayoutEnabled = ProcessInfo.processInfo.environment["DEBUG_LAYOUT"] == "1"
+private let debugEnabled = ProcessInfo.processInfo.environment["ARXIV_DEBUG"] == "1"
+
+private func debugLog(_ msg: String) {
+    if debugEnabled { print("[DEBUG] \(msg)") }
+}
+
+private func annotationLog(_ msg: String) {
+    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] \(msg)") }
+}
 
 private let chatLatencyDebugEnabled = ProcessInfo.processInfo.environment["ARXIV_CHAT_LATENCY"] == "1"
 
@@ -2735,7 +2744,7 @@ private final class AnnotationTextView: NSTextView {
             if NSEvent.modifierFlags.contains(.shift) {
                 super.doCommand(by: selector) // Insert newline for Shift+Return
             } else {
-                if annotationDebugEnabled { print("[ANNOTATION_DEBUG] insertNewline command, calling onSubmit") }
+                annotationLog("insertNewline command, calling onSubmit")
                 onSubmit?()
             }
             return
@@ -2745,7 +2754,7 @@ private final class AnnotationTextView: NSTextView {
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // esc
-            if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Escape pressed in textView, calling onCancel") }
+            annotationLog("Escape pressed in textView, calling onCancel")
             onCancel?()
             return
         }
@@ -2884,24 +2893,24 @@ private final class AnnotationComposerViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        print("[DEBUG] AnnotationComposerViewController viewDidAppear")
+        debugLog("AnnotationComposerViewController viewDidAppear")
         selectedColor = initialColor
         textView.string = initialText
         updateColorSelection()
         // Ensure the popover window is key and text view is first responder
         self.view.window?.makeKeyAndOrderFront(nil)
         self.view.window?.makeFirstResponder(textView)
-        print("[DEBUG] Made popover window key and set first responder in viewDidAppear")
+        debugLog("Made popover window key and set first responder in viewDidAppear")
     }
 
     private func onSelectColor(_ sender: ColorButtonView) {
-        print("[DEBUG] Color button clicked: \(sender)")
+        debugLog("Color button clicked: \(sender)")
         let palette = paletteColors()
-        guard let idx = colorButtons.firstIndex(of: sender), idx < palette.count else { print("[DEBUG] Color button index not found"); return }
+        guard let idx = colorButtons.firstIndex(of: sender), idx < palette.count else { debugLog("Color button index not found"); return }
         selectedColor = palette[idx]
         updateColorSelection()
         onColorChanged?(selectedColor)
-        print("[DEBUG] Selected color: \(selectedColor), current selection: \(String(describing: view.window?.firstResponder))")
+        debugLog("Selected color: \(selectedColor), current selection: \(String(describing: view.window?.firstResponder))")
     }
 
     private func updateColorSelection() {
@@ -3009,14 +3018,8 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         attachOverlay()
         installObservers()
         refreshIcons()
-        // For debugging: automatically trigger annotation creation after 5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-            print("[DEBUG] Timer fired, triggering annotation")
-            if let pdfView = self.pdfView, let _ = self.hostView, let page = pdfView.currentPage {
-                let location = NSPoint(x: 200, y: 200) // arbitrary point in the PDF view
-                self.beginAnnotation(at: location, page: page)
-            }
-        }
+        // NOTE: removed automatic debug-trigger here. The annotation composer
+        // must only appear in response to explicit user actions (Annotate).
     }
 
     deinit {
@@ -3269,7 +3272,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
     }
 
     private func hideAnnotationMenu(reason: String) {
-        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] hideAnnotationMenu called, reason: \(reason)") }
+        annotationLog("hideAnnotationMenu called, reason: \(reason)")
         removePreviewHighlight()
         composerPopover?.close()
         composerPopover = nil
@@ -3282,7 +3285,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
     }
 
     private func presentComposer(context: AnnotationContext) {
-        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] presentComposer called") }
+        annotationLog("presentComposer called")
         guard composerPopover == nil else { return }
         NSApp.activate(ignoringOtherApps: true)
         let vc = AnnotationComposerViewController()
@@ -3302,7 +3305,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
 
         vc.onSubmit = { [weak self] text, color in
             guard let self = self else { return }
-            print("[DEBUG] onSubmit called with text: '\(text)', color: \(color)")
+            debugLog("onSubmit called with text: '\(text)', color: \(color)")
             if let existing = context.existingAnnotation {
                 let groupID = noteGroupID(for: existing) ?? UUID().uuidString
                 assignGroupID(groupID, to: existing)
@@ -3324,18 +3327,18 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
 
         // Set up preview highlight for real-time color feedback (only for new annotations)
         if let selection = context.selection, context.existingAnnotation == nil {
-            print("[DEBUG] Setting up preview highlight for selection")
+            debugLog("Setting up preview highlight for selection")
             createPreviewHighlight(for: selection, on: context.page, color: vc.initialColor)
             pdfView?.highlightedSelections = [selection]  // Ensure selection remains visible
             vc.onColorChanged = { [weak self] color in
-                print("[DEBUG] Color changed to: \(color)")
+                debugLog("Color changed to: \(color)")
                 self?.updatePreviewHighlight(color: color)
                 if let selection = context.selection {
                     self?.pdfView?.highlightedSelections = [selection]  // Preserve selection highlight
                 }
             }
         } else {
-            print("[DEBUG] No selection for preview highlight, existing annotation: \(context.existingAnnotation != nil)")
+            debugLog("No selection for preview highlight, existing annotation: \(context.existingAnnotation != nil)")
         }
 
         if let host = hostView, let pdfView {
@@ -3360,28 +3363,28 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
             }
 
             pop.show(relativeTo: anchorRect, of: host, preferredEdge: .maxY)
-            if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Popover shown") }
+            annotationLog("Popover shown")
 
             // Ensure popover window is key and text view is first responder
             DispatchQueue.main.async {
                 if let window = self.composerPopover?.contentViewController?.view.window {
-                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Window in async: \(window), isKey: \(window.isKeyWindow)") }
+                    annotationLog("Window in async: \(window), isKey: \(window.isKeyWindow)")
                     window.makeKeyAndOrderFront(nil)
-                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] After makeKey in async, isKey: \(window.isKeyWindow)") }
+                    annotationLog("After makeKey in async, isKey: \(window.isKeyWindow)")
                     if let vc = self.composerPopover?.contentViewController as? AnnotationComposerViewController {
                         window.makeFirstResponder(vc.textView)
-                        if annotationDebugEnabled { print("[ANNOTATION_DEBUG] First responder set to: \(window.firstResponder)") }
+                        annotationLog("First responder set to: \(window.firstResponder)")
                         let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                             if event.keyCode == 36 { // Return
                                 if event.modifierFlags.contains(.shift) {
                                     return event // let textView handle for newline
                                 } else {
-                                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Return pressed globally, calling submit") }
+                                    annotationLog("Return pressed globally, calling submit")
                                     vc.submit()
                                     return nil
                                 }
                             } else if event.keyCode == 53 { // Escape
-                                if annotationDebugEnabled { print("[ANNOTATION_DEBUG] Escape pressed globally, calling cancel") }
+                                annotationLog("Escape pressed globally, calling cancel")
                                 vc.cancel()
                                 return nil
                             }
@@ -3390,7 +3393,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
                         self.keyMonitor = monitor
                     }
                 } else {
-                    if annotationDebugEnabled { print("[ANNOTATION_DEBUG] No window found in async") }
+                    annotationLog("No window found in async")
                 }
             }
         }
@@ -3423,7 +3426,7 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
     }
 
     private func commitAnnotation(text: String, color: NSColor, context: AnnotationContext) {
-        print("[DEBUG] commitAnnotation called with selection: \(context.selection != nil ? "present" : "nil")")
+        debugLog("commitAnnotation called with selection: \(context.selection != nil ? "present" : "nil")")
         guard let pdfView, let doc = pdfView.document else { return }
 
         // Persist the last-used color so it becomes the default for new highlights.
@@ -3497,7 +3500,6 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
         }
 
         persistAndReload(document: doc, focusPage: page)
-        pdfView.highlightedSelections = nil  // Clear selection highlight after committing annotation
         refreshIcons()
     }
 
@@ -3543,18 +3545,14 @@ private final class PDFAnnotationCoordinator: NSObject, NSPopoverDelegate {
             try? FileManager.default.removeItem(at: tmp)
         }
 
-        guard let reloaded = PDFDocument(url: targetURL) else {
-            refreshIcons()
-            return
-        }
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        pdfView.document = reloaded
-        CATransaction.commit()
-        if focusIndex != NSNotFound, focusIndex >= 0, let page = reloaded.page(at: focusIndex) {
-            pdfView.go(to: page)
-            logHighlightSummary("after_reload", page: page, groupID: nil)
+        // We persist the document to disk but avoid reloading the document object into the PDFView.
+        // Reloading replaced the in-memory document and cleared `highlightedSelections`; keeping
+        // the in-memory document preserves the user's selection/highlight visual state.
+        if focusIndex != NSNotFound, focusIndex >= 0 {
+            if let page = document.page(at: focusIndex) {
+                pdfView.go(to: page)
+                logHighlightSummary("after_persist", page: page, groupID: nil)
+            }
         }
         pdfView.scaleFactor = currentScale
         refreshIcons()
