@@ -1,8 +1,8 @@
 {
   "builtTestProducts" : [
     {
-      "binaryPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.xctest/Contents/MacOS/PreviewLikePDFZoomPackageTests",
-      "packagePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom",
+      "binaryPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.xctest/Contents/MacOS/PreviewLikePDFZoomPackageTests",
+      "packagePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom",
       "productName" : "PreviewLikePDFZoomPackageTests"
     }
   ],
@@ -23,31 +23,31 @@
   "swiftCommands" : {
     "C.PreviewLikePDFZoomApp-arm64-apple-macosx26.0-debug.module" : {
       "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-      "fileList" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources",
-      "importPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "fileList" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources",
+      "importPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "inputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources"
         }
       ],
       "isLibrary" : false,
       "moduleName" : "PreviewLikePDFZoomApp",
-      "moduleOutputPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomApp.swiftmodule",
+      "moduleOutputPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomApp.swiftmodule",
       "objects" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -56,7 +56,7 @@
         "-enable-batch-mode",
         "-serialize-diagnostics",
         "-index-store-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
         "-Onone",
         "-enable-testing",
         "-j12",
@@ -64,7 +64,7 @@
         "-DDEBUG",
         "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
         "-module-cache-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
         "-parseable-output",
         "-Xfrontend",
         "-entry-point-function-name",
@@ -106,67 +106,72 @@
         "-package-name",
         "previewlikepdfzoom"
       ],
-      "outputFileMapPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/output-file-map.json",
+      "outputFileMapPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/output-file-map.json",
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomApp.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomApp.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
       ],
-      "tempsPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build",
+      "tempsPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build",
       "wholeModuleOptimization" : false
     },
     "C.PreviewLikePDFZoomKit-arm64-apple-macosx26.0-debug.module" : {
       "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-      "fileList" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources",
-      "importPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "fileList" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources",
+      "importPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "inputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/LeftToolbarClusterAutoScale.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources"
         }
       ],
       "isLibrary" : true,
       "moduleName" : "PreviewLikePDFZoomKit",
-      "moduleOutputPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule",
+      "moduleOutputPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule",
       "objects" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/LeftToolbarClusterAutoScale.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -175,7 +180,7 @@
         "-enable-batch-mode",
         "-serialize-diagnostics",
         "-index-store-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
         "-Onone",
         "-enable-testing",
         "-j12",
@@ -183,12 +188,12 @@
         "-DDEBUG",
         "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
         "-module-cache-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
         "-parseable-output",
         "-parse-as-library",
         "-emit-objc-header",
         "-emit-objc-header-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/include/PreviewLikePDFZoomKit-Swift.h",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/include/PreviewLikePDFZoomKit-Swift.h",
         "-color-diagnostics",
         "-swift-version",
         "5",
@@ -225,86 +230,106 @@
         "-package-name",
         "previewlikepdfzoom"
       ],
-      "outputFileMapPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/output-file-map.json",
+      "outputFileMapPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/output-file-map.json",
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/LeftToolbarClusterAutoScale.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/LeftToolbarClusterAutoScale.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
       ],
-      "tempsPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build",
+      "tempsPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build",
       "wholeModuleOptimization" : false
     },
     "C.PreviewLikePDFZoomKitTests-arm64-apple-macosx26.0-debug.module" : {
       "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-      "fileList" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources",
-      "importPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "fileList" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources",
+      "importPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "inputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/LeftToolbarClusterAutoScaleTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationCoordinateStabilityTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationPersistenceTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKit.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources"
         }
       ],
       "isLibrary" : true,
       "moduleName" : "PreviewLikePDFZoomKitTests",
-      "moduleOutputPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule",
+      "moduleOutputPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule",
       "objects" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/LeftToolbarClusterAutoScaleTests.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationCoordinateStabilityTests.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationPersistenceTests.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -313,7 +338,7 @@
         "-enable-batch-mode",
         "-serialize-diagnostics",
         "-index-store-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
         "-Onone",
         "-enable-testing",
         "-Xfrontend",
@@ -323,7 +348,7 @@
         "-DDEBUG",
         "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
         "-module-cache-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
         "-parseable-output",
         "-parse-as-library",
         "-color-diagnostics",
@@ -362,66 +387,81 @@
         "-package-name",
         "previewlikepdfzoom"
       ],
-      "outputFileMapPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/output-file-map.json",
+      "outputFileMapPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/output-file-map.json",
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/LeftToolbarClusterAutoScaleTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationCoordinateStabilityTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationPersistenceTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/LeftToolbarClusterAutoScaleTests.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationCoordinateStabilityTests.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationPersistenceTests.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
       ],
-      "tempsPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build",
+      "tempsPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build",
       "wholeModuleOptimization" : false
     },
     "C.PreviewLikePDFZoomPackageTests-arm64-apple-macosx26.0-debug.module" : {
       "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-      "fileList" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources",
-      "importPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "fileList" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources",
+      "importPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "inputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomKitTests.swiftmodule"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources"
         }
       ],
       "isLibrary" : true,
       "moduleName" : "PreviewLikePDFZoomPackageTests",
-      "moduleOutputPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomPackageTests.swiftmodule",
+      "moduleOutputPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomPackageTests.swiftmodule",
       "objects" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -430,7 +470,7 @@
         "-enable-batch-mode",
         "-serialize-diagnostics",
         "-index-store-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
         "-Onone",
         "-enable-testing",
         "-Xfrontend",
@@ -440,12 +480,12 @@
         "-DDEBUG",
         "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
         "-module-cache-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
         "-parseable-output",
         "-parse-as-library",
         "-emit-objc-header",
         "-emit-objc-header-path",
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/include/PreviewLikePDFZoomPackageTests-Swift.h",
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/include/PreviewLikePDFZoomPackageTests-Swift.h",
         "-color-diagnostics",
         "-plugin-path",
         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
@@ -479,22 +519,22 @@
         "-package-name",
         "previewlikepdfzoom"
       ],
-      "outputFileMapPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/output-file-map.json",
+      "outputFileMapPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/output-file-map.json",
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomPackageTests.swiftmodule"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules/PreviewLikePDFZoomPackageTests.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
+        "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
       ],
-      "tempsPath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build",
+      "tempsPath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build",
       "wholeModuleOptimization" : false
     }
   },
@@ -509,16 +549,16 @@
       "-package-name",
       "previewlikepdfzoom",
       "-c",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift",
       "-I",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "-target",
       "arm64-apple-macosx13.0",
       "-incremental",
       "-enable-batch-mode",
       "-serialize-diagnostics",
       "-index-store-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
       "-Onone",
       "-enable-testing",
       "-j12",
@@ -526,7 +566,7 @@
       "-DDEBUG",
       "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
       "-module-cache-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
       "-parseable-output",
       "-Xfrontend",
       "-entry-point-function-name",
@@ -577,20 +617,21 @@
       "-package-name",
       "previewlikepdfzoom",
       "-c",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/LeftToolbarClusterAutoScale.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift",
       "-I",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "-target",
       "arm64-apple-macosx13.0",
       "-incremental",
       "-enable-batch-mode",
       "-serialize-diagnostics",
       "-index-store-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
       "-Onone",
       "-enable-testing",
       "-j12",
@@ -598,12 +639,12 @@
       "-DDEBUG",
       "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
       "-module-cache-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
       "-parseable-output",
       "-parse-as-library",
       "-emit-objc-header",
       "-emit-objc-header-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/include/PreviewLikePDFZoomKit-Swift.h",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/include/PreviewLikePDFZoomKit-Swift.h",
       "-color-diagnostics",
       "-swift-version",
       "5",
@@ -649,19 +690,22 @@
       "-package-name",
       "previewlikepdfzoom",
       "-c",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/LeftToolbarClusterAutoScaleTests.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationCoordinateStabilityTests.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationPersistenceTests.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift",
       "-I",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "-target",
       "arm64-apple-macosx14.0",
       "-incremental",
       "-enable-batch-mode",
       "-serialize-diagnostics",
       "-index-store-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
       "-Onone",
       "-enable-testing",
       "-Xfrontend",
@@ -671,7 +715,7 @@
       "-DDEBUG",
       "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
       "-module-cache-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
       "-parseable-output",
       "-parse-as-library",
       "-color-diagnostics",
@@ -719,16 +763,16 @@
       "-package-name",
       "previewlikepdfzoom",
       "-c",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift",
       "-I",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/Modules",
       "-target",
       "arm64-apple-macosx13.0",
       "-incremental",
       "-enable-batch-mode",
       "-serialize-diagnostics",
       "-index-store-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/index/store",
       "-Onone",
       "-enable-testing",
       "-Xfrontend",
@@ -738,12 +782,12 @@
       "-DDEBUG",
       "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
       "-module-cache-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/ModuleCache",
       "-parseable-output",
       "-parse-as-library",
       "-emit-objc-header",
       "-emit-objc-header-path",
-      "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/include/PreviewLikePDFZoomPackageTests-Swift.h",
+      "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/include/PreviewLikePDFZoomPackageTests-Swift.h",
       "-color-diagnostics",
       "-plugin-path",
       "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
@@ -799,14 +843,14 @@
 
   },
   "testEntryPointCommands" : {
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift" : {
       "inputs" : [
 
       ],
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
         }
       ]
     }
@@ -817,7 +861,7 @@
     }
   },
   "writeCommands" : {
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp-entitlement.plist" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp-entitlement.plist" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -829,9 +873,9 @@
           "name" : "<com.apple.security.get-task-allow>"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp-entitlement.plist"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp-entitlement.plist"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -840,12 +884,12 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomApp/main.swift"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/sources"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.product/Objects.LinkFileList" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.product/Objects.LinkFileList" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -854,32 +898,36 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.build/main.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/LeftToolbarClusterAutoScale.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.product/Objects.LinkFileList"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomApp.product/Objects.LinkFileList"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -888,28 +936,32 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ArxivShareEmailTemplate.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/LeftToolbarClusterAutoScale.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/PDFCoordinateConversions.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomController.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomLadder.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Sources/PreviewLikePDFZoomKit/ZoomModes.swift"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/sources"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -918,24 +970,36 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ArxivShareEmailTemplateTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/LeftToolbarClusterAutoScaleTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationCoordinateStabilityTests.swift"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/PDFAnnotationPersistenceTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/SnapshotTesting.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/TestPDFFactory.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/Tests/PreviewLikePDFZoomKitTests/ZoomControllerTests.swift"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/sources"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -944,12 +1008,12 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/sources"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.product/Objects.LinkFileList" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.product/Objects.LinkFileList" : {
       "alwaysOutOfDate" : false,
       "inputs" : [
         {
@@ -958,48 +1022,64 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ArxivShareEmailTemplate.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/LeftToolbarClusterAutoScale.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/PDFCoordinateConversions.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomController.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomLadder.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKit.build/ZoomModes.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ArxivShareEmailTemplateTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/LeftToolbarClusterAutoScaleTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationCoordinateStabilityTests.swift.o"
         },
         {
           "kind" : "file",
-          "name" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/PDFAnnotationPersistenceTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/SnapshotTesting.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/TestPDFFactory.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomKitTests.build/ZoomControllerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.product/Objects.LinkFileList"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.product/Objects.LinkFileList"
     },
-    "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+    "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
       "alwaysOutOfDate" : true,
       "inputs" : [
         {
@@ -1011,7 +1091,7 @@
           "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
         }
       ],
-      "outputFilePath" : "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+      "outputFilePath" : "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
     }
   }
 }

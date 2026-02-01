@@ -2,11 +2,11 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Watch & Relaunch arxiv-picker.swift",
+			"label": "Build AstroStack.app",
 			"type": "shell",
 			"command": "zsh",
 			"args": [
-				"${workspaceFolder}/arxiv-picker.watch.sh"
+				"${workspaceFolder}/scripts/build-app.sh"
 			],
 			"isBackground": true,
 			"problemMatcher": [],

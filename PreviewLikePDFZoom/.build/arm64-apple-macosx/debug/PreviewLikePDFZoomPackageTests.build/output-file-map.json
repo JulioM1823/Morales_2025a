@@ -1,12 +1,12 @@
 {
   "": {
-    "swift-dependencies": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/master.swiftdeps"
+    "swift-dependencies": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/master.swiftdeps"
   },
-  "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift": {
-    "dependencies": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.d",
-    "object": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o",
-    "swiftmodule": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner~partial.swiftmodule",
-    "swift-dependencies": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swiftdeps",
-    "diagnostics": "/Users/juliomorales/bin/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.dia"
+  "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.d",
+    "object": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/juliomorales/Smart Home/AstroStack/PreviewLikePDFZoom/.build/arm64-apple-macosx/debug/PreviewLikePDFZoomPackageTests.build/runner.dia"
   }
 }

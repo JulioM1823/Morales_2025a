@@ -1,0 +1,113 @@
+<linkset>
+  <html:link rel="localization" href="notero.ftl" />
+</linkset>
+
+<!-- `Notero_Preferences` is defined in `src/content/prefs/preferences.tsx` -->
+<groupbox class="notero-groupbox" onload="Notero_Preferences.init()">
+  <label>
+    <html:h2 data-l10n-id="notero-preferences-notion-groupbox-heading" />
+  </label>
+  <hbox>
+    <button
+      class="notero-margin-block-end"
+      data-l10n-id="notero-preferences-notion-connect-button"
+      hidden="true"
+      id="notero-notionConnect"
+    />
+  </hbox>
+  <image class="zotero-spinner-16" id="notero-notionConnection-spinner" />
+  <hbox
+    align="center"
+    class="notero-margin-block-end"
+    hidden="true"
+    id="notero-notionToken-container"
+  >
+    <label
+      control="notero-notionToken"
+      data-l10n-id="notero-preferences-notion-token-label"
+    />
+    <html:input
+      data-l10n-id="notero-preferences-notion-token-input"
+      id="notero-notionToken"
+      type="text"
+    />
+  </hbox>
+  <vbox align="start" hidden="true" id="notero-notionConnection-container">
+    <hbox align="center">
+      <label
+        data-l10n-id="notero-preferences-notion-workspace"
+        id="notero-notionWorkspace"
+      />
+      <button
+        data-l10n-id="notero-preferences-notion-upgrade-button"
+        id="notero-notionUpgradeConnection"
+      />
+      <button
+        data-l10n-id="notero-preferences-notion-disconnect-button"
+        id="notero-notionDisconnect"
+      />
+    </hbox>
+    <hbox align="center" class="notero-margin-block-start">
+      <label
+        control="notero-notionDatabase"
+        data-l10n-id="notero-preferences-notion-database"
+      />
+      <menulist
+        id="notero-notionDatabase"
+        disabled="true"
+        native="true"
+        preference="extensions.notero.notionDatabaseID"
+      >
+        <menupopup />
+      </menulist>
+    </hbox>
+  </vbox>
+  <label class="notero-error" hidden="true" id="notero-notionError" />
+</groupbox>
+
+<groupbox class="notero-groupbox">
+  <label>
+    <html:h2 data-l10n-id="notero-preferences-properties-groupbox-heading" />
+  </label>
+  <label data-l10n-id="notero-preferences-properties-groupbox-description" />
+  <hbox align="center" class="notero-margin-block-start">
+    <label
+      control="notero-pageTitleFormat"
+      data-l10n-id="notero-preferences-page-title-format"
+    />
+    <menulist
+      id="notero-pageTitleFormat"
+      disabled="true"
+      native="true"
+      preference="extensions.notero.pageTitleFormat"
+    >
+      <menupopup />
+    </menulist>
+  </hbox>
+</groupbox>
+
+<groupbox class="notero-groupbox">
+  <label>
+    <html:h2 data-l10n-id="notero-preferences-sync-groupbox-heading" />
+  </label>
+  <label data-l10n-id="notero-preferences-sync-groupbox-description1" />
+  <label data-l10n-id="notero-preferences-sync-groupbox-description2" />
+  <hbox
+    class="notero-margin-block-start notero-margin-block-end virtualized-table-container"
+    flex="1"
+  >
+    <html:div id="notero-syncConfigsTable-container" />
+  </hbox>
+  <checkbox
+    data-l10n-id="notero-preferences-sync-on-modify-items"
+    id="notero-syncOnModifyItems"
+    native="true"
+    preference="extensions.notero.syncOnModifyItems"
+  />
+  <checkbox
+    data-l10n-id="notero-preferences-sync-notes"
+    id="notero-syncNotes"
+    native="true"
+    preference="extensions.notero.syncNotes"
+  />
+</groupbox>

@@ -1,0 +1,250 @@
+//
+// Mixins
+//
+
+@use "sass:math";
+@mixin popover-pointer($width, $height, $offset: 50%, $position: null) {
+	$border-x: math.div($width, 2);
+	$border-y: $height;
+
+	&::before,
+	&::after {
+		content: "";
+		position: absolute;
+		border: solid transparent;
+		border-width: $border-y $border-x;
+
+	}
+
+	#{if($position == "bottom-center", "&", "&[class*='bottom-center']")} {
+		&::before,
+		&::after {
+			border-top-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			left: 50%;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			top: (-$border-y - 1px);
+			border-bottom-color: var(--color-panedivider);
+		}
+
+		&::after {
+			top: -$border-y;
+			border-bottom-color: var(--color-background);
+		}
+	}
+
+
+	#{if($position == "top-center", "&", "&[class*='top-center']")} {
+		&::before,
+		&::after {
+			border-bottom-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			left: 50%;
+			/*! rtl:end:ignore */
+
+		}
+
+		&::before {
+			bottom: (-$border-y - 1px);
+			border-top-color: var(--color-panedivider);
+		}
+
+		&::after {
+			bottom: -$border-y;
+			border-top-color: var(--color-background);
+		}
+	}
+
+	#{if($position == "left-center", "&", "&[class*='left-center']")} {
+		&::before,
+		&::after {
+			/*! rtl:begin:ignore */
+			border-right-width: 0;
+			transform: translateY(-8px);
+			top: 50%;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			/*! rtl:begin:ignore */
+			right: (-$border-x - 1px);
+			border-left-color: var(--color-panedivider);
+			/*! rtl:end:ignore */
+		}
+
+		&::after {
+			/*! rtl:begin:ignore */
+			right: -$border-x;
+			border-left-color: var(--color-background);
+			/*! rtl:end:ignore */
+		}
+	}
+
+	#{if($position == "right-center", "&", "&[class*='right-center']")} {
+		&::before,
+		&::after {
+			/*! rtl:begin:ignore */
+			border-left-width: 0;
+			transform: translateY(-8px);
+			top: 50%;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			/*! rtl:begin:ignore */
+			left: (-$border-x - 1px);
+			border-right-color: var(--color-panedivider);
+			/*! rtl:end:ignore */
+		}
+
+		&::after {
+			/*! rtl:begin:ignore */
+			left: -$border-x;
+			border-right-color: var(--color-background);
+			/*! rtl:end:ignore */
+		}
+	}
+
+	// ---
+
+	#{if($position == "top-left", "&", "&[class*='top-left']")} {
+		&::before,
+		&::after {
+			border-bottom-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			left: 20px;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			bottom: (-$border-y - 1px);
+			border-top-color: var(--color-panedivider);
+		}
+
+		&::after {
+			bottom: -$border-y;
+			border-top-color: var(--color-background);
+		}
+	}
+
+	#{if($position == "top-right", "&", "&[class*='top-right']")} {
+		&::before,
+		&::after {
+			border-bottom-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			right: 20px;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			bottom: (-$border-y - 1px);
+			border-top-color: var(--color-panedivider);
+		}
+
+		&::after {
+			bottom: -$border-y;
+			border-top-color: var(--color-background);
+		}
+	}
+
+	#{if($position == "bottom-left", "&", "&[class*='bottom-left']")} {
+		&::before,
+		&::after {
+			border-top-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			left: 20px;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			top: (-$border-y - 1px);
+			border-bottom-color: var(--color-panedivider);
+		}
+
+		&::after {
+			top: -$border-y;
+			border-bottom-color: var(--color-background);
+		}
+	}
+
+	#{if($position == "bottom-right", "&", "&[class*='bottom-right']")} {
+		&::before,
+		&::after {
+			border-top-width: 0;
+			transform: translateX(-$border-x);
+			/*! rtl:begin:ignore */
+			right: 20px;
+			/*! rtl:end:ignore */
+		}
+
+		&::before {
+			top: (-$border-y - 1px);
+			border-bottom-color: var(--color-panedivider);
+		}
+
+		&::after {
+			top: -$border-y;
+			border-bottom-color: var(--color-background);
+		}
+	}
+}
+
+// An implementation of Firefox light-dark() CSS mixin, which is not supported in 102
+@mixin light-dark($prop, $light-color, $dark-color) {
+	@media (prefers-color-scheme: light) {
+		#{$prop}: $light-color;
+	}
+	@media (prefers-color-scheme: dark) {
+		#{$prop}: $dark-color;
+	}
+}
+
+@mixin macOS-inactive-opacity {
+	$selector: &;
+	@at-root {
+		@media (-moz-platform: macos) {
+			#{$selector} {
+				&:-moz-window-inactive {
+					opacity: 0.6;
+				}
+			}
+		}
+	}
+}
+
+@mixin pdf-page-image-dark-light {
+	$selector: &;
+	@at-root {
+		:root[data-color-scheme="dark"] #{$selector} {
+			filter: brightness(0.8);
+		}
+
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-color-scheme]) {
+				#{$selector} {
+					filter: brightness(0.8);
+				}
+			}
+		}
+	}
+}
+
+@mixin popup {
+	position: absolute;
+	z-index: $z-index-find-popup;
+	background: var(--material-toolbar);
+	border-radius: 6px;
+	box-shadow: 0 0   3px  0 rgba(0, 0, 0, 0.55),
+				0 8px 40px 0 rgba(0, 0, 0, 0.25),
+				0 0   3px  0 rgba(255, 255, 255, 0.1) inset;
+	display: flex;
+	flex-direction: column;
+}

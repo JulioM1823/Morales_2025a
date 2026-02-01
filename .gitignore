@@ -1,0 +1,70 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temp
+logs/
+*.log
+tmp/
+tmp*/
+*.tmp
+*.bak
+*.old
+
+# Build artifacts
+build/
+dist/
+out/
+coverage/
+.nyc_output/
+.turbo/
+.parcel-cache/
+.cache/
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.yarn/logs/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Swift/Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.dSYM
+*.dSYM.zip
+*.dSYM.tar
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+.clang-module-cache/
+
+# Local scratch
+scratch/
+archive/
