@@ -1,10 +1,16 @@
-Article/main.log
-Article/main.aux
-Article/main.bbl
-Article/main.fdb_latexmk
-Article/main.fls
-Article/main.out
-Article/main.synctex.gz
+Morales 2025a et al/main.log
+Morales 2025a et al/main.aux
+Morales 2025a et al/main.bbl
+Morales 2025a et al/main.fdb_latexmk
+Morales 2025a et al/main.fls
+Morales 2025a et al/main.out
+Morales 2025a et al/main.synctex.gz
+Morales 2025a et al/Figures/Animations/
 Data/
-Article/Figures/Animations/
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
 .vscode/
+Code/Time-Distance/Oana_codes/
