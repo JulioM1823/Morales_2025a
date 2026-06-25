@@ -2,8 +2,8 @@
 # download_files.sh
 #
 # Purpose:
-#   Fetch a remote CO5BOLD HDF5/OPeNDAP resource, subset in z, bin in x/y/z,
-#   and write a compact NetCDF output to a target directory.
+#   Fetch a remote CO5BOLD HDF5/OPeNDAP resource, bin in x/y, optionally
+#   bin in z, and write a compact NetCDF output to a target directory.
 #
 # Usage:
 #   ./download_files.sh <url_list.txt> <output_dir>
@@ -13,11 +13,16 @@
 #   REMOTE_RETRIES        (count)   default 3
 #   REMOTE_TIMEOUT_STEP   (seconds) default 300; added per retry attempt
 #   SKIP_EXISTING         (0/1)     default 1; skip outputs already written
+#   Z_BIN_ENABLED         (0/1)     default 1; apply vertical binning
+#   Z_BIN                 (int)     default 11; z-bin factor
+#   Z_SUBSET_START        (int)     default 54; first xc3 index before binning
+#   Z_SUBSET_END          (int)     default 119; last xc3 index before binning
 #
 # Notes:
 #   - Requires NCO tools: ncks, ncap2, ncwa, ncatted, ncrename
 #   - Requires GNU timeout as `gtimeout` (macOS coreutils). If `timeout` exists,
 #     the script will use it as a fallback.
+#   - Failed URLs from the current run are written to <output_dir>/failed_urls.txt
 #
 set -euo pipefail
 
@@ -32,6 +37,13 @@ set -euo pipefail
 : "${AUTO_MAX_JOBS_CAP:=4}"
 : "${AUTO_MIN_IMPROVEMENT_PCT:=5}"
 : "${SKIP_EXISTING:=1}"
+: "${Z_BIN_ENABLED:=1}"
+: "${Z_BIN:=11}"
+: "${Z_SUBSET_START:=54}"
+: "${Z_SUBSET_END:=119}"
+
+# Use a fixed fast local scratch area for per-file intermediates.
+WORK_TMP_ROOT="/tmp/morales_2025a_download_tmp"
 
 # ---------------------------
 # Helpers
@@ -50,6 +62,23 @@ emit_log_block() {
   cat "${log_file}"
   printf '\n'
   rm -f "${log_file}"
+}
+
+cleanup_run_tmpdirs() {
+  local run_id="$1"
+  local tmp_matches=( "${OUT_DIR}"/.tmp_*_run${run_id}(N) )
+
+  if [[ -n "${WORK_TMP_ROOT:-}" ]]; then
+    tmp_matches+=( "${WORK_TMP_ROOT}"/download_files_tmp_run${run_id}_*(N) )
+  fi
+
+  (( ${#tmp_matches[@]} > 0 )) || return 0
+  rm -rf -- "${tmp_matches[@]}"
+}
+
+record_failed_url() {
+  local url="$1"
+  print -r -- "${url}" >> "${FAILED_URLS_FILE}"
 }
 
 print_progress_estimate() {
@@ -103,26 +132,39 @@ remote_run() {
   local attempt=1
   local rc=0
   local attempt_timeout
+  local scratch_dir
   REMOTE_RUN_LAST_ATTEMPTS=0
   REMOTE_RUN_LAST_RC=0
+
+  # Reuse one scratch directory per remote command invocation.
+  scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/download_files_remote.XXXXXX")" || die "Unable to create remote scratch dir"
+
   while (( attempt <= REMOTE_RETRIES )); do
     attempt_timeout=$(( REMOTE_TIMEOUT + (attempt - 1) * REMOTE_TIMEOUT_STEP ))
     set +e
-    "${TIMEOUT_CMD}" "${attempt_timeout}" "$@"
+    (
+      cd "${scratch_dir}" || exit 1
+      "${TIMEOUT_CMD}" "${attempt_timeout}" "$@"
+    )
     rc=$?
     set -e
 
     if (( rc == 0 )); then
+      rm -rf -- "${scratch_dir}"
       REMOTE_RUN_LAST_ATTEMPTS="${attempt}"
       REMOTE_RUN_LAST_RC=0
       return 0
     fi
 
     echo "[WARN] Remote command failed/timeout (attempt ${attempt}/${REMOTE_RETRIES}, timeout=${attempt_timeout}s, rc=${rc}): $@" >&2
-    local sleep_s=$(( 3 * attempt * attempt ))
-    sleep "${sleep_s}"
+    if (( attempt < REMOTE_RETRIES )); then
+      local sleep_s=$(( 3 * attempt * attempt ))
+      sleep "${sleep_s}"
+    fi
     (( attempt += 1 ))
   done
+
+  rm -rf -- "${scratch_dir}"
   REMOTE_RUN_LAST_ATTEMPTS=$(( attempt - 1 ))
   REMOTE_RUN_LAST_RC="${rc}"
   return "${rc}"
@@ -140,6 +182,36 @@ dim0_size_from_ncks_meta() {
   awk -F'[,= ]+' '/dimension 0:/{for(i=1;i<=NF;i++) if($i=="size"){print $(i+1); exit}}'
 }
 
+# Read a named dimension size from `ncks -M` metadata output.
+dim_size_from_ncks_header() {
+  local metadata="$1"
+  local dim_name="$2"
+
+  awk -v dim="${dim_name}" '
+    $1 == dim && $2 == "=" {
+      gsub(/[^0-9]/, "", $3)
+      print $3
+      exit
+    }
+  ' <<< "${metadata}"
+}
+
+# Check whether a variable exists in `ncks -M` metadata output.
+var_exists_in_ncks_header() {
+  local metadata="$1"
+  local var_name="$2"
+
+  awk -v var="${var_name}" '
+    $0 ~ "^[[:space:]]*[A-Za-z_][A-Za-z0-9_[:space:]]+[[:space:]]" var "[[:space:]]*\\(" {
+      found = 1
+      exit
+    }
+    END {
+      exit(found ? 0 : 1)
+    }
+  ' <<< "${metadata}"
+}
+
 # ---------------------------
 # Validate inputs
 # ---------------------------
@@ -150,6 +222,16 @@ OUT_DIR="$2"
 
 [[ -f "${URL_LIST}" ]] || die "URL list not found: ${URL_LIST}"
 mkdir -p "${OUT_DIR}" || die "Unable to create output dir: ${OUT_DIR}"
+URL_LIST="${URL_LIST:A}"
+OUT_DIR="${OUT_DIR:A}"
+
+if [[ -n "${WORK_TMP_ROOT}" ]]; then
+  mkdir -p "${WORK_TMP_ROOT}" || die "Unable to create WORK_TMP_ROOT: ${WORK_TMP_ROOT}"
+  WORK_TMP_ROOT="${WORK_TMP_ROOT:A}"
+fi
+
+FAILED_URLS_FILE="${OUT_DIR}/failed_urls.txt"
+rm -f "${FAILED_URLS_FILE}"
 
 need_cmd ncks
 need_cmd ncap2
@@ -159,6 +241,7 @@ need_cmd ncrename
 need_cmd sed
 need_cmd awk
 need_cmd date
+need_cmd mktemp
 
 # ---------------------------
 # Read URLs
@@ -178,9 +261,19 @@ done < "${URL_LIST}"
 [[ "${AUTO_MIN_IMPROVEMENT_PCT}" == <-> ]] || die "AUTO_MIN_IMPROVEMENT_PCT must be an integer >= 0"
 [[ "${REMOTE_TIMEOUT_STEP}" == <-> ]] || die "REMOTE_TIMEOUT_STEP must be an integer >= 0"
 [[ "${SKIP_EXISTING}" == <-> ]] || die "SKIP_EXISTING must be 0 or 1"
+[[ "${Z_BIN_ENABLED}" == <-> ]] || die "Z_BIN_ENABLED must be 0 or 1"
 (( AUTO_MAX_JOBS_CAP >= 1 )) || die "AUTO_MAX_JOBS_CAP must be >= 1"
 (( REMOTE_TIMEOUT_STEP >= 0 )) || die "REMOTE_TIMEOUT_STEP must be >= 0"
 (( SKIP_EXISTING == 0 || SKIP_EXISTING == 1 )) || die "SKIP_EXISTING must be 0 or 1"
+(( Z_BIN_ENABLED == 0 || Z_BIN_ENABLED == 1 )) || die "Z_BIN_ENABLED must be 0 or 1"
+
+if (( Z_BIN_ENABLED )); then
+  [[ "${Z_BIN}" == <-> ]] || die "Z_BIN must be an integer >= 1"
+  [[ "${Z_SUBSET_START}" == <-> ]] || die "Z_SUBSET_START must be an integer"
+  [[ "${Z_SUBSET_END}" == <-> ]] || die "Z_SUBSET_END must be an integer"
+  (( Z_BIN >= 1 )) || die "Z_BIN must be >= 1"
+  (( Z_SUBSET_END >= Z_SUBSET_START )) || die "Z_SUBSET_END must be >= Z_SUBSET_START"
+fi
 
 typeset -A seen_stems
 for u in "${URLS[@]}"; do
@@ -216,7 +309,8 @@ auto_mode=0
 effective_max_jobs=1
 if [[ "${MAX_JOBS}" == "auto" ]]; then
   auto_mode=1
-  effective_max_jobs=1
+  effective_max_jobs=2
+  (( effective_max_jobs > AUTO_MAX_JOBS_CAP )) && effective_max_jobs="${AUTO_MAX_JOBS_CAP}"
 else
   [[ "${MAX_JOBS}" == <-> ]] || die "MAX_JOBS must be an integer >= 1 or 'auto'"
   (( MAX_JOBS >= 1 )) || die "MAX_JOBS must be >= 1"
@@ -227,6 +321,9 @@ if (( skipped_existing > 0 )); then
   echo "[INFO] Skipping ${skipped_existing} existing output(s); ${local_count} file(s) remain."
 fi
 echo "[INFO] Will process ${local_count} file(s) with MAX_JOBS=${MAX_JOBS}"
+if [[ -n "${WORK_TMP_ROOT}" ]]; then
+  echo "[INFO] Using WORK_TMP_ROOT=${WORK_TMP_ROOT} for per-file intermediates"
+fi
 
 # ---------------------------
 # Main per-URL processing
@@ -248,8 +345,15 @@ process_one() {
     local ts pid tmpdir
     ts="$(date +%Y%m%d_%H%M%S)"
     pid="$$"
-    tmpdir="${OUT_DIR}/.tmp_${ts}_run${run_id}"
-    mkdir -p "${tmpdir}"
+    if [[ -n "${WORK_TMP_ROOT}" ]]; then
+      tmpdir="$(mktemp -d "${WORK_TMP_ROOT}/download_files_tmp_run${run_id}_XXXXXX")" || {
+        echo "[ERROR] [${stem}] Unable to create temp directory under WORK_TMP_ROOT=${WORK_TMP_ROOT}" >&2
+        return 1
+      }
+    else
+      tmpdir="${OUT_DIR}/.tmp_${ts}_run${run_id}"
+      mkdir -p "${tmpdir}"
+    fi
 
     local tmp_subset_depth="${tmpdir}/.subset_depth.${stem}.tmp.nc"
     local tmp_binned="${tmpdir}/.binned_xyz.${stem}.tmp.nc"
@@ -268,61 +372,99 @@ process_one() {
     # ---------------------------
     # Step 2: define binning factors
     # ---------------------------
-    log "2/8" "[${stem}] Setting horizontal and vertical binning factors (2/8)"
+    log "2/8" "[${stem}] Setting binning factors (2/8)"
     local xy_bin=2
-    local z_bin=11
+    local z_bin=1
+    local z_subset_start="${Z_SUBSET_START}"
+    local z_subset_end="${Z_SUBSET_END}"
+    if (( Z_BIN_ENABLED )); then
+      z_bin="${Z_BIN}"
+      log "2/8" "[${stem}] z-binning enabled: bin=${z_bin}, xc3[${z_subset_start}:${z_subset_end}]"
+    else
+      log "2/8" "[${stem}] z-binning disabled"
+    fi
 
     # ---------------------------
-    # Step 3: subset vertical
+    # Step 3: download source data without z-axis subsetting
     # ---------------------------
-    # Values from your run (xc3[54:] for a 66-sample slice => 54..119; xb3 includes one more => 54..120).
-    local z0=54
-    local z1=119
-    local zb1=120
-    local z_count=$(( z1 - z0 + 1 ))
+    log "3/8" "[${stem}] Downloading source data (3/8)"
 
-    log "3/8" "[${stem}] Subsetting vertical (forcing coord payload fetch): xc3[${z0}:] xb3[${z0}:] (3/8)"
-
-    remote_run ncks -O \
-      -d xc3,"${z0}","${z1}" \
-      -d xb3,"${z0}","${zb1}" \
-      "${url}" \
-      "${tmp_subset_depth}"
+    if (( Z_BIN_ENABLED )); then
+      local z_subset_end_bounds=$(( z_subset_end + 1 ))
+      if ! remote_run ncks -O \
+        -d xc3,"${z_subset_start}","${z_subset_end}" \
+        -d xb3,"${z_subset_start}","${z_subset_end_bounds}" \
+        "${url}" \
+        "${tmp_subset_depth}"; then
+        local download_attempts_failed="${REMOTE_RUN_LAST_ATTEMPTS:-0}"
+        local download_rc="${REMOTE_RUN_LAST_RC:-1}"
+        echo "[ERROR] [${stem}] Remote download failed after ${download_attempts_failed} attempt(s) (last rc=${download_rc}): ${url}" >&2
+        return "${download_rc}"
+      fi
+    else
+      if ! remote_run ncks -O \
+        "${url}" \
+        "${tmp_subset_depth}"; then
+      local download_attempts_failed="${REMOTE_RUN_LAST_ATTEMPTS:-0}"
+      local download_rc="${REMOTE_RUN_LAST_RC:-1}"
+      echo "[ERROR] [${stem}] Remote download failed after ${download_attempts_failed} attempt(s) (last rc=${download_rc}): ${url}" >&2
+      return "${download_rc}"
+    fi
+    fi
     local download_attempts="${REMOTE_RUN_LAST_ATTEMPTS:-1}"
+    [[ -s "${tmp_subset_depth}" ]] || {
+      echo "[ERROR] [${stem}] Remote download did not create expected output: ${tmp_subset_depth}" >&2
+      return 1
+    }
 
     # ---------------------------
-    # Step 4: detect optional vars locally, then read sliced coordinate sizes
+    # Step 4: detect optional vars locally, then read coordinate sizes
     # ---------------------------
-    log "4/8" "[${stem}] Detecting optional vars locally + deriving binned dimensions (4/8)"
-    local xc1_len xc2_len xb1_len xb2_len xc3_len xb3_len
+    log "4/8" "[${stem}] Detecting optional vars locally + deriving output dimensions (4/8)"
+    local xc1_len xc2_len xb1_len xb2_len xc3_len xb3_len ncks_header
 
-    # Detect optional variables from the already-downloaded local subset file.
-    # This removes three extra remote metadata round-trips per URL.
-    set +e
-    ncks -M -v bb1 "${tmp_subset_depth}" >/dev/null 2>&1; [[ $? -eq 0 ]] && has_bb1=1
-    ncks -M -v bb2 "${tmp_subset_depth}" >/dev/null 2>&1; [[ $? -eq 0 ]] && has_bb2=1
-    ncks -M -v bb3 "${tmp_subset_depth}" >/dev/null 2>&1; [[ $? -eq 0 ]] && has_bb3=1
-    set -e
+    # Read local metadata once to avoid repeated subprocess startup overhead.
+    ncks_header="$(ncks -M "${tmp_subset_depth}")" || {
+      echo "[ERROR] [${stem}] Failed to inspect metadata for ${tmp_subset_depth}" >&2
+      return 1
+    }
+
+    var_exists_in_ncks_header "${ncks_header}" bb1 && has_bb1=1
+    var_exists_in_ncks_header "${ncks_header}" bb2 && has_bb2=1
+    var_exists_in_ncks_header "${ncks_header}" bb3 && has_bb3=1
 
     (( has_bb1 )) && log "4/8" "[${stem}] Found bb1"
     (( has_bb2 )) && log "4/8" "[${stem}] Found bb2"
     (( has_bb3 )) && log "4/8" "[${stem}] Found bb3"
 
-    xc1_len="$(ncks --trd -m -v xc1 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
-    xc2_len="$(ncks --trd -m -v xc2 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
-    xb1_len="$(ncks --trd -m -v xb1 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
-    xb2_len="$(ncks --trd -m -v xb2 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
-    xc3_len="$(ncks --trd -m -v xc3 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
-    xb3_len="$(ncks --trd -m -v xb3 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+    xc1_len="$(dim_size_from_ncks_header "${ncks_header}" xc1)"
+    xc2_len="$(dim_size_from_ncks_header "${ncks_header}" xc2)"
+    xb1_len="$(dim_size_from_ncks_header "${ncks_header}" xb1)"
+    xb2_len="$(dim_size_from_ncks_header "${ncks_header}" xb2)"
+    xc3_len="$(dim_size_from_ncks_header "${ncks_header}" xc3)"
+    xb3_len="$(dim_size_from_ncks_header "${ncks_header}" xb3)"
 
-    (( xc3_len == z_count )) || die "xc3 slice length mismatch: got ${xc3_len}, expected ${z_count}"
-    (( xb3_len == z_count + 1 )) || die "xb3 slice length mismatch: got ${xb3_len}, expected $((z_count + 1))"
+    # Fallback for edge-case metadata formats from older NCO builds.
+    if [[ -z "${xc1_len}" || -z "${xc2_len}" || -z "${xb1_len}" || -z "${xb2_len}" || -z "${xc3_len}" || -z "${xb3_len}" ]]; then
+      xc1_len="$(ncks --trd -m -v xc1 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+      xc2_len="$(ncks --trd -m -v xc2 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+      xb1_len="$(ncks --trd -m -v xb1 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+      xb2_len="$(ncks --trd -m -v xb2 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+      xc3_len="$(ncks --trd -m -v xc3 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+      xb3_len="$(ncks --trd -m -v xb3 "${tmp_subset_depth}" | dim0_size_from_ncks_meta)"
+    fi
+
+    [[ -n "${xc1_len}" && -n "${xc2_len}" && -n "${xb1_len}" && -n "${xb2_len}" && -n "${xc3_len}" && -n "${xb3_len}" ]] || {
+      echo "[ERROR] [${stem}] Failed to derive coordinate lengths from ${tmp_subset_depth}" >&2
+      return 1
+    }
+
     (( xc1_len % xy_bin == 0 )) || die "xc1 length ${xc1_len} is not divisible by ${xy_bin}"
     (( xc2_len % xy_bin == 0 )) || die "xc2 length ${xc2_len} is not divisible by ${xy_bin}"
     (( xb1_len == xc1_len + 1 )) || die "xb1 length ${xb1_len} is inconsistent with xc1 length ${xc1_len}"
     (( xb2_len == xc2_len + 1 )) || die "xb2 length ${xb2_len} is inconsistent with xc2 length ${xc2_len}"
-    (( xc3_len % z_bin == 0 )) || die "xc3 length ${xc3_len} is not divisible by ${z_bin}"
     (( xb3_len == xc3_len + 1 )) || die "xb3 length ${xb3_len} is inconsistent with xc3 length ${xc3_len}"
+    (( xc3_len % z_bin == 0 )) || die "xc3 length ${xc3_len} is not divisible by z_bin=${z_bin}"
 
     local xc1_last=$(( xc1_len - 1 ))
     local xc2_last=$(( xc2_len - 1 ))
@@ -354,12 +496,15 @@ process_one() {
     for v in "${coords[@]}" "${phys[@]}"; do
       ncatted_args+=( -a _FillValue,"${v}",d,, )
     done
-    ncatted -O "${ncatted_args[@]}" "${tmp_subset_depth}" >/dev/null
+    ncatted -O "${ncatted_args[@]}" "${tmp_subset_depth}" >/dev/null || {
+      echo "[ERROR] [${stem}] Failed to strip _FillValue attributes from ${tmp_subset_depth}" >&2
+      return 1
+    }
 
     # ---------------------------
-    # Step 6: binning (x/y by 2; z by 11)
+    # Step 6: binning (x/y by 2; z unchanged)
     # ---------------------------
-    log "6/8" "[${stem}] Binning: x/y by 2 and z by 11 (6/8)"
+    log "6/8" "[${stem}] Binning: x/y by 2; z by ${z_bin} (6/8)"
 
     local expr=""
     expr+='defdim("xc1b",'${xc1b_len}');'
@@ -375,14 +520,18 @@ process_one() {
     expr+='xb1b[$xb1b]=xb1(0:'${xb1_last}':'${xy_bin}');'
     expr+='xb2b[$xb2b]=xb2(0:'${xb2_last}':'${xy_bin}');'
 
-    # z centers averaged over 11 slices; z bounds take every 11th
-    expr+='xc3b[$xc3b]=(1.0/'${z_bin}')*('
+    # Vertical coordinates averaged in bins; bounds take every z_bin-th entry
+    local z_terms=""
     local k
     for (( k=0; k<z_bin; k++ )); do
-      expr+='xc3('${k}':'${xc3_last}':'${z_bin}')'
-      (( k < z_bin - 1 )) && expr+='+'
+      local term="xc3(${k}:${xc3_last}:${z_bin})"
+      if [[ -z "${z_terms}" ]]; then
+        z_terms="${term}"
+      else
+        z_terms+="+${term}"
+      fi
     done
-    expr+=');'
+    expr+='xc3b[$xc3b]=(1.0/'${z_bin}')*('${z_terms}');'
     expr+='xb3b[$xb3b]=xb3(0:'${xb3_last}':'${z_bin}');'
 
     # Variables to bin
@@ -394,21 +543,39 @@ process_one() {
     # Build binned expressions for each variable
     for v in "${bin_vars[@]}"; do
       expr+="${v}_binned[\$xc3b,\$xc2b,\$xc1b]=(1.0/${z_bin})*0.25*("
+      local z_sum=""
       for (( k=0; k<z_bin; k++ )); do
-        expr+="(${v}(${k}:${xc3_last}:${z_bin},0:${xc2_last}:${xy_bin},0:${xc1_last}:${xy_bin})+${v}(${k}:${xc3_last}:${z_bin},1:${xc2_last}:${xy_bin},0:${xc1_last}:${xy_bin})+${v}(${k}:${xc3_last}:${z_bin},0:${xc2_last}:${xy_bin},1:${xc1_last}:${xy_bin})+${v}(${k}:${xc3_last}:${z_bin},1:${xc2_last}:${xy_bin},1:${xc1_last}:${xy_bin}))"
-        (( k < z_bin - 1 )) && expr+='+'
+        local z_slice="${k}:${xc3_last}:${z_bin}"
+        local xy_sum="(${v}(${z_slice},0:${xc2_last}:${xy_bin},0:${xc1_last}:${xy_bin})+"
+        xy_sum+="${v}(${z_slice},1:${xc2_last}:${xy_bin},0:${xc1_last}:${xy_bin})+"
+        xy_sum+="${v}(${z_slice},0:${xc2_last}:${xy_bin},1:${xc1_last}:${xy_bin})+"
+        xy_sum+="${v}(${z_slice},1:${xc2_last}:${xy_bin},1:${xc1_last}:${xy_bin}))"
+        if [[ -z "${z_sum}" ]]; then
+          z_sum="${xy_sum}"
+        else
+          z_sum+="+${xy_sum}"
+        fi
       done
-      expr+=');'
+      expr+="${z_sum});"
     done
 
-    ncap2 -O -s "${expr}" "${tmp_subset_depth}" "${tmp_binned}"
+    ncap2 -O -s "${expr}" "${tmp_subset_depth}" "${tmp_binned}" || {
+      echo "[ERROR] [${stem}] Failed to compute binned output from ${tmp_subset_depth}" >&2
+      return 1
+    }
 
     # ---------------------------
     # Step 7: compute rho_xy_mean AFTER all binning
     # ---------------------------
     log "7/8" "[${stem}] Computing rho_xy_mean AFTER all binning (7/8)"
-    ncwa -O -a xc1b,xc2b -v rho_binned "${tmp_binned}" "${tmp_rho_mean}"
-    ncrename -O -v rho_binned,rho "${tmp_rho_mean}"
+    ncwa -O -a xc1b,xc2b -v rho_binned "${tmp_binned}" "${tmp_rho_mean}" || {
+      echo "[ERROR] [${stem}] Failed to compute rho_xy_mean from ${tmp_binned}" >&2
+      return 1
+    }
+    ncrename -O -v rho_binned,rho "${tmp_rho_mean}" || {
+      echo "[ERROR] [${stem}] Failed to rename rho_binned in ${tmp_rho_mean}" >&2
+      return 1
+    }
 
     # ---------------------------
     # Step 8: write final output
@@ -435,7 +602,10 @@ process_one() {
     # NetCDF4 output causes the coordinate payload to be replaced by the default
     # fill value (9.969e36). Staging through a classic file avoids that NCO path,
     # preserves the coordinate arrays, and still lets us compress the final output.
-    ncks -O -3 -v "${out_vars_csv}" "${tmp_binned}" "${tmp_final_canonical}"
+    ncks -O -3 -v "${out_vars_csv}" "${tmp_binned}" "${tmp_final_canonical}" || {
+      echo "[ERROR] [${stem}] Failed to stage canonical output from ${tmp_binned}" >&2
+      return 1
+    }
 
     # Rename dims/vars back to canonical names (xc1b->xc1, v1_binned->v1, etc.)
     local rename_args=(
@@ -445,16 +615,31 @@ process_one() {
     for v in "${keep_phys[@]}"; do
       rename_args+=( -v "${v}_binned,${v}" )
     done
-    ncrename -O "${rename_args[@]}" "${tmp_final_canonical}"
+    ncrename -O "${rename_args[@]}" "${tmp_final_canonical}" || {
+      echo "[ERROR] [${stem}] Failed to rename canonical variables in ${tmp_final_canonical}" >&2
+      return 1
+    }
 
     # Prepare rho on the canonical vertical dimension before appending it.
     # This avoids reintroducing xc3b into the final file.
-    ncks -O -3 -v xc3b,rho "${tmp_rho_mean}" "${tmp_rho_canonical}"
-    ncrename -O -d xc3b,xc3 -v xc3b,xc3 "${tmp_rho_canonical}"
-    ncks -A -v rho "${tmp_rho_canonical}" "${tmp_final_canonical}"
+    ncks -O -3 -v xc3b,rho "${tmp_rho_mean}" "${tmp_rho_canonical}" || {
+      echo "[ERROR] [${stem}] Failed to stage rho output from ${tmp_rho_mean}" >&2
+      return 1
+    }
+    ncrename -O -d xc3b,xc3 -v xc3b,xc3 "${tmp_rho_canonical}" || {
+      echo "[ERROR] [${stem}] Failed to canonicalize rho dimensions in ${tmp_rho_canonical}" >&2
+      return 1
+    }
+    ncks -A -v rho "${tmp_rho_canonical}" "${tmp_final_canonical}" || {
+      echo "[ERROR] [${stem}] Failed to append rho into ${tmp_final_canonical}" >&2
+      return 1
+    }
 
     # Compress only after the canonical-coordinate file is complete.
-    ncks -O -4 -L 4 "${tmp_final_canonical}" "${final_out}"
+    ncks -O -4 -L 4 "${tmp_final_canonical}" "${final_out}" || {
+      echo "[ERROR] [${stem}] Failed to compress final output to ${final_out}" >&2
+      return 1
+    }
 
     # Optional pacing knob for debugging or server-throttling experiments.
     (( POST_FILE_SLEEP > 0 )) && sleep "${POST_FILE_SLEEP}"
@@ -482,6 +667,8 @@ best_throughput_milli=0
 auto_locked=0
 run_start_seconds="${SECONDS}"
 completed_total=0
+successful_total=0
+failed_total=0
 SMOOTHED_ETA_SECONDS=""
 
 i=1
@@ -490,12 +677,15 @@ while (( i <= local_count )); do
   pid_to_label=()
   pid_to_stats=()
   pid_to_log=()
+  typeset -A pid_to_run_id
+  pid_to_run_id=()
 
   batch_slots="${current_jobs}"
   (( batch_slots > local_count - i + 1 )) && batch_slots=$(( local_count - i + 1 ))
   batch_start="${SECONDS}"
   batch_completed=0
   batch_retry_count=0
+  batch_failure_count=0
 
   if (( batch_slots == 1 )); then
     u="${URLS[$i]}"
@@ -504,7 +694,16 @@ while (( i <= local_count )); do
     log_file="${OUT_DIR}/.joblog_${run_id}.txt"
     if ! process_one "${u}" "${i}" "${local_count}" "${run_id}"; then
       emit_log_block "${log_file}"
-      die "Job failed for URL: ${u}"
+      cleanup_run_tmpdirs "${run_id}"
+      record_failed_url "${u}"
+      (( failed_total += 1 ))
+      batch_failure_count=1
+      batch_completed=1
+      (( completed_total += 1 ))
+      print_progress_estimate "${completed_total}" "${local_count}" "${run_start_seconds}"
+      echo "[WARN] Continuing after failed URL. Saved to ${FAILED_URLS_FILE}: ${u}"
+      (( i += 1 ))
+      continue
     fi
     emit_log_block "${log_file}"
 
@@ -519,6 +718,7 @@ while (( i <= local_count )); do
       (( batch_retry_count += 1 ))
     fi
     batch_completed=1
+    (( successful_total += 1 ))
     (( completed_total += 1 ))
     print_progress_estimate "${completed_total}" "${local_count}" "${run_start_seconds}"
     (( i += 1 ))
@@ -532,6 +732,7 @@ while (( i <= local_count )); do
       pid_to_label[$!]="${u}"
       pid_to_stats[$!]="${OUT_DIR}/.jobstats_${run_id}.txt"
       pid_to_log[$!]="${OUT_DIR}/.joblog_${run_id}.txt"
+      pid_to_run_id[$!]="${run_id}"
       (( i += 1 ))
       (( launched += 1 ))
     done
@@ -539,7 +740,15 @@ while (( i <= local_count )); do
     for pid in "${batch_pids[@]}"; do
       if ! wait "${pid}"; then
         emit_log_block "${pid_to_log[$pid]-}"
-        die "Job failed for URL: ${pid_to_label[$pid]}"
+        cleanup_run_tmpdirs "${pid_to_run_id[$pid]-}"
+        record_failed_url "${pid_to_label[$pid]}"
+        (( failed_total += 1 ))
+        (( batch_failure_count += 1 ))
+        (( batch_completed += 1 ))
+        (( completed_total += 1 ))
+        print_progress_estimate "${completed_total}" "${local_count}" "${run_start_seconds}"
+        echo "[WARN] Continuing after failed URL. Saved to ${FAILED_URLS_FILE}: ${pid_to_label[$pid]}"
+        continue
       fi
       emit_log_block "${pid_to_log[$pid]-}"
 
@@ -555,6 +764,7 @@ while (( i <= local_count )); do
         (( batch_retry_count += 1 ))
       fi
       (( batch_completed += 1 ))
+      (( successful_total += 1 ))
       (( completed_total += 1 ))
       print_progress_estimate "${completed_total}" "${local_count}" "${run_start_seconds}"
     done
@@ -565,14 +775,14 @@ while (( i <= local_count )); do
     (( batch_wall < 1 )) && batch_wall=1
     throughput_milli=$(( (1000 * batch_completed) / batch_wall ))
 
-    echo "[AUTO] batch_jobs=${current_jobs} completed=${batch_completed} wall=${batch_wall}s retries=${batch_retry_count} throughput=${throughput_milli} mpf"
+    echo "[AUTO] batch_jobs=${current_jobs} completed=${batch_completed} wall=${batch_wall}s retries=${batch_retry_count} failures=${batch_failure_count} throughput=${throughput_milli} mpf"
 
     if (( auto_locked == 0 )); then
-      if (( batch_retry_count > 0 )); then
+      if (( batch_retry_count > 0 || batch_failure_count > 0 )); then
         (( current_jobs > 1 )) && current_jobs=$(( current_jobs - 1 ))
         best_jobs="${current_jobs}"
         auto_locked=1
-        echo "[AUTO] Retries detected. Holding remaining jobs at ${current_jobs}."
+        echo "[AUTO] Retries or failures detected. Holding remaining jobs at ${current_jobs}."
       elif (( best_throughput_milli == 0 )); then
         best_throughput_milli="${throughput_milli}"
         best_jobs="${current_jobs}"
@@ -603,4 +813,10 @@ while (( i <= local_count )); do
   fi
 done
 
-echo "[INFO] Completed ${local_count}/${local_count}"
+if (( failed_total > 0 )); then
+  echo "[WARN] Completed ${completed_total}/${local_count} files with ${successful_total} success(es) and ${failed_total} failure(s)."
+  echo "[WARN] Failed URLs saved to ${FAILED_URLS_FILE}"
+else
+  rm -f "${FAILED_URLS_FILE}"
+  echo "[INFO] Completed ${local_count}/${local_count}"
+fi

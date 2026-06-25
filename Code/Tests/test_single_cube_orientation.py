@@ -8,7 +8,7 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TIME_DISTANCE_PATH = ROOT / "Code" / "Time-Distance" / "time_distance.py"
+TIME_DISTANCE_PATH = ROOT / "Code" / "Time-Distance" / "pipeline.py"
 CONFIG_PATH = ROOT / "Code" / "Time-Distance" / "config.py"
 
 

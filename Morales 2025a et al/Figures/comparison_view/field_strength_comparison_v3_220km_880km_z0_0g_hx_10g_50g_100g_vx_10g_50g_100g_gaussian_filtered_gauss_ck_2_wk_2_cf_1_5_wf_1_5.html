@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Strength Comparison 220-880 km</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .figure-frame {
+      position: relative;
+      display: block;
+      overflow: visible;
+    }
+
+    .figure-frame.is-managed img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      max-width: none;
+      max-height: none;
+    }
+
+    .figure-frame.is-crop {
+      overflow: hidden;
+    }
+
+    img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: none;
+      max-height: none;
+      image-rendering: auto;
+    }
+
+    .subplot-map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .figure-frame:not(.is-overview) .subplot-map {
+      display: none;
+    }
+
+    .subplot-hotspot {
+      position: absolute;
+      display: block;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0);
+      touch-action: pan-x pan-y;
+    }
+
+    .subplot-hotspot:focus-visible {
+      outline: 2px solid #0b5cab;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="figure-frame is-overview" style="width: 4103px; height: 4281px;" data-figure-frame>
+    <img data-full-resolution-image src="../field_strength_comparison_v3_220km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg" alt="Field Strength Comparison: 220-880 km" width="4103" height="4281">
+    <div class="subplot-map" aria-label="Field Strength Comparison subplot navigation">
+    <a class="subplot-hotspot" href="../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="z0_0g-komega" data-source-path="z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="z0_0g k-omega diagram" aria-label="z0_0g k-omega diagram" style="left: 6.629296%; top: 10.838589%; width: 10.675116%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="z0_0g-xc" data-source-path="z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="z0_0g cross-correlation" aria-label="z0_0g cross-correlation" style="left: 6.629296%; top: 31.207662%; width: 10.675116%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="z0_0g-phase_diff" data-source-path="z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="z0_0g phase difference" aria-label="z0_0g phase difference" style="left: 6.629296%; top: 54.987153%; width: 10.675116%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="hx_10g-komega" data-source-path="hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="hx_10g k-omega diagram" aria-label="hx_10g k-omega diagram" style="left: 17.304411%; top: 10.838589%; width: 10.675116%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="hx_10g-xc" data-source-path="hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="hx_10g cross-correlation" aria-label="hx_10g cross-correlation" style="left: 17.304411%; top: 31.207662%; width: 10.675116%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="hx_10g-phase_diff" data-source-path="hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="hx_10g phase difference" aria-label="hx_10g phase difference" style="left: 17.304411%; top: 54.987153%; width: 10.675116%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="hx_50g-komega" data-source-path="hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="hx_50g k-omega diagram" aria-label="hx_50g k-omega diagram" style="left: 27.979527%; top: 10.838589%; width: 10.675116%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="hx_50g-xc" data-source-path="hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="hx_50g cross-correlation" aria-label="hx_50g cross-correlation" style="left: 27.979527%; top: 31.207662%; width: 10.675116%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="hx_50g-phase_diff" data-source-path="hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="hx_50g phase difference" aria-label="hx_50g phase difference" style="left: 27.979527%; top: 54.987153%; width: 10.675116%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="hx_100g-komega" data-source-path="hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="hx_100g k-omega diagram" aria-label="hx_100g k-omega diagram" style="left: 38.654643%; top: 10.838589%; width: 10.675116%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="hx_100g-xc" data-source-path="hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="hx_100g cross-correlation" aria-label="hx_100g cross-correlation" style="left: 38.654643%; top: 31.207662%; width: 10.675116%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="hx_100g-phase_diff" data-source-path="hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="hx_100g phase difference" aria-label="hx_100g phase difference" style="left: 38.654643%; top: 54.987153%; width: 10.675116%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="vx_10g-komega" data-source-path="vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="vx_10g k-omega diagram" aria-label="vx_10g k-omega diagram" style="left: 49.329759%; top: 10.838589%; width: 21.350232%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="vx_10g-xc" data-source-path="vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="vx_10g cross-correlation" aria-label="vx_10g cross-correlation" style="left: 49.329759%; top: 31.207662%; width: 21.350232%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="vx_10g-phase_diff" data-source-path="vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="vx_10g phase difference" aria-label="vx_10g phase difference" style="left: 49.329759%; top: 54.987153%; width: 21.350232%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="vx_50g-komega" data-source-path="vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="vx_50g k-omega diagram" aria-label="vx_50g k-omega diagram" style="left: 70.679990%; top: 10.838589%; width: 10.675116%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="vx_50g-xc" data-source-path="vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="vx_50g cross-correlation" aria-label="vx_50g cross-correlation" style="left: 70.679990%; top: 31.207662%; width: 10.675116%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="vx_50g-phase_diff" data-source-path="vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="vx_50g phase difference" aria-label="vx_50g phase difference" style="left: 70.679990%; top: 54.987153%; width: 10.675116%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" data-nav-target="vx_100g-komega" data-source-path="vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png" title="vx_100g k-omega diagram" aria-label="vx_100g k-omega diagram" style="left: 81.355106%; top: 10.838589%; width: 10.699488%; height: 18.126606%;"></a>
+    <a class="subplot-hotspot" href="../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" data-nav-target="vx_100g-xc" data-source-path="vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg" title="vx_100g cross-correlation" aria-label="vx_100g cross-correlation" style="left: 81.355106%; top: 31.207662%; width: 10.699488%; height: 21.280075%;"></a>
+    <a class="subplot-hotspot" href="../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" data-nav-target="vx_100g-phase_diff" data-source-path="vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg" title="vx_100g phase difference" aria-label="vx_100g phase difference" style="left: 81.355106%; top: 54.987153%; width: 10.699488%; height: 18.079888%;"></a>
+    <a class="subplot-hotspot" href="../z0_0g_v3_220km_880km_v3_v3_220km_gaussian_filter_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg" data-nav-target="gaussian-filter-z0_0g" data-source-path="z0_0g_v3_220km_880km_v3_v3_220km_gaussian_filter_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg" title="Field Strength Comparison: 220-880 km Gaussian filter" aria-label="Field Strength Comparison: 220-880 km Gaussian filter" style="left: 43.212284%; top: 77.551974%; width: 12.234950%; height: 17.355758%;"></a>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const overview = {"id":"overview","label":"Field Strength Comparison: 220-880 km","src":"../field_strength_comparison_v3_220km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg","sourcePath":"field_strength_comparison_v3_220km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg","alt":"Field Strength Comparison: 220-880 km","crop":null};
+      const targets = [{"id":"z0_0g-komega","label":"z0_0g k-omega diagram","src":"../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"z0_0g k-omega diagram","crop":null,"bounds":{"left":6.629295637338533,"top":10.838589114692828,"width":10.67511576894955,"height":18.12660593319318},"pixelBounds":{"left":272,"top":464,"width":438,"height":776}},{"id":"z0_0g-xc","label":"z0_0g cross-correlation","src":"../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"z0_0g cross-correlation","crop":null,"bounds":{"left":6.629295637338533,"top":31.20766176127073,"width":10.67511576894955,"height":21.280074748890446},"pixelBounds":{"left":272,"top":1336,"width":438,"height":911}},{"id":"z0_0g-phase_diff","label":"z0_0g phase difference","src":"../z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"z0_0g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"z0_0g phase difference","crop":null,"bounds":{"left":6.629295637338533,"top":54.987152534454566,"width":10.67511576894955,"height":18.07988787666433},"pixelBounds":{"left":272,"top":2354,"width":438,"height":774}},{"id":"hx_10g-komega","label":"hx_10g k-omega diagram","src":"../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"hx_10g k-omega diagram","crop":null,"bounds":{"left":17.304411406288082,"top":10.838589114692828,"width":10.67511576894955,"height":18.12660593319318},"pixelBounds":{"left":710,"top":464,"width":438,"height":776}},{"id":"hx_10g-xc","label":"hx_10g cross-correlation","src":"../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"hx_10g cross-correlation","crop":null,"bounds":{"left":17.304411406288082,"top":31.20766176127073,"width":10.67511576894955,"height":21.280074748890446},"pixelBounds":{"left":710,"top":1336,"width":438,"height":911}},{"id":"hx_10g-phase_diff","label":"hx_10g phase difference","src":"../hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"hx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"hx_10g phase difference","crop":null,"bounds":{"left":17.304411406288082,"top":54.987152534454566,"width":10.67511576894955,"height":18.07988787666433},"pixelBounds":{"left":710,"top":2354,"width":438,"height":774}},{"id":"hx_50g-komega","label":"hx_50g k-omega diagram","src":"../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"hx_50g k-omega diagram","crop":null,"bounds":{"left":27.97952717523763,"top":10.838589114692828,"width":10.67511576894955,"height":18.12660593319318},"pixelBounds":{"left":1148,"top":464,"width":438,"height":776}},{"id":"hx_50g-xc","label":"hx_50g cross-correlation","src":"../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"hx_50g cross-correlation","crop":null,"bounds":{"left":27.97952717523763,"top":31.20766176127073,"width":10.67511576894955,"height":21.280074748890446},"pixelBounds":{"left":1148,"top":1336,"width":438,"height":911}},{"id":"hx_50g-phase_diff","label":"hx_50g phase difference","src":"../hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"hx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"hx_50g phase difference","crop":null,"bounds":{"left":27.97952717523763,"top":54.987152534454566,"width":10.67511576894955,"height":18.07988787666433},"pixelBounds":{"left":1148,"top":2354,"width":438,"height":774}},{"id":"hx_100g-komega","label":"hx_100g k-omega diagram","src":"../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"hx_100g k-omega diagram","crop":null,"bounds":{"left":38.65464294418718,"top":10.838589114692828,"width":10.67511576894955,"height":18.12660593319318},"pixelBounds":{"left":1586,"top":464,"width":438,"height":776}},{"id":"hx_100g-xc","label":"hx_100g cross-correlation","src":"../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"hx_100g cross-correlation","crop":null,"bounds":{"left":38.65464294418718,"top":31.20766176127073,"width":10.67511576894955,"height":21.280074748890446},"pixelBounds":{"left":1586,"top":1336,"width":438,"height":911}},{"id":"hx_100g-phase_diff","label":"hx_100g phase difference","src":"../hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"hx_100g phase difference","crop":null,"bounds":{"left":38.65464294418718,"top":54.987152534454566,"width":10.67511576894955,"height":18.07988787666433},"pixelBounds":{"left":1586,"top":2354,"width":438,"height":774}},{"id":"vx_10g-komega","label":"vx_10g k-omega diagram","src":"../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"vx_10g k-omega diagram","crop":null,"bounds":{"left":49.32975871313673,"top":10.838589114692828,"width":21.3502315378991,"height":18.12660593319318},"pixelBounds":{"left":2024,"top":464,"width":876,"height":776}},{"id":"vx_10g-xc","label":"vx_10g cross-correlation","src":"../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"vx_10g cross-correlation","crop":null,"bounds":{"left":49.32975871313673,"top":31.20766176127073,"width":21.3502315378991,"height":21.280074748890446},"pixelBounds":{"left":2024,"top":1336,"width":876,"height":911}},{"id":"vx_10g-phase_diff","label":"vx_10g phase difference","src":"../vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"vx_10g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"vx_10g phase difference","crop":null,"bounds":{"left":49.32975871313673,"top":54.987152534454566,"width":21.3502315378991,"height":18.07988787666433},"pixelBounds":{"left":2024,"top":2354,"width":876,"height":774}},{"id":"vx_50g-komega","label":"vx_50g k-omega diagram","src":"../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"vx_50g k-omega diagram","crop":null,"bounds":{"left":70.67999025103583,"top":10.838589114692828,"width":10.67511576894955,"height":18.12660593319318},"pixelBounds":{"left":2900,"top":464,"width":438,"height":776}},{"id":"vx_50g-xc","label":"vx_50g cross-correlation","src":"../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"vx_50g cross-correlation","crop":null,"bounds":{"left":70.67999025103583,"top":31.20766176127073,"width":10.67511576894955,"height":21.280074748890446},"pixelBounds":{"left":2900,"top":1336,"width":438,"height":911}},{"id":"vx_50g-phase_diff","label":"vx_50g phase difference","src":"../vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"vx_50g phase difference","crop":null,"bounds":{"left":70.67999025103583,"top":54.987152534454566,"width":10.67511576894955,"height":18.07988787666433},"pixelBounds":{"left":2900,"top":2354,"width":438,"height":774}},{"id":"vx_100g-komega","label":"vx_100g k-omega diagram","src":"../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","sourcePath":"vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_komega_magnetic_orientation_validation.png","alt":"vx_100g k-omega diagram","crop":null,"bounds":{"left":81.35510601998537,"top":10.838589114692828,"width":10.69948817938094,"height":18.12660593319318},"pixelBounds":{"left":3338,"top":464,"width":439,"height":776}},{"id":"vx_100g-xc","label":"vx_100g cross-correlation","src":"../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","sourcePath":"vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg","alt":"vx_100g cross-correlation","crop":null,"bounds":{"left":81.35510601998537,"top":31.20766176127073,"width":10.69948817938094,"height":21.280074748890446},"pixelBounds":{"left":3338,"top":1336,"width":439,"height":911}},{"id":"vx_100g-phase_diff","label":"vx_100g phase difference","src":"../vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","sourcePath":"vx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg","alt":"vx_100g phase difference","crop":null,"bounds":{"left":81.35510601998537,"top":54.987152534454566,"width":10.69948817938094,"height":18.07988787666433},"pixelBounds":{"left":3338,"top":2354,"width":439,"height":774}},{"id":"gaussian-filter-z0_0g","label":"Field Strength Comparison: 220-880 km Gaussian filter","src":"../z0_0g_v3_220km_880km_v3_v3_220km_gaussian_filter_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg","sourcePath":"z0_0g_v3_220km_880km_v3_v3_220km_gaussian_filter_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg","alt":"Field Strength Comparison: 220-880 km Gaussian filter","crop":null,"bounds":{"left":43.21228369485742,"top":77.55197383788834,"width":12.234950036558615,"height":17.35575800046718},"pixelBounds":{"left":1773,"top":3320,"width":502,"height":743}}];
+      const targetById = new Map(targets.map((target) => [target.id, target]));
+      const frame = document.querySelector("[data-figure-frame]");
+      const image = document.querySelector("[data-full-resolution-image]");
+      const minimumScale = 0.01;
+      let baseWidth = Number(image.getAttribute("width")) || 0;
+      let baseHeight = Number(image.getAttribute("height")) || 0;
+      let scale = 1;
+      let gestureStartScale = 1;
+      let currentViewId = "overview";
+      let pendingViewState = null;
+      let pointerStart = null;
+
+      const storageKey = () => `comparison-view:${window.location.pathname}:${currentViewId}`;
+
+      const saveViewState = () => {
+        try {
+          window.sessionStorage.setItem(storageKey(), JSON.stringify({
+            scale,
+            scrollX: window.scrollX,
+            scrollY: window.scrollY,
+          }));
+        } catch (error) {
+          // Session storage can be unavailable for local files in some browsers.
+        }
+      };
+
+      const loadViewState = (viewId) => {
+        try {
+          const value = window.sessionStorage.getItem(`comparison-view:${window.location.pathname}:${viewId}`);
+          return value === null ? null : JSON.parse(value);
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const refreshBaseDimensions = () => {
+        baseWidth = image.naturalWidth || baseWidth || image.getBoundingClientRect().width;
+        baseHeight = image.naturalHeight || baseHeight || image.getBoundingClientRect().height;
+      };
+
+      const activeView = () => targetById.get(currentViewId) || overview;
+
+      const setFrameGeometry = () => {
+        const view = activeView();
+        const crop = view.crop || null;
+        const visibleWidth = crop === null ? baseWidth : crop.width;
+        const visibleHeight = crop === null ? baseHeight : crop.height;
+        const renderedWidth = visibleWidth * scale;
+        const renderedHeight = visibleHeight * scale;
+
+        frame.style.width = `${renderedWidth}px`;
+        frame.style.height = `${renderedHeight}px`;
+        image.style.width = `${baseWidth * scale}px`;
+        image.style.height = `${baseHeight * scale}px`;
+        image.style.left = crop === null ? "0px" : `${-crop.left * scale}px`;
+        image.style.top = crop === null ? "0px" : `${-crop.top * scale}px`;
+        frame.classList.toggle("is-overview", currentViewId === "overview");
+        frame.classList.toggle("is-crop", crop !== null);
+      };
+
+      const applyScale = (nextScale, anchorX, anchorY) => {
+        if (!Number.isFinite(nextScale) || nextScale <= 0) {
+          return;
+        }
+
+        refreshBaseDimensions();
+        if (baseWidth <= 0 || baseHeight <= 0) {
+          return;
+        }
+
+        const before = frame.getBoundingClientRect();
+        const viewportX = Number.isFinite(anchorX) ? anchorX : window.innerWidth / 2;
+        const viewportY = Number.isFinite(anchorY) ? anchorY : window.innerHeight / 2;
+        const imageX = before.width > 0 ? (viewportX - before.left) / before.width : 0.5;
+        const imageY = before.height > 0 ? (viewportY - before.top) / before.height : 0.5;
+        const boundedScale = Math.max(minimumScale, nextScale);
+        const view = activeView();
+        const crop = view.crop || null;
+        const visibleWidth = crop === null ? baseWidth : crop.width;
+        const renderedWidth = visibleWidth * boundedScale;
+
+        if (!Number.isFinite(renderedWidth) || renderedWidth <= 0) {
+          return;
+        }
+
+        scale = boundedScale;
+        setFrameGeometry();
+
+        const after = frame.getBoundingClientRect();
+        const targetLeft = window.scrollX + after.left + imageX * after.width - viewportX;
+        const targetTop = window.scrollY + after.top + imageY * after.height - viewportY;
+        window.scrollTo(targetLeft, targetTop);
+      };
+
+      const applyStoredState = () => {
+        if (pendingViewState !== null && Number.isFinite(pendingViewState.scale)) {
+          scale = Math.max(minimumScale, pendingViewState.scale);
+        }
+        setFrameGeometry();
+
+        if (pendingViewState !== null) {
+          window.scrollTo(
+            Number(pendingViewState.scrollX) || 0,
+            Number(pendingViewState.scrollY) || 0,
+          );
+        }
+
+        pendingViewState = null;
+      };
+
+      const showView = (viewId, updateHistory) => {
+        const nextView = viewId === "overview" ? overview : targetById.get(viewId);
+        if (nextView === undefined) {
+          return;
+        }
+
+        saveViewState();
+        currentViewId = viewId;
+        pendingViewState = loadViewState(viewId);
+        scale = pendingViewState === null || !Number.isFinite(pendingViewState.scale)
+          ? 1
+          : Math.max(minimumScale, pendingViewState.scale);
+
+        if (updateHistory) {
+          const nextUrl = viewId === "overview"
+            ? window.location.pathname + window.location.search
+            : `#subplot=${encodeURIComponent(viewId)}`;
+          window.history.pushState({ viewId }, "", nextUrl);
+        }
+
+        document.title = nextView.label || overview.label;
+        image.alt = nextView.alt || nextView.label || overview.alt;
+        if (image.getAttribute("src") !== nextView.src) {
+          image.addEventListener("load", () => {
+            refreshBaseDimensions();
+            applyStoredState();
+          }, { once: true });
+          image.src = nextView.src;
+        } else {
+          refreshBaseDimensions();
+          applyStoredState();
+        }
+      };
+
+      const viewIdFromLocation = () => {
+        const match = window.location.hash.match(/^#subplot=(.+)$/);
+        if (match === null) {
+          return "overview";
+        }
+
+        const viewId = decodeURIComponent(match[1]);
+        return targetById.has(viewId) ? viewId : "overview";
+      };
+
+      frame.classList.add("is-managed");
+      image.addEventListener("load", () => {
+        refreshBaseDimensions();
+        setFrameGeometry();
+      }, { once: true });
+      refreshBaseDimensions();
+      setFrameGeometry();
+      currentViewId = viewIdFromLocation();
+      window.history.replaceState({ viewId: currentViewId }, "", window.location.href);
+      if (currentViewId !== "overview") {
+        showView(currentViewId, false);
+      }
+
+      document.addEventListener("pointerdown", (event) => {
+        const link = event.target.closest("[data-nav-target]");
+        pointerStart = link === null ? null : {
+          x: event.clientX,
+          y: event.clientY,
+          id: link.getAttribute("data-nav-target"),
+        };
+      }, true);
+
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("[data-nav-target]");
+        if (link === null) {
+          return;
+        }
+
+        event.preventDefault();
+        const viewId = link.getAttribute("data-nav-target");
+        if (pointerStart !== null && pointerStart.id === viewId) {
+          const dx = event.clientX - pointerStart.x;
+          const dy = event.clientY - pointerStart.y;
+          if (Math.hypot(dx, dy) > 6) {
+            pointerStart = null;
+            return;
+          }
+        }
+
+        pointerStart = null;
+        showView(viewId, true);
+      });
+
+      window.addEventListener("popstate", (event) => {
+        const viewId = event.state && typeof event.state.viewId === "string"
+          ? event.state.viewId
+          : viewIdFromLocation();
+        showView(viewId, false);
+      });
+
+      window.addEventListener("pagehide", saveViewState);
+
+      window.addEventListener("wheel", (event) => {
+        if (!event.ctrlKey && !event.metaKey) {
+          return;
+        }
+
+        event.preventDefault();
+        applyScale(scale * Math.exp(-event.deltaY * 0.002), event.clientX, event.clientY);
+      }, { passive: false });
+
+      window.addEventListener("gesturestart", (event) => {
+        event.preventDefault();
+        gestureStartScale = scale;
+      }, { passive: false });
+
+      window.addEventListener("gesturechange", (event) => {
+        event.preventDefault();
+        applyScale(gestureStartScale * event.scale, window.innerWidth / 2, window.innerHeight / 2);
+      }, { passive: false });
+    })();
+  </script>
+</body>
+</html>

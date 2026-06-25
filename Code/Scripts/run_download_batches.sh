@@ -33,6 +33,17 @@ downloader="${script_dir}/download_files.sh"
 
 data_root="/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold"
 : "${SKIP_OUTPUT_DIRS:=}"
+: "${MAX_JOBS:=auto}"
+: "${AUTO_MIN_IMPROVEMENT_PCT:=5}"
+
+if [[ -z "${AUTO_MAX_JOBS_CAP:-}" ]]; then
+  if command -v sysctl >/dev/null 2>&1; then
+    AUTO_MAX_JOBS_CAP="$(sysctl -n hw.logicalcpu 2>/dev/null || true)"
+  fi
+  [[ "${AUTO_MAX_JOBS_CAP:-}" == <-> ]] || AUTO_MAX_JOBS_CAP=8
+fi
+(( AUTO_MAX_JOBS_CAP >= 1 )) || AUTO_MAX_JOBS_CAP=8
+(( AUTO_MAX_JOBS_CAP <= 16 )) || AUTO_MAX_JOBS_CAP=16
 
 typeset -a mappings
 mappings=(
@@ -44,10 +55,16 @@ mappings=(
   "${data_root}/vx/file_names_vx_2.txt|${data_root}/vx/100G"
   "${data_root}/z0/file_names_z0_0.txt|${data_root}/z0/0G"
 )
+typeset -a failed_url_reports
+failed_url_reports=()
 
 echo "[INFO] Project root: ${project_root}"
 echo "[INFO] Downloader: ${downloader}"
-echo "[INFO] MAX_JOBS=${MAX_JOBS:-1}"
+echo "[INFO] MAX_JOBS=${MAX_JOBS}"
+if [[ "${MAX_JOBS}" == "auto" ]]; then
+  echo "[INFO] AUTO_MAX_JOBS_CAP=${AUTO_MAX_JOBS_CAP}"
+  echo "[INFO] AUTO_MIN_IMPROVEMENT_PCT=${AUTO_MIN_IMPROVEMENT_PCT}"
+fi
 if [[ -n "${SKIP_OUTPUT_DIRS}" ]]; then
   echo "[INFO] SKIP_OUTPUT_DIRS=${SKIP_OUTPUT_DIRS}"
 fi
@@ -100,16 +117,28 @@ for mapping in "${mappings[@]}"; do
   mkdir -p "${out_dir}"
 
   env \
-    MAX_JOBS="${MAX_JOBS:-1}" \
-    AUTO_MAX_JOBS_CAP="${AUTO_MAX_JOBS_CAP:-4}" \
-    AUTO_MIN_IMPROVEMENT_PCT="${AUTO_MIN_IMPROVEMENT_PCT:-5}" \
+    MAX_JOBS="${MAX_JOBS}" \
+    AUTO_MAX_JOBS_CAP="${AUTO_MAX_JOBS_CAP}" \
+    AUTO_MIN_IMPROVEMENT_PCT="${AUTO_MIN_IMPROVEMENT_PCT}" \
     REMOTE_TIMEOUT="${REMOTE_TIMEOUT:-600}" \
     REMOTE_RETRIES="${REMOTE_RETRIES:-3}" \
     REMOTE_TIMEOUT_STEP="${REMOTE_TIMEOUT_STEP:-300}" \
     POST_FILE_SLEEP="${POST_FILE_SLEEP:-0}" \
     SKIP_EXISTING="${SKIP_EXISTING:-1}" \
     zsh "${downloader}" "${url_list}" "${out_dir}"
+
+  failed_urls_file="${out_dir}/failed_urls.txt"
+  if [[ -s "${failed_urls_file}" ]]; then
+    failed_url_reports+=( "${failed_urls_file}" )
+    failed_urls_count="$(wc -l < "${failed_urls_file}" | tr -d '[:space:]')"
+    echo "[WARN] ${failed_urls_count} failed URL(s) recorded for ${out_dir}"
+    echo "[WARN] Failed URLs list: ${failed_urls_file}"
+  fi
 done
 
 echo
-echo "[INFO] All dataset groups completed successfully."
+if (( ${#failed_url_reports[@]} > 0 )); then
+  echo "[WARN] Dataset processing completed with failed URLs."
+else
+  echo "[INFO] All dataset groups completed successfully."
+fi

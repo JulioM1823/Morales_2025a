@@ -6,7 +6,10 @@ Morales 2025a et al/main.fls
 Morales 2025a et al/main.out
 Morales 2025a et al/main.synctex.gz
 Morales 2025a et al/Figures/Animations/
-Data/
+Data/*
+!Data/Filters/
+Data/Filters/*
+!Data/Filters/.gitkeep
 .DS_Store
 __pycache__/
 *.pyc

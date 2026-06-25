@@ -344,9 +344,7 @@ def azimuthal_averaging(mid_time, end_time, array, mid_space, radial_meshgrid):
 
             # Select the pixels that fall inside the current annulus.
             annulus_mask = np.logical_and(
-                radial_meshgrid >= radius_index - annulus_half_width,
-                radial_meshgrid < radius_index + annulus_half_width,
-            )
+                radial_meshgrid >= radius_index - annulus_half_width, radial_meshgrid < radius_index + annulus_half_width)
 
             # Convert the annulus mask into flattened C-order indices.
             annulus_inds = find(annulus_mask == True)
@@ -419,10 +417,7 @@ def azimuthal_averaging2(mid_time, end_time, array, mid_space, radial_meshgrid, 
         for radius_index in range(1, int(mid_space) + 1):
 
             # Select the pixels that fall inside the current annulus.
-            annulus_mask = np.logical_and(
-                radial_meshgrid >= radius_index - w,
-                radial_meshgrid < radius_index + w,
-            )
+            annulus_mask = np.logical_and(radial_meshgrid >= radius_index - w, radial_meshgrid < radius_index + w)
 
             # Convert the annulus mask into flattened C-order indices.
             annulus_inds = find(annulus_mask == True)

@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 import sys
 import tempfile
+import threading
+import time
 
 import netCDF4  # noqa: F401
 import numpy as np
@@ -19,6 +21,120 @@ except ImportError:
     HAS_DASK = False
 
 TS_PATTERN = re.compile(r't(-?\d+)s')
+
+
+def format_duration(seconds: float) -> str:
+    
+    '''
+    Purpose
+    --------
+    Format an elapsed duration for progress messages.
+    '''
+    
+    seconds_i = int(seconds)
+    minutes, seconds_i = divmod(seconds_i, 60)
+    hours, minutes = divmod(minutes, 60)
+    
+    if hours:
+        return f'{hours:d}h{minutes:02d}m{seconds_i:02d}s'
+    if minutes:
+        return f'{minutes:d}m{seconds_i:02d}s'
+    return f'{seconds_i:d}s'
+
+
+def format_bytes(num_bytes: int) -> str:
+    
+    '''
+    Purpose
+    --------
+    Format a byte count for progress messages.
+    '''
+    
+    value = float(num_bytes)
+    for unit in ('B', 'KiB', 'MiB', 'GiB', 'TiB'):
+        if value < 1024.0 or unit == 'TiB':
+            return f'{value:.1f} {unit}'
+        value /= 1024.0
+    
+    return f'{value:.1f} TiB'
+
+
+class ProgressLog:
+    
+    '''
+    Purpose
+    --------
+    Emit timestamped progress messages to stderr without changing stdout.
+    '''
+    
+    def __init__(self, enabled: bool = True) -> None:
+        self.enabled = enabled
+        self.start_time = time.monotonic()
+    
+    def emit(self, message: str) -> None:
+        if not self.enabled:
+            return
+        
+        elapsed = format_duration(time.monotonic() - self.start_time)
+        print(f'[progress +{elapsed}] {message}', file=sys.stderr, flush=True)
+
+
+def start_file_size_monitor(
+    path: Path,
+    label: str,
+    progress: ProgressLog,
+    interval: float,
+) -> tuple[threading.Event | None, threading.Thread | None]:
+    
+    '''
+    Purpose
+    --------
+    Start a lightweight background monitor that reports file size during long
+    NetCDF writes.
+    '''
+    
+    if not progress.enabled:
+        return None, None
+    
+    stop_event = threading.Event()
+    
+    def monitor() -> None:
+        last_size: int | None = None
+        while not stop_event.wait(interval):
+            try:
+                size = path.stat().st_size
+            except FileNotFoundError:
+                size = 0
+            
+            suffix = '' if size != last_size else ' (unchanged)'
+            progress.emit(
+                f'{label}: {format_bytes(size)} written to {path.name}{suffix}'
+            )
+            last_size = size
+    
+    thread = threading.Thread(target=monitor, daemon=True)
+    thread.start()
+    
+    return stop_event, thread
+
+
+def stop_file_size_monitor(
+    stop_event: threading.Event | None,
+    thread: threading.Thread | None,
+) -> None:
+    
+    '''
+    Purpose
+    --------
+    Stop a background file-size monitor.
+    '''
+    
+    if stop_event is None or thread is None:
+        return
+    
+    stop_event.set()
+    thread.join(timeout=2.0)
+
 
 def read_args() -> argparse.Namespace:
     
@@ -74,6 +190,20 @@ def read_args() -> argparse.Namespace:
         '--overwrite',
         action='store_true',
         help='Overwrite the output file if it already exists.',
+    )
+    parser.add_argument(
+        '--progress-interval',
+        type=float,
+        default=10.0,
+        help=(
+            'Seconds between long-running progress updates '
+            '(default: %(default)s).'
+        ),
+    )
+    parser.add_argument(
+        '--no-progress',
+        action='store_true',
+        help='Disable progress messages.',
     )
     
     return parser.parse_args()
@@ -393,7 +523,12 @@ def check_dataset_match(
             )
 
 
-def check_input_files(nc_files: list[Path], time_dim: str) -> tuple[str, bool]:
+def check_input_files(
+    nc_files: list[Path],
+    time_dim: str,
+    progress: ProgressLog | None = None,
+    progress_interval: float = 10.0,
+) -> tuple[str, bool]:
     
     '''
     Purpose
@@ -417,6 +552,12 @@ def check_input_files(nc_files: list[Path], time_dim: str) -> tuple[str, bool]:
     '''
     
     ref_path = nc_files[0]
+    total_files = len(nc_files)
+    report_every = max(1, total_files // 20)
+    last_report = time.monotonic()
+    
+    if progress is not None:
+        progress.emit(f'Validating reference schema 1/{total_files}: {ref_path.name}')
     
     with open_nc_file(ref_path) as ds0:
         dim_name, has_time_dim = get_time_dim_name(ds0, time_dim)
@@ -428,7 +569,7 @@ def check_input_files(nc_files: list[Path], time_dim: str) -> tuple[str, bool]:
             )
         ref_schema = get_dataset_schema(ds0)
     
-    for nc_path in nc_files[1:]:
+    for idx, nc_path in enumerate(nc_files[1:], start=2):
         with open_nc_file(nc_path) as ds:
             has_time_dim_i = dim_name in ds.sizes
             if has_time_dim_i != has_time_dim:
@@ -452,6 +593,18 @@ def check_input_files(nc_files: list[Path], time_dim: str) -> tuple[str, bool]:
                 time_dim=dim_name,
                 has_time_dim=has_time_dim,
             )
+        
+        now = time.monotonic()
+        if (
+            progress is not None
+            and (
+                idx == total_files
+                or idx % report_every == 0
+                or now - last_report >= progress_interval
+            )
+        ):
+            progress.emit(f'Validated schemas {idx}/{total_files} files')
+            last_report = now
     
     return dim_name, has_time_dim
 
@@ -500,6 +653,8 @@ def concat_nc_files(
     t_vals: list[int],
     time_dim: str,
     has_time_dim: bool,
+    progress: ProgressLog | None = None,
+    progress_interval: float = 10.0,
 ) -> tuple[xr.Dataset, list[xr.Dataset]]:
     
     '''
@@ -540,6 +695,10 @@ def concat_nc_files(
     }
     
     if HAS_DASK and has_time_dim:
+        if progress is not None:
+            progress.emit(
+                f'Opening {len(nc_files)} files with xarray.open_mfdataset'
+            )
         ds_cat = xr.open_mfdataset(
             [str(path) for path in nc_files],
             engine='netcdf4',
@@ -551,7 +710,31 @@ def concat_nc_files(
         return ds_cat, []
     
     chunk_mode = 'auto' if HAS_DASK else None
-    open_list = [open_nc_file(path, chunks=chunk_mode) for path in nc_files]
+    open_list = []
+    total_files = len(nc_files)
+    report_every = max(1, total_files // 20)
+    last_report = time.monotonic()
+    
+    if progress is not None:
+        progress.emit(f'Opening {total_files} input datasets')
+    
+    for idx, path in enumerate(nc_files, start=1):
+        open_list.append(open_nc_file(path, chunks=chunk_mode))
+        
+        now = time.monotonic()
+        if (
+            progress is not None
+            and (
+                idx == total_files
+                or idx % report_every == 0
+                or now - last_report >= progress_interval
+            )
+        ):
+            progress.emit(f'Opened {idx}/{total_files} input datasets')
+            last_report = now
+    
+    if progress is not None:
+        progress.emit(f'Concatenating {total_files} datasets along {time_dim}')
     
     with xr.set_options(keep_attrs=True):
         ds_cat = xr.concat(open_list, dim=concat_axis, **concat_kwargs)
@@ -564,6 +747,8 @@ def write_output_nc(
     out_path: Path,
     time_dim: str,
     overwrite: bool,
+    progress: ProgressLog | None = None,
+    progress_interval: float = 10.0,
 ) -> None:
     
     '''
@@ -603,16 +788,36 @@ def write_output_nc(
         tmp_path = Path(handle.name)
     
     unlimited_dims = [time_dim] if time_dim in ds.dims else None
+    stop_event: threading.Event | None = None
+    thread: threading.Thread | None = None
     
     try:
+        if progress is not None:
+            progress.emit(f'Writing temporary NetCDF output: {tmp_path.name}')
+        if progress is not None:
+            stop_event, thread = start_file_size_monitor(
+                tmp_path,
+                'Writing output',
+                progress,
+                progress_interval,
+            )
         ds.to_netcdf(
             tmp_path,
             engine='netcdf4',
             format='NETCDF4',
             unlimited_dims=unlimited_dims,
         )
+        stop_file_size_monitor(stop_event, thread)
+        stop_event = None
+        thread = None
+        if progress is not None:
+            progress.emit(
+                f'Finished temporary output: {format_bytes(tmp_path.stat().st_size)}'
+            )
+            progress.emit(f'Replacing final output: {out_path.name}')
         tmp_path.replace(out_path)
     finally:
+        stop_file_size_monitor(stop_event, thread)
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
 
@@ -639,10 +844,13 @@ def main() -> int:
     '''
     
     args = read_args()
+    progress = ProgressLog(enabled=not args.no_progress)
+    progress_interval = max(1.0, args.progress_interval)
     
     nc_dir = args.directory.expanduser().resolve()
     
     try:
+        progress.emit(f'Scanning NetCDF files in {nc_dir}')
         if args.output is None:
             _, t_vals0 = find_nc_files(nc_dir, ignore_bad_name=True)
             out_name = get_output_name(nc_dir, t_vals0)
@@ -655,7 +863,15 @@ def main() -> int:
             out_path.name,
             ignore_bad_name=True,
         )
-        time_dim, has_time_dim = check_input_files(nc_files, args.time_dim)
+        progress.emit(
+            f'Found {len(nc_files)} input files; expected output is {out_path.name}'
+        )
+        time_dim, has_time_dim = check_input_files(
+            nc_files,
+            args.time_dim,
+            progress=progress,
+            progress_interval=progress_interval,
+        )
     except Exception as err:  # noqa: BLE001
         print(f'Error: {err}', file=sys.stderr)
         return 1
@@ -677,7 +893,10 @@ def main() -> int:
             t_vals=t_vals,
             time_dim=time_dim,
             has_time_dim=has_time_dim,
+            progress=progress,
+            progress_interval=progress_interval,
         )
+        progress.emit('Updating output history metadata')
         ds_cat = update_history(ds_cat, nc_files)
         
         if not has_time_dim and time_dim in ds_cat.coords:
@@ -691,6 +910,8 @@ def main() -> int:
             out_path=out_path,
             time_dim=time_dim,
             overwrite=args.overwrite,
+            progress=progress,
+            progress_interval=progress_interval,
         )
     except Exception as err:  # noqa: BLE001
         print(f'Error: {err}', file=sys.stderr)
