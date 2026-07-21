@@ -55,6 +55,18 @@ DIRECTION_ORDER = (
 )
 
 
+def _load_output_paths_module():
+    module_path = Path(__file__).resolve().with_name('output_paths.py')
+    spec = importlib.util.spec_from_file_location('time_distance_output_paths', module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module
+
+
+output_paths = _load_output_paths_module()
+
+
 @dataclass(frozen = True)
 class TimeDistanceResult:
     xcorr: np.ndarray
@@ -3739,10 +3751,9 @@ def build_base_slug(config):
 
     context = build_context_labels(config)
     source_slug = build_source_slug(config)
-    processing_slug = build_processing_slug(config)
     geometry_slug = build_xcorr_geometry_slug(config)
 
-    return _join_slug([context['slug_prefix'], source_slug, processing_slug, geometry_slug, context['slug_suffix']])
+    return _join_slug([context['slug_prefix'], source_slug, geometry_slug, context['slug_suffix']])
 
 
 
@@ -3866,13 +3877,44 @@ def prepare_runtime_config(config):
 
     data_output_dir = Path(paths['data_output_dir']).expanduser().resolve()
     figure_output_dir = Path(paths.get('figure_dir', data_output_dir)).expanduser().resolve()
-    data['outfile'] = str(data_output_dir / f"{build_output_stem(runtime_config, 'time_distance')}.fits")
-    data['phase_outfile'] = str(data_output_dir / f"{build_output_stem(runtime_config, 'phase_difference')}.fits")
-    data['komega_outfile'] = str(data_output_dir / f"{build_output_stem(runtime_config, 'komega_diagram')}.fits")
-    data['coherence_outfile'] = str(data_output_dir / f"{build_output_stem(runtime_config, 'coherence_diagram')}.fits")
+    output_context = output_paths.build_runtime_output_paths(
+        runtime_config,
+        data_output_dir,
+        figure_output_dir if source_type == 'single_cube' else None)
+    filter_folder_name = output_context['filter_folder']
+    data['filter_folder'] = filter_folder_name
+    data['filter_parameters_file'] = str(data_output_dir / filter_folder_name / 'filter_parameters.txt')
+    data['outfile'] = str(output_paths.build_output_file(
+        data_output_dir,
+        runtime_config,
+        'time_distance',
+        f"{build_output_stem(runtime_config, 'time_distance')}.fits",
+        filter_folder_name))
+    data['phase_outfile'] = str(output_paths.build_output_file(
+        data_output_dir,
+        runtime_config,
+        'phase_difference',
+        f"{build_output_stem(runtime_config, 'phase_difference')}.fits",
+        filter_folder_name))
+    data['komega_outfile'] = str(output_paths.build_output_file(
+        data_output_dir,
+        runtime_config,
+        'komega_diagram',
+        f"{build_output_stem(runtime_config, 'komega_diagram')}.fits",
+        filter_folder_name))
+    data['coherence_outfile'] = str(output_paths.build_output_file(
+        data_output_dir,
+        runtime_config,
+        'coherence_diagram',
+        f"{build_output_stem(runtime_config, 'coherence_diagram')}.fits",
+        filter_folder_name))
     if source_type == 'single_cube':
-        data['orientation_validation_outfile'] = str(
-            figure_output_dir / f"{build_output_stem(runtime_config, 'komega_diagram')}_magnetic_orientation_validation.png")
+        data['orientation_validation_outfile'] = str(output_paths.build_output_file(
+            figure_output_dir,
+            runtime_config,
+            'orientation_validation',
+            f"{build_output_stem(runtime_config, 'komega_diagram')}_magnetic_orientation_validation.png",
+            filter_folder_name))
     else:
         data['orientation_validation_outfile'] = ''
 
@@ -5587,8 +5629,15 @@ class TimeDistance:
         Julio M. Morales, March 12th, 2026
         '''
 
-        # Create the output directory and write the core time-distance products.
-        self.outfile.parent.mkdir(parents = True, exist_ok = True)
+        # Create the output directories and write the core time-distance products.
+        for output_file in [
+            self.outfile,
+            self.phase_outfile,
+            self.komega_outfile,
+            self.coherence_outfile,
+        ]:
+            output_file.parent.mkdir(parents = True, exist_ok = True)
+
         xcorr_geometry = normalize_xcorr_geometry(
             self.time_distance.get('xcorr_geometry', _XCORR_GEOMETRY_DEFAULT))
         core_header = fits.Header()

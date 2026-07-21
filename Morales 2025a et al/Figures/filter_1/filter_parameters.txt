@@ -1,0 +1,11 @@
+filtering.enabled: true
+filtering.filter_sequence: [gaussian]
+filtering.gaussian.central_f: 3.0
+filtering.gaussian.central_k: 1.5
+filtering.gaussian.enabled: true
+filtering.gaussian.width_f: 3.0
+filtering.gaussian.width_k: 4.0
+filtering.magnetogram.enabled: false
+filtering.magnetogram.fill_value: 0.0
+filtering.magnetogram.selection: magnetic
+filtering.magnetogram.threshold_G: 3.0

@@ -121,10 +121,10 @@ default_plot_generate = {
       'gaussian_filter': True,
           'dopplergram': True,
             'composite': True,
-      'correlation_radius_animation': True,
-    'correlation_vertical_animation': True,
-            'phase_radius_animation': True,
-          'phase_vertical_animation': True,
+      'correlation_radius_animation': False,
+    'correlation_vertical_animation': False,
+            'phase_radius_animation': False,
+          'phase_vertical_animation': False,
 }
 
 
@@ -134,7 +134,7 @@ default_plot_generate = {
 
 # Theory-based dispersion-curve defaults used by the diagnostic overlays.
 cs: float = 7.8
-a: float = 0.33*cs
+a: float  = 0.33*cs
 theta_deg: float = 80.0
 phi_deg: float = 40.0
 H: float = 125.0

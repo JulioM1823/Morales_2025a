@@ -141,10 +141,16 @@ def test_config_accepts_directional_xcorr_geometry():
     )
     config["time_distance"]["xcorr_geometry"] = "east"
     runtime_config = td.prepare_runtime_config(config)
+    outfile_path = Path(runtime_config["data"]["outfile"])
+    phase_path = Path(runtime_config["data"]["phase_outfile"])
 
     assert runtime_config["time_distance"]["xcorr_geometry"] == "east"
-    assert "_east_xc.fits" in runtime_config["data"]["outfile"]
-    assert "_east_phase_diff.fits" in runtime_config["data"]["phase_outfile"]
+    assert outfile_path.parts[-4:-1] == ("xcorr", "east", "v1")
+    assert phase_path.parts[-4:-1] == ("phase", "east", "v1")
+    assert "_east_xc.fits" in outfile_path.name
+    assert "_east_phase_diff.fits" in phase_path.name
+    assert "filter_1" in outfile_path.parts
+    assert Path(runtime_config["data"]["filter_parameters_file"]).exists()
 
 
 def test_config_rejects_invalid_xcorr_geometry():
@@ -508,6 +514,7 @@ def test_xcorrj_runtime_controls_do_not_change_output_names(tmp_path):
     for key in ["outfile", "phase_outfile", "komega_outfile", "coherence_outfile"]:
         assert Path(controlled_runtime["data"][key]).name == Path(base_runtime["data"][key]).name
         assert "_annulus" not in Path(base_runtime["data"][key]).name
+        assert "annulus" in Path(base_runtime["data"][key]).parts
 
 
 def test_directional_xcorr_geometry_changes_output_names(tmp_path):
@@ -525,7 +532,43 @@ def test_directional_xcorr_geometry_changes_output_names(tmp_path):
     runtime_config = td.prepare_runtime_config(config)
 
     for key in ["outfile", "phase_outfile", "komega_outfile", "coherence_outfile"]:
-        assert "_north_" in Path(runtime_config["data"][key]).name
+        path = Path(runtime_config["data"][key])
+        assert "north" in path.parts
+        assert "_north_" in path.name
+
+
+def test_prepare_runtime_config_strips_filter_and_magnetogram_metadata_from_filenames(tmp_path):
+    filtering = copy.deepcopy(config_module.default_filtering)
+    filtering["magnetogram"]["enabled"] = True
+    filtering["magnetogram"]["selection"] = "magnetic"
+    filtering["magnetogram"]["threshold_G"] = 10.0
+    filtering["gaussian"]["central_k"] = 2.0
+    filtering["gaussian"]["width_k"] = 2.0
+    filtering["gaussian"]["central_f"] = 1.5
+    filtering["gaussian"]["width_f"] = 1.5
+    config = config_module.get_config(
+        source_type = "paired_cubes",
+        v1_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe5434.fits"),
+        v2_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe7090.fits"),
+        delta_z_km = 100.0,
+        p_dx_Mm = 0.5,
+        dt = 1.0,
+        data_output_dir = str(tmp_path / "data"),
+        figure_dir = str(tmp_path / "figures"),
+        filtering = filtering,
+    )
+    runtime_config = td.prepare_runtime_config(config)
+    outfile_path = Path(runtime_config["data"]["outfile"])
+    parameter_text = Path(runtime_config["data"]["filter_parameters_file"]).read_text(encoding = "utf-8")
+
+    assert outfile_path.parts[-7:-4] == ("observations", "magneto", "06may2019")
+    assert outfile_path.parts[-4:-1] == ("xcorr", "annulus", "v1")
+    assert "gaussian" not in outfile_path.name
+    assert "gauss_ck" not in outfile_path.name
+    assert "magnetogram" not in outfile_path.name
+    assert "b_gt_10g" not in outfile_path.name
+    assert "filtering.gaussian.central_k: 2.0" in parameter_text
+    assert "filtering.magnetogram.threshold_G: 10.0" in parameter_text
 
 
 def test_azimuthal_average_fft_complex_oana_matches_legacy_reference():

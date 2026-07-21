@@ -109,6 +109,7 @@ def _load_config_module(module_path: Path = CONFIG_PATH):
 helpers = _load_td_batch_notebook_helpers(BATCH_NOTEBOOK_PATH)
 analysis_helpers = _load_td_analysis_notebook_helpers(PLOTS_NOTEBOOK_PATH)
 performance_audit = _load_performance_audit_module(PERFORMANCE_AUDIT_PATH)
+comparison_view = helpers.comparison_view
 
 
 def _touch(path: Path) -> Path:
@@ -413,6 +414,10 @@ def test_comparison_view_discovers_and_writes_minimal_stable_sheets(tmp_path: Pa
         figure_dir
         / "paired_cubes_gaussian_filter_comparison_v3_0km_220km_filters_2_f1_gauss.png"
     )
+    for case_prefix in ["z0_0g", "hx_10g", "hx_50g", "hx_100g"]:
+        _write_tiny_png(figure_dir / f"{case_prefix}_v3_0km_220km_unfiltered_komega.png")
+        _write_tiny_png(figure_dir / f"{case_prefix}_v3_0km_220km_xc.png")
+        _write_tiny_png(figure_dir / f"{case_prefix}_v3_0km_220km_phase_diff.png")
 
     outputs = helpers.write_default_comparison_viewers(figure_dir)
     first_render = {
@@ -434,6 +439,9 @@ def test_comparison_view_discovers_and_writes_minimal_stable_sheets(tmp_path: Pa
     field_orientation_html = first_render["field_orientation_comparison.html"]
 
     assert outputs["field_strength_comparison"]["plot_count"] == 2
+    assert outputs["field_strength_comparison"]["subplot_link_warning_count"] > 0
+    field_strength_warnings = Path(outputs["field_strength_comparison"]["subplot_link_warning_log"]).read_text(encoding = "utf-8")
+    assert "missing target" in field_strength_warnings
     assert "paired_cubes_gaussian_filter_comparison" not in field_strength_html
     assert field_strength_html.index("0-220 km") < field_strength_html.index("220-440 km")
     assert 'width="1" height="1"' in field_strength_html
@@ -479,6 +487,107 @@ def test_comparison_view_labels_directional_geometry(tmp_path: Path):
     assert outputs["field_strength_comparison"]["plot_count"] == 1
     assert "0-220 km - East Wedge" in field_strength_html
     assert "0-220 km - East Wedge" in full_view_html
+
+
+def test_comparison_view_komega_hotspots_do_not_link_orientation_validation(tmp_path: Path):
+    figure_dir = tmp_path / "figures"
+    processing_slug = "gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5"
+    comparison_name = f"field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_{processing_slug}.png"
+    case_stem = "hx_10g_v3_0km_220km"
+    filtered_case_stem = f"{case_stem}_{processing_slug}"
+
+    _write_tiny_png(figure_dir / comparison_name)
+    _write_tiny_png(figure_dir / f"{case_stem}_unfiltered_komega.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_komega_magnetic_orientation_validation.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_xc.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_phase_diff.png")
+
+    helpers.write_default_comparison_viewers(figure_dir)
+    full_view_html = (figure_dir / "comparison_view" / comparison_name.replace(".png", ".html")).read_text(encoding = "utf-8")
+
+    assert f'href="../{case_stem}_unfiltered_komega.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_xc.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_phase_diff.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_komega_magnetic_orientation_validation.png"' not in full_view_html
+
+
+def test_gaussian_comparison_komega_hotspots_do_not_link_orientation_validation(tmp_path: Path):
+    figure_dir = tmp_path / "figures"
+    processing_slug = "gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5"
+    comparison_name = "gaussian_filter_comparison_v3_0km_220km_filters_1_f1_gauss_ck_2_wk_2_cf_1_5_wf_1_5.png"
+    filtered_case_stem = f"z0_0g_v3_0km_220km_{processing_slug}"
+
+    _write_tiny_png(figure_dir / comparison_name)
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_komega.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_komega_magnetic_orientation_validation.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_xc.png")
+    _write_tiny_png(figure_dir / f"{filtered_case_stem}_phase_diff.png")
+
+    helpers.write_default_comparison_viewers(figure_dir)
+    full_view_html = (figure_dir / "comparison_view" / comparison_name.replace(".png", ".html")).read_text(encoding = "utf-8")
+
+    assert f'href="../{filtered_case_stem}_komega.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_xc.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_phase_diff.png"' in full_view_html
+    assert f'href="../{filtered_case_stem}_komega_magnetic_orientation_validation.png"' not in full_view_html
+
+
+def test_comparison_view_hotspots_resolve_cleaned_nested_hierarchy_paths(tmp_path: Path):
+    figure_dir = tmp_path / "figures"
+    comparison_path = (
+        figure_dir
+        / "filter_9"
+        / "field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.png"
+    )
+    _write_tiny_png(comparison_path)
+    _write_tiny_png(
+        figure_dir
+        / "filter_0"
+        / "simulations"
+        / "nonmagneto"
+        / "horizontal"
+        / "10G"
+        / "komega"
+        / "annulus"
+        / "v3"
+        / "hx_10g_v3_0km_220km_komega.png"
+    )
+    _write_tiny_png(
+        figure_dir
+        / "filter_9"
+        / "simulations"
+        / "nonmagneto"
+        / "horizontal"
+        / "10G"
+        / "xcorr"
+        / "annulus"
+        / "v3"
+        / "hx_10g_v3_0km_220km_xc.png"
+    )
+    _write_tiny_png(
+        figure_dir
+        / "filter_9"
+        / "simulations"
+        / "nonmagneto"
+        / "horizontal"
+        / "10G"
+        / "phase"
+        / "annulus"
+        / "v3"
+        / "hx_10g_v3_0km_220km_phase_diff.png"
+    )
+
+    helpers.write_default_comparison_viewers(figure_dir)
+    full_view_html = (
+        figure_dir
+        / "comparison_view"
+        / "field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.html"
+    ).read_text(encoding = "utf-8")
+
+    assert 'data-full-resolution-image src="../filter_9/field_strength_comparison' in full_view_html
+    assert 'href="../filter_0/simulations/nonmagneto/horizontal/10G/komega/annulus/v3/hx_10g_v3_0km_220km_komega.png"' in full_view_html
+    assert 'href="../filter_9/simulations/nonmagneto/horizontal/10G/xcorr/annulus/v3/hx_10g_v3_0km_220km_xc.png"' in full_view_html
+    assert 'href="../filter_9/simulations/nonmagneto/horizontal/10G/phase/annulus/v3/hx_10g_v3_0km_220km_phase_diff.png"' in full_view_html
 
 
 def test_plots_notebook_omits_gallery_export_block():
