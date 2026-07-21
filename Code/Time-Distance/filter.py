@@ -12,8 +12,6 @@ import re
 from scipy.signal.windows import bartlett, gaussian
 from tqdm import tqdm
 
-
-
 try:
     import netCDF4 as nc
 except ModuleNotFoundError:
