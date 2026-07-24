@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 import time
-   
+
 from astropy.io import fits
 import h5py
 import numpy as np
@@ -11,7 +11,8 @@ from pathlib import Path
 import re
 from scipy.signal.windows import bartlett, gaussian
 from tqdm import tqdm
-  
+
+
 try:
     import netCDF4 as nc
 except ModuleNotFoundError:
