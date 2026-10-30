@@ -1,0 +1,5 @@
+# BEGIN Overleaf Workshop local metadata
+# Keep local project cache, comments, chat, and sync state out of source control.
+*
+!.gitignore
+# END Overleaf Workshop local metadata
