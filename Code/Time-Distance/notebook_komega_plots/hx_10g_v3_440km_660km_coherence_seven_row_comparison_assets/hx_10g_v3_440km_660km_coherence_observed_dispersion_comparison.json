@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "label": "Observed/Simulation k\u2013\u03c9 Diagram",
+      "path": "hx_10g_v3_440km_660km_coherence_observed.png",
+      "kind": "observed"
+    },
+    {
+      "label": "3D MAG Wave k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/3d_mag_wave.png",
+      "kind": "theory",
+      "model": "nc2009"
+    },
+    {
+      "label": "Alfv\u00e9n Mode k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/alfven_mode.png",
+      "kind": "theory",
+      "model": "alfven_mode"
+    },
+    {
+      "label": "Slow/Fast Magnetoacoustic Mode k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/slow_fast_mode.png",
+      "kind": "theory",
+      "model": "slow_fast_mode"
+    },
+    {
+      "label": "Bunte 1993 k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/bunte1993.png",
+      "kind": "theory",
+      "model": "bunte1993"
+    },
+    {
+      "label": "MT1982 k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/mt1982.png",
+      "kind": "theory",
+      "model": "mt1982"
+    },
+    {
+      "label": "MT1981 k\u2013\u03c9 Diagram",
+      "path": "dispersion_comparison/hx_10g_v3_440km_660km_coherence_observed/mt1981.png",
+      "kind": "theory",
+      "model": "mt1981"
+    }
+  ],
+  "pair_context": {
+    "height_values_km": [],
+    "a_by_height_km_s": [],
+    "a_km_s": 2.574,
+    "a_source": "config komega_comparison.standalone_pair",
+    "theta_by_height_deg": [],
+    "theta_deg": 80.0,
+    "theta_source": "config komega_comparison.standalone_pair",
+    "phi_by_height_deg": [],
+    "phi_deg": 40.0,
+    "phi_source": "config komega_comparison.standalone_pair",
+    "dz_km": 168.0,
+    "dz_source": "config komega_comparison.standalone_pair",
+    "standalone_fallback_used": true,
+    "angles_available": true,
+    "zero_field": false,
+    "angle_note": "",
+    "theta_convention": "inclination from +z",
+    "phi_convention": "azimuth atan2(By, Bx), +x toward +y",
+    "dz_convention": "absolute physical layer separation"
+  },
+  "solver_domain": {
+    "k_h_Mm_inverse": [
+      0.0,
+      6.929983794683363
+    ],
+    "nu_mHz": [
+      0.06973500697350055,
+      9.972105997210578
+    ],
+    "shape": [
+      64,
+      43
+    ],
+    "conversions": {
+      "kh": "k_h [Mm^-1] / 1000 -> [km^-1]",
+      "omega": "nu [mHz] * 1e-3 * 2pi -> omega [rad s^-1]",
+      "omega_zero": "omega=0 excluded from Vesa solver evaluation; observed axis limit retained",
+      "theta_phi": "degrees -> radians",
+      "dz": "absolute layer separation retained in km"
+    }
+  },
+  "authoritative_source": {
+    "config_file": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Code/diagnostic_diagram/config.py",
+    "functions_file": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Code/diagnostic_diagram/functions.py",
+    "methods": [
+      "DiagnosticDiagram.omega_solve_grid",
+      "DiagnosticDiagram.kz_solve_grid",
+      "DiagnosticDiagram.associate_omega_boundaries_with_kz",
+      "DiagnosticDiagram.plot_omega_boundaries_for_kz_branch",
+      "DiagnosticDiagram.phase_speed",
+      "DiagnosticDiagram.phase_difference"
+    ]
+  },
+  "models": [
+    {
+      "model": "nc2009",
+      "label": "3D MAG Wave k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "a": 2.574,
+        "theta": 1.3962634015954636,
+        "phi": 0.6981317007977318,
+        "dz": 168.0,
+        "cs": 7.8,
+        "g": 0.274,
+        "N": 0.030951723772202785,
+        "wac": 0.0312
+      },
+      "kz_branches_rendered": 6,
+      "colorbars_rendered": 6,
+      "authoritative_kz_order": 6,
+      "authoritative_omega_order": 6,
+      "physical_omega_branches": 3,
+      "associated_boundary_points": 211,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    },
+    {
+      "model": "alfven_mode",
+      "label": "Alfv\u00e9n Mode k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "a": 2.574,
+        "theta": 1.3962634015954636,
+        "phi": 0.6981317007977318,
+        "dz": 168.0
+      },
+      "kz_branches_rendered": 2,
+      "colorbars_rendered": 2,
+      "authoritative_kz_order": 2,
+      "authoritative_omega_order": 2,
+      "physical_omega_branches": 1,
+      "associated_boundary_points": 41,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    },
+    {
+      "model": "slow_fast_mode",
+      "label": "Slow/Fast Magnetoacoustic Mode k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "a": 2.574,
+        "theta": 1.3962634015954636,
+        "phi": 0.6981317007977318,
+        "dz": 168.0,
+        "cs": 7.8
+      },
+      "kz_branches_rendered": 4,
+      "colorbars_rendered": 4,
+      "authoritative_kz_order": 4,
+      "authoritative_omega_order": 2,
+      "physical_omega_branches": 2,
+      "associated_boundary_points": 125,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    },
+    {
+      "model": "bunte1993",
+      "label": "Bunte 1993 k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "a": 2.574,
+        "dz": 168.0,
+        "cs": 7.8,
+        "g": 0.274,
+        "H": 125.0,
+        "gamma": 1.6666666666666667,
+        "tau": 200.0
+      },
+      "kz_branches_rendered": 2,
+      "colorbars_rendered": 2,
+      "authoritative_kz_order": 2,
+      "authoritative_omega_order": 8,
+      "physical_omega_branches": 3,
+      "associated_boundary_points": 252,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    },
+    {
+      "model": "mt1982",
+      "label": "MT1982 k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "dz": 168.0,
+        "cs": 7.8,
+        "g": 0.274,
+        "H": 125.0,
+        "N": 0.030951723772202785,
+        "gamma": 1.6666666666666667,
+        "tau": 200.0
+      },
+      "kz_branches_rendered": 2,
+      "colorbars_rendered": 2,
+      "authoritative_kz_order": 2,
+      "authoritative_omega_order": 8,
+      "physical_omega_branches": 2,
+      "associated_boundary_points": 0,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    },
+    {
+      "model": "mt1981",
+      "label": "MT1981 k\u2013\u03c9 Diagram",
+      "params_supplied": {
+        "dz": 168.0,
+        "cs": 7.8,
+        "H": 125.0,
+        "N": 0.030951723772202785
+      },
+      "kz_branches_rendered": 2,
+      "colorbars_rendered": 2,
+      "authoritative_kz_order": 2,
+      "authoritative_omega_order": 4,
+      "physical_omega_branches": 2,
+      "associated_boundary_points": 170,
+      "unavailable_reason": "",
+      "omega_solver_failures": 0
+    }
+  ],
+  "souffrin_included": false
+}

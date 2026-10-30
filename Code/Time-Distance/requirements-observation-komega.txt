@@ -1,0 +1,10 @@
+bokeh>=3.2,<4
+numpy
+scipy
+astropy
+cmasher
+matplotlib
+contourpy>=1.0
+tqdm
+h5py
+netCDF4
