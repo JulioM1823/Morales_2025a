@@ -1,0 +1,126 @@
+{
+  "artifact": {
+    "sha256": "254f6ffe3fef5f3edaf26d63cd9e4bab0c731d66d4193fc425eba38e3390f93a",
+    "size_bytes": 262553
+  },
+  "diagnostic_directory": "phase_differences",
+  "extra": {
+    "automatic_reuse": false,
+    "migration_source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/hx_100g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg",
+    "source_sha256": "254f6ffe3fef5f3edaf26d63cd9e4bab0c731d66d4193fc425eba38e3390f93a",
+    "verification": "same underlying file and SHA256"
+  },
+  "filter_configuration": {
+    "mode": "historical",
+    "provenance": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/simulations/nonmagneto/horizontal/100G/komega/annulus/v3/hx_100g_v3_220km_880km_komega.inputs.json"
+  },
+  "identity": {
+    "category": "hx/h100G",
+    "dataset_id": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/100G/simulation_hx_100G_33570s_48000s.nc",
+    "diagnostic_parameters": {},
+    "filtering": {
+      "enabled": true,
+      "filter_sequence": [
+        "gaussian"
+      ],
+      "gaussian": {
+        "central_f": 1.5,
+        "central_k": 2.0,
+        "enabled": true,
+        "width_f": 1.5,
+        "width_k": 2.0
+      },
+      "magnetogram": {
+        "enabled": false,
+        "fill_value": 0.0,
+        "selection": "nonmagnetic",
+        "threshold_G": ""
+      }
+    },
+    "geometry": {
+      "delta_z_km": 659.9998836363636,
+      "delta_z_rounded_km": 660,
+      "grouping_status": "available",
+      "heights_km": [
+        220.00011636363638,
+        880.0
+      ],
+      "labels": [
+        "h1",
+        "h4"
+      ],
+      "pair": "h1_vs_h4"
+    },
+    "implementation": {
+      "status": "legacy implementation not fully recorded"
+    },
+    "legacy_provenance": {
+      "processing_parameters_status": "only recorded parameters; remaining values unknown",
+      "reference": {
+        "data": {
+          "file": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/100G/simulation_hx_100G_33570s_48000s.nc",
+          "h1": 1,
+          "h2": 4,
+          "observable": "v3",
+          "resolved_h1_index": 1,
+          "resolved_h1_km": 220.00011636363638,
+          "resolved_h2_index": 4,
+          "resolved_h2_km": 880.0,
+          "source_type": "single_cube"
+        },
+        "filtering": {
+          "enabled": true,
+          "filter_sequence": [
+            "gaussian"
+          ],
+          "gaussian": {
+            "central_f": 1.5,
+            "central_k": 2.0,
+            "enabled": true,
+            "width_f": 1.5,
+            "width_k": 2.0
+          },
+          "magnetogram": {
+            "enabled": false,
+            "fill_value": 0.0,
+            "selection": "nonmagnetic",
+            "threshold_G": ""
+          }
+        },
+        "magnetogram_mode": {
+          "single_cube": "bottom"
+        },
+        "provenance": "saved atmospheric cube/height provenance; observable from canonical pipeline name or saved megaplot metadata",
+        "sampling": {
+          "dt": 30.0,
+          "p_dx_Mm": 0.16000000000000014
+        },
+        "schema_version": 1
+      },
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/simulations/nonmagneto/horizontal/100G/komega/annulus/v3/hx_100g_v3_220km_880km_komega.fits"
+    },
+    "magnetogram_mode": {
+      "single_cube": "bottom"
+    },
+    "observable": "v3",
+    "organization_prefix": "simulations/v3/Annulus",
+    "phase_calibration_sha256": "f7878ade053f7858b8363ca01f858e512dbfa424e490203afc38c9416422319a",
+    "processing": {
+      "dt": 30.0,
+      "p_dx_Mm": 0.16000000000000014,
+      "xcorr_geometry": "annulus"
+    },
+    "schema_version": 2,
+    "source_type": "single_cube",
+    "sources": [
+      {
+        "mtime_ns": 1777244633405016772,
+        "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/100G/simulation_hx_100G_33570s_48000s.nc",
+        "size_bytes": 5486417538
+      }
+    ]
+  },
+  "product": "phase_difference",
+  "run_id": "095dffa494d6622eb4891f2260f2065d5b39e8ce7aa34d2973785d2133fd5d43",
+  "schema_version": 2
+}
