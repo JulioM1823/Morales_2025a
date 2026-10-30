@@ -30,6 +30,7 @@ comm==0.1.3
 contourpy==1.0.7
 corner==2.2.2
 cycler==0.11.0
+dask[array]==2023.12.1
 debugpy==1.6.7
 decorator==5.1.1
 defusedxml==0.7.1
@@ -108,6 +109,7 @@ nbclient==0.8.0
 nbconvert==7.4.0
 nbformat==5.9.0
 nest-asyncio==1.5.6
+netCDF4==1.7.4
 networkx==3.1
 notebook==7.0.0
 notebook_shim==0.2.3
@@ -212,6 +214,7 @@ webcolors==1.13
 webencodings==0.5.1
 websocket-client==1.5.2
 widgetsnbextension==4.0.7
+xarray==2023.12.0
 xyzservices==2023.7.0
 y-py==0.6.0
 ypy-websocket==0.12.3

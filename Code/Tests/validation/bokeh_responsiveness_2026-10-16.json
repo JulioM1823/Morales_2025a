@@ -1,0 +1,90 @@
+{
+  "date": "2026-10-16",
+  "python": "3.10.10 (v3.10.10:aad5f6a891, Feb  7 2023, 08:47:40) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "numpy": "1.24.3",
+  "gaussian": {
+    "before_ms_median": 3.800979000516236,
+    "after_ms_median": 0.2771454746834934,
+    "speedup": 13.714743150170657,
+    "max_abs_difference_before_after": 0.0,
+    "javascript_evaluation_without_rendering": {
+      "median_ms": 0.1775829999999985,
+      "p95_ms": 0.8870839999999873
+    }
+  },
+  "models": {
+    "nc2009": {
+      "before_seconds": 0.5285761669510975,
+      "worker_seconds": 0.5336862080730498,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "alfven_mode": {
+      "before_seconds": 0.041213750024326146,
+      "worker_seconds": 0.041268208995461464,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "slow_mode": {
+      "before_seconds": 0.6076263330178335,
+      "worker_seconds": 0.6018515829928219,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "fast_mode": {
+      "before_seconds": 0.6013760829810053,
+      "worker_seconds": 0.6006235420936719,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "bunte1993": {
+      "before_seconds": 0.1980172909097746,
+      "worker_seconds": 0.18630549998488277,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "mt1982": {
+      "before_seconds": 0.2975131249986589,
+      "worker_seconds": 0.2928780830698088,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    },
+    "mt1981": {
+      "before_seconds": 0.43792425002902746,
+      "worker_seconds": 0.4334034159546718,
+      "arrays_bitwise_equal": true,
+      "grid": [
+        24,
+        28
+      ]
+    }
+  },
+  "native_dataset_model": {
+    "model": "nc2009",
+    "grid": [
+      120,
+      241
+    ],
+    "before_seconds": 32.68232350004837,
+    "worker_seconds": 28.86281995801255,
+    "arrays_bitwise_equal": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "package_id": "498503fe-6b43-4c52-be26-cb151b7120ef",
+  "html_pages": 9570,
+  "required_sources": 109,
+  "additional_data": 0,
+  "missing_source_assets": 102,
+  "local_resource_references": 42362,
+  "missing_resources": 0,
+  "unique_launch_contexts": 735,
+  "context_failures": 0,
+  "archive_crc_passed": true,
+  "archive_bytes": 2016448430,
+  "stalled_observing_cube_resolved": true,
+  "all_109_required_source_paths_and_sizes_present": true,
+  "archive_sha256": "3a08c8a7cc0e2ca67dd5c481986d8cfc229989f0db249e4880b98a949d945183",
+  "environment_setup_focused_tests_passed": 23,
+  "automatic_python_setup": "Python 3.11 downloaded and private environment provisioned on macOS arm64",
+  "historical_focused_tests_passed": 27,
+  "model_switch_transport_fixed": true
+}

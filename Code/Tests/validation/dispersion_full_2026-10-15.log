@@ -1,0 +1,474 @@
+..............................F......................................... [ 20%]
+...............FFF..FFF...F....F.F.F.................................... [ 40%]
+........................................................................ [ 60%]
+........................................................................ [ 80%]
+.........................................................s...........    [100%]
+==================================== ERRORS ====================================
+__________ ERROR collecting Code/Tests/test_time_distance_helpers.py ___________
+ImportError while importing test module '/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Code/Tests/test_time_distance_helpers.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+Code/Tests/test_time_distance_helpers.py:11: in <module>
+    import time_distance as tdp  # noqa: E402
+E   ModuleNotFoundError: No module named 'time_distance'
+=================================== FAILURES ===================================
+________ test_all_models_demo_notebook_is_small_valid_and_user_editable ________
+
+    def test_all_models_demo_notebook_is_small_valid_and_user_editable():
+        notebook = nbformat.read(DEMO_NOTEBOOK, as_version=4)
+        nbformat.validate(notebook)
+        code = "\n".join(cell.source for cell in notebook.cells if cell.cell_type == "code")
+    
+        assert len(notebook.cells) == 3
+        assert "DATASET_PATH =" in code
+        assert "MODEL_NAME =" not in code
+        assert "standalone_pair" in code
+        assert "COMPARISON_ROW_LABELS" not in code
+        assert "load_komega_fits_dataset" in code
+        assert "generate_standalone_komega_comparison" in code
+        assert "seven_row_comparison" in code
+        for cell in notebook.cells:
+            if cell.cell_type == "code":
+>               assert cell.execution_count is None
+E               assert 1 is None
+E                +  where 1 = {'cell_type': 'code', 'execution_count': 1, 'id': 'setup', 'metadata': {}, 'outputs': [], 'source': "from copy import ..._local_module('komega_demo_dispersion', TD_DIR / 'dispersion_comparison.py')\nconfig = deepcopy(config_module.config)"}.execution_count
+
+Code/Tests/test_dispersion_comparison.py:376: AssertionError
+____________________ test_omega_poly_matches_golden[mt1982] ____________________
+
+model = 'mt1982'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_omega_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.omega_poly(OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["omega_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x703690bbe0>, array(1.18829923), array(22.68911873))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 21.5008195
+E           Max relative difference: 0.94762691
+E            x: array(1.188299)
+E            y: array(22.689119)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+__________________ test_omega_poly_matches_golden[bunte1993] ___________________
+
+model = 'bunte1993'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_omega_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.omega_poly(OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["omega_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x703690a440>, array(-1023441.7086451), array(-462567.87168179))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 560873.83696331
+E           Max relative difference: 1.21252225
+E            x: array(-1023441.708645)
+E            y: array(-462567.871682)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+____________________ test_omega_poly_matches_golden[nc2009] ____________________
+
+model = 'nc2009'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_omega_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.omega_poly(OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["omega_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036909b40>, array(-0.01754907), array(-0.00086804))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 0.01668103
+E           Max relative difference: 19.21683804
+E            x: array(-0.017549)
+E            y: array(-0.000868)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+_____________________ test_kz_poly_matches_golden[mt1982] ______________________
+
+model = 'mt1982'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_kz_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["kz_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9d1b0>, array(-0.00455072), array(-0.01063638))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 0.00608565
+E           Max relative difference: 0.57215473
+E            x: array(-0.004551)
+E            y: array(-0.010636)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+____________________ test_kz_poly_matches_golden[bunte1993] ____________________
+
+model = 'bunte1993'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_kz_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["kz_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036908a60>, array(0.01253768), array(0.01265886))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 0.00012118
+E           Max relative difference: 0.0095726
+E            x: array(0.012538)
+E            y: array(0.012659)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+_____________________ test_kz_poly_matches_golden[nc2009] ______________________
+
+model = 'nc2009'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_kz_poly_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["kz_poly"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:146: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9ef80>, array(-0.01695741), array(-0.00166908))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 0.01528833
+E           Max relative difference: 9.15974122
+E            x: array(-0.016957)
+E            y: array(-0.001669)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+___________________ test_omega_solve_matches_golden[mt1982] ____________________
+
+model = 'mt1982'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_omega_solve_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.omega_solve(KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["omega_solve"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9cc10>, array([0.        , 0.02893444, 0.        , 0.        , 0...    ]), array([0.        , 0.03082635, 0.        , 0.        , 0.        ,
+       0.        , 0.        , 0.        ]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 8 (12.5%)
+E           Max absolute difference: 0.00189191
+E           Max relative difference: 0.06137321
+E            x: array([0.      , 0.028934, 0.      , 0.      , 0.      , 0.      ,
+E                  0.      , 0.      ])
+E            y: array([0.      , 0.030826, 0.      , 0.      , 0.      , 0.      ,
+E                  0.      , 0.      ])
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+_____________________ test_kz_solve_matches_golden[mt1982] _____________________
+
+model = 'mt1982'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_kz_solve_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.kz_solve(KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["kz_solve"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9eb90>, array([[-0.22754943,  0.22754943],
+       [-0.15579336, ...0.01103351],
+       [-0.00571902,  0.00571902],
+       [-0.0035422 ,  0.0035422 ],
+       [-0.00239468,  0.00239468]]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 20 / 20 (100%)
+E           Max absolute difference: 0.2444491
+E           Max relative difference: 2.33871809
+E            x: array([[-0.227549,  0.227549],
+E                  [-0.155793,  0.155793],
+E                  [-0.114966,  0.114966],...
+E            y: array([[-0.471999,  0.471999],
+E                  [-0.26785 ,  0.26785 ],
+E                  [-0.172286,  0.172286],...
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+_____________________ test_kz_solve_matches_golden[nc2009] _____________________
+
+model = 'nc2009'
+
+    @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
+    def test_kz_solve_matches_golden(model: str):
+        diag = _make_diag(model)
+        result = diag.kz_solve(KH_SAMPLE)
+>       np.testing.assert_allclose(result, GOLDEN[model]["kz_solve"], rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9d750>, array([[0.79694588, 0.8013969 , 0.81518541, 0.81951422, ...
+         0.        ],
+       [-0.55180803, -0.54600255, -0.32350212, -0.31766172,  0.        ,
+         0.        ]]))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 40 / 60 (66.7%)
+E           Max absolute difference: 1.25634942
+E           Max relative difference: 3.92971469
+E            x: array([[0.796946, 0.801397, 0.815185, 0.819514, 0.      , 0.      ],
+E                  [0.784513, 0.789545, 0.826999, 0.831985, 0.      , 0.      ],
+E                  [0.772043, 0.779373, 0.837159, 0.844467, 0.      , 0.      ],...
+E            y: array([[-0.445869, -0.423021,  0.      ,  0.      ,  0.      ,  0.      ],
+E                  [-0.457344, -0.451507, -0.418431, -0.411553,  0.      ,  0.      ],
+E                  [-0.468932, -0.465403, -0.404501, -0.400005,  0.      ,  0.      ],...
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+________________________ test_kz_poly_complex_branch_a0 ________________________
+
+    def test_kz_poly_complex_branch_a0():
+        kh_grid, omega_grid = np.meshgrid(KH_VALUES, OMEGA_VALUES)
+        params = dict(cfg.params["bunte1993"])
+        params["a"] = 0.0
+        diag = fn.DiagnosticDiagram(kh_grid, omega_grid, params)
+        result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
+        expected = -0.0393259691799348 + 0.011811340556245359j
+>       np.testing.assert_allclose(result, expected, rtol=RTOL, atol=ATOL)
+
+Code/Tests/test_functions.py:186: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<function assert_allclose.<locals>.compare at 0x7036d9cdc0>, array(-0.01788895+0.02793609j), array(-0.03932597+0.01181134j))
+kwds = {'equal_nan': True, 'err_msg': '', 'header': 'Not equal to tolerance rtol=1e-09, atol=1e-12', 'verbose': True}
+
+    @wraps(func)
+    def inner(*args, **kwds):
+        with self._recreate_cm():
+>           return func(*args, **kwds)
+E           AssertionError: 
+E           Not equal to tolerance rtol=1e-09, atol=1e-12
+E           
+E           Mismatched elements: 1 / 1 (100%)
+E           Max absolute difference: 0.02682449
+E           Max relative difference: 0.65327734
+E            x: array(-0.017889+0.027936j)
+E            y: array(-0.039326+0.011811j)
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: AssertionError
+=============================== warnings summary ===============================
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: 5 warnings
+Code/Tests/test_atmospheric_profiles.py: 23 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: 5 warnings
+Code/Tests/test_atmospheric_profiles.py: 23 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1829: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.space          = oneOf(self._space_widths)("space")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1831: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.style_literal  = oneOf(
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1839: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+    )("sym").leaveWhitespace()
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1844: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    Optional(r"\math" + oneOf(self._fontnames)("font")) + "{")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1847: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.delim          = oneOf(self._delims)
+
+Code/Tests/test_atmospheric_profiles.py: 71 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1806: PyparsingDeprecationWarning: 'setName' deprecated - use 'set_name'
+    val.setName(key)
+
+Code/Tests/test_atmospheric_profiles.py: 62 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1809: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    val.setParseAction(getattr(self, key))
+
+Code/Tests/test_atmospheric_profiles.py: 12 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1649: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    return Empty().setParseAction(raise_error)
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1948: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    + OneOrMore(oneOf(["_", "^"]) - p.placeable)("subsuper")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1968: PyparsingDeprecationWarning: 'unquoteResults' argument is deprecated, use 'unquote_results'
+    p.math_string   = QuotedString('$', '\\', unquoteResults=False)
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1969: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+    p.non_math      = Regex(r"(?:(?:\\[$])|[^$])*").leaveWhitespace()
+
+Code/Tests/test_atmospheric_profiles.py: 96 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1992: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    result = self._expression.parseString(s)
+
+Code/Tests/test_atmospheric_profiles.py: 112 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:2019: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    return self._math_expression.parseString(toks[0][1:-1])
+
+Code/Tests/test_atmospheric_profiles.py: 96 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:2000: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    self._expression.resetCache()
+
+Code/Tests/test_atmospheric_profiles.py: 116 warnings
+Code/Tests/test_bunte_filter_tool.py: 6 warnings
+Code/Tests/test_dispersion_consistency.py: 38 warnings
+Code/Tests/test_dopplergram_recalculation.py: 32 warnings
+Code/Tests/test_gaussian_filter_explorer.py: 2 warnings
+Code/Tests/test_integrated_komega_explorer.py: 1630 warnings
+Code/Tests/test_komega_bokeh_integration.py: 160 warnings
+Code/Tests/test_komega_explorer.py: 110 warnings
+Code/Tests/test_magnetogram_workflow.py: 62 warnings
+Code/Tests/test_observation_komega_explorer.py: 400 warnings
+Code/Tests/test_spatial_phase_analysis.py: 114 warnings
+Code/Tests/test_spectral_coherence.py: 260 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[east]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[west]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[north]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[south]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_chunked_handles_odd_even_width_and_clipped_maxdist[24-1]
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Code/Tests/test_time_distance_runtime.py:242: RuntimeWarning: Mean of empty slice.
+    phiann[irad, :] = fft_higher[yy, xx, :].mean(axis = 0)
+
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[east]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[west]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[north]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_directional_geometry_matches_reference_small_cube[south]
+Code/Tests/test_time_distance_runtime.py::test_xcorrj_chunked_handles_odd_even_width_and_clipped_maxdist[24-1]
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/numpy/core/_methods.py:184: RuntimeWarning: invalid value encountered in divide
+    ret = um.true_divide(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED Code/Tests/test_dispersion_comparison.py::test_all_models_demo_notebook_is_small_valid_and_user_editable
+FAILED Code/Tests/test_functions.py::test_omega_poly_matches_golden[mt1982]
+FAILED Code/Tests/test_functions.py::test_omega_poly_matches_golden[bunte1993]
+FAILED Code/Tests/test_functions.py::test_omega_poly_matches_golden[nc2009]
+FAILED Code/Tests/test_functions.py::test_kz_poly_matches_golden[mt1982] - As...
+FAILED Code/Tests/test_functions.py::test_kz_poly_matches_golden[bunte1993]
+FAILED Code/Tests/test_functions.py::test_kz_poly_matches_golden[nc2009] - As...
+FAILED Code/Tests/test_functions.py::test_omega_solve_matches_golden[mt1982]
+FAILED Code/Tests/test_functions.py::test_kz_solve_matches_golden[mt1982] - A...
+FAILED Code/Tests/test_functions.py::test_kz_solve_matches_golden[nc2009] - A...
+FAILED Code/Tests/test_functions.py::test_kz_poly_complex_branch_a0 - Asserti...
+ERROR Code/Tests/test_time_distance_helpers.py
+11 failed, 345 passed, 1 skipped, 3454 warnings, 1 error in 231.34s (0:03:51)

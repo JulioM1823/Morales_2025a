@@ -1,0 +1,374 @@
+Broader numerical/integration/coherence run:
+...............s........................................................ [ 62%]
+.......FFFF.............................s..                              [100%]
+=================================== FAILURES ===================================
+_ test_filter_changes_update_both_right_plots_without_touching_left_or_solving[central_k-2.2] _
+
+app = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702bd74220>
+key = 'central_k', value = 2.2
+
+    @pytest.mark.parametrize('key,value', [('central_k', 2.2), ('width_k', 3.2),
+                                          ('central_f', 2.5), ('width_f', 2.2)])
+    def test_filter_changes_update_both_right_plots_without_touching_left_or_solving(app, key, value):
+        calculate(app)
+        select(app.secondary, app.primary.observations[1].id)
+        original_data = app.primary.image_source.data['image'][0]
+        original_secondary = app.secondary.image_source.data['image'][0]
+        original_model = [source.data['image'][0] for source in app.model.image_sources]
+        cached = app.model.last_result
+        with patch.object(app.model_workspace.vesa, 'compute_diagram', side_effect=AssertionError('Repeated solve')):
+            app.primary.filter.sliders[key].value = value
+            app.primary.filter._perform_recompute()
+        assert app.primary.image_source.data['image'][0] is original_data
+        assert app.secondary.image_source.data['image'][0] is original_secondary
+        assert app.model.last_result is cached
+        for source, before in zip(app.model.image_sources, original_model):
+            assert source.data['image'][0] is before
+        assert_dataset_filter(app, app.primary)
+        assert_dataset_filter(app, app.secondary)
+        np.testing.assert_allclose(app.model.filtered_result.phase_deg,
+            cached.phase_deg * app.model.transmission[..., None], equal_nan=True)
+>       assert 'Unsaved' in app.primary.status.text
+E       AssertionError: assert 'Unsaved' in ''
+E        +  where '' = Div(id='p145560', ...).text
+E        +    where Div(id='p145560', ...) = <integrated_komega_explorer.DatasetPair object at 0x702bd773d0>.status
+E        +      where <integrated_komega_explorer.DatasetPair object at 0x702bd773d0> = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702bd74220>.primary
+
+Code/Tests/test_integrated_komega_explorer.py:335: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+---------------------------- Captured stderr setup -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 196.19file/s]
+----------------------------- Captured stdout call -----------------------------
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_331e231dce41a3a580cab56a60024ddaa23db97d59ae8dc5a0cf65444a07a2c4.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_2_2_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_6f76c885100fa0143548828e546b064162bdc2da3b1940ec2a48b5b8642a545c.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_2_2_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_d2dc00b44b1ac0e4a95153d0efac10f7b5b8230293a122af8931517064258597.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_2_2_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_6f76c885100fa0143548828e546b064162bdc2da3b1940ec2a48b5b8642a545c.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_2_2_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_d2dc00b44b1ac0e4a95153d0efac10f7b5b8230293a122af8931517064258597.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+----------------------------- Captured stderr call -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 181.44file/s]
+_ test_filter_changes_update_both_right_plots_without_touching_left_or_solving[width_k-3.2] _
+
+app = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702cd7a080>
+key = 'width_k', value = 3.2
+
+    @pytest.mark.parametrize('key,value', [('central_k', 2.2), ('width_k', 3.2),
+                                          ('central_f', 2.5), ('width_f', 2.2)])
+    def test_filter_changes_update_both_right_plots_without_touching_left_or_solving(app, key, value):
+        calculate(app)
+        select(app.secondary, app.primary.observations[1].id)
+        original_data = app.primary.image_source.data['image'][0]
+        original_secondary = app.secondary.image_source.data['image'][0]
+        original_model = [source.data['image'][0] for source in app.model.image_sources]
+        cached = app.model.last_result
+        with patch.object(app.model_workspace.vesa, 'compute_diagram', side_effect=AssertionError('Repeated solve')):
+            app.primary.filter.sliders[key].value = value
+            app.primary.filter._perform_recompute()
+        assert app.primary.image_source.data['image'][0] is original_data
+        assert app.secondary.image_source.data['image'][0] is original_secondary
+        assert app.model.last_result is cached
+        for source, before in zip(app.model.image_sources, original_model):
+            assert source.data['image'][0] is before
+        assert_dataset_filter(app, app.primary)
+        assert_dataset_filter(app, app.secondary)
+        np.testing.assert_allclose(app.model.filtered_result.phase_deg,
+            cached.phase_deg * app.model.transmission[..., None], equal_nan=True)
+>       assert 'Unsaved' in app.primary.status.text
+E       AssertionError: assert 'Unsaved' in ''
+E        +  where '' = Div(id='p153274', ...).text
+E        +    where Div(id='p153274', ...) = <integrated_komega_explorer.DatasetPair object at 0x702cd78c70>.status
+E        +      where <integrated_komega_explorer.DatasetPair object at 0x702cd78c70> = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702cd7a080>.primary
+
+Code/Tests/test_integrated_komega_explorer.py:335: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+---------------------------- Captured stderr setup -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 315.76file/s]
+----------------------------- Captured stdout call -----------------------------
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_331e231dce41a3a580cab56a60024ddaa23db97d59ae8dc5a0cf65444a07a2c4.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_3_2_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_42d13ba0f05d7dff973274ee82488535e60b529327da4991df188cad724876f9.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_3_2_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_9b27121b8c0b033e81a72f2819c819c91ec058d6e89e4dae8dfecacf72eb7c93.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_3_2_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_42d13ba0f05d7dff973274ee82488535e60b529327da4991df188cad724876f9.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_3_2_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_9b27121b8c0b033e81a72f2819c819c91ec058d6e89e4dae8dfecacf72eb7c93.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+----------------------------- Captured stderr call -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 243.61file/s]
+_ test_filter_changes_update_both_right_plots_without_touching_left_or_solving[central_f-2.5] _
+
+app = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702ded6380>
+key = 'central_f', value = 2.5
+
+    @pytest.mark.parametrize('key,value', [('central_k', 2.2), ('width_k', 3.2),
+                                          ('central_f', 2.5), ('width_f', 2.2)])
+    def test_filter_changes_update_both_right_plots_without_touching_left_or_solving(app, key, value):
+        calculate(app)
+        select(app.secondary, app.primary.observations[1].id)
+        original_data = app.primary.image_source.data['image'][0]
+        original_secondary = app.secondary.image_source.data['image'][0]
+        original_model = [source.data['image'][0] for source in app.model.image_sources]
+        cached = app.model.last_result
+        with patch.object(app.model_workspace.vesa, 'compute_diagram', side_effect=AssertionError('Repeated solve')):
+            app.primary.filter.sliders[key].value = value
+            app.primary.filter._perform_recompute()
+        assert app.primary.image_source.data['image'][0] is original_data
+        assert app.secondary.image_source.data['image'][0] is original_secondary
+        assert app.model.last_result is cached
+        for source, before in zip(app.model.image_sources, original_model):
+            assert source.data['image'][0] is before
+        assert_dataset_filter(app, app.primary)
+        assert_dataset_filter(app, app.secondary)
+        np.testing.assert_allclose(app.model.filtered_result.phase_deg,
+            cached.phase_deg * app.model.transmission[..., None], equal_nan=True)
+>       assert 'Unsaved' in app.primary.status.text
+E       AssertionError: assert 'Unsaved' in ''
+E        +  where '' = Div(id='p160988', ...).text
+E        +    where Div(id='p160988', ...) = <integrated_komega_explorer.DatasetPair object at 0x702ded5a50>.status
+E        +      where <integrated_komega_explorer.DatasetPair object at 0x702ded5a50> = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702ded6380>.primary
+
+Code/Tests/test_integrated_komega_explorer.py:335: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+---------------------------- Captured stderr setup -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 283.81file/s]
+----------------------------- Captured stdout call -----------------------------
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_331e231dce41a3a580cab56a60024ddaa23db97d59ae8dc5a0cf65444a07a2c4.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_2_5_wf_3_shape_16x16x80_dt_11_88_dx_0_43_5fec53fa63b5f2fd8757a0f5442652e312fc9d1558ff551f063e50dedd7ee8fe.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_2_5_wf_3_shape_20x20x59_dt_11_88_dx_0_43_9fc66d752431704f223ae7db5a543cdfae78c12724ffe16d22b5204079d2eac5.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_2_5_wf_3_shape_16x16x80_dt_11_88_dx_0_43_5fec53fa63b5f2fd8757a0f5442652e312fc9d1558ff551f063e50dedd7ee8fe.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_2_5_wf_3_shape_20x20x59_dt_11_88_dx_0_43_9fc66d752431704f223ae7db5a543cdfae78c12724ffe16d22b5204079d2eac5.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+----------------------------- Captured stderr call -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 267.31file/s]
+_ test_filter_changes_update_both_right_plots_without_touching_left_or_solving[width_f-2.2] _
+
+app = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702ea747f0>
+key = 'width_f', value = 2.2
+
+    @pytest.mark.parametrize('key,value', [('central_k', 2.2), ('width_k', 3.2),
+                                          ('central_f', 2.5), ('width_f', 2.2)])
+    def test_filter_changes_update_both_right_plots_without_touching_left_or_solving(app, key, value):
+        calculate(app)
+        select(app.secondary, app.primary.observations[1].id)
+        original_data = app.primary.image_source.data['image'][0]
+        original_secondary = app.secondary.image_source.data['image'][0]
+        original_model = [source.data['image'][0] for source in app.model.image_sources]
+        cached = app.model.last_result
+        with patch.object(app.model_workspace.vesa, 'compute_diagram', side_effect=AssertionError('Repeated solve')):
+            app.primary.filter.sliders[key].value = value
+            app.primary.filter._perform_recompute()
+        assert app.primary.image_source.data['image'][0] is original_data
+        assert app.secondary.image_source.data['image'][0] is original_secondary
+        assert app.model.last_result is cached
+        for source, before in zip(app.model.image_sources, original_model):
+            assert source.data['image'][0] is before
+        assert_dataset_filter(app, app.primary)
+        assert_dataset_filter(app, app.secondary)
+        np.testing.assert_allclose(app.model.filtered_result.phase_deg,
+            cached.phase_deg * app.model.transmission[..., None], equal_nan=True)
+>       assert 'Unsaved' not in app.primary.status.text
+E       AssertionError: assert 'Unsaved' in ''
+E        +  where '' = Div(id='p168702', ...).text
+E        +    where Div(id='p168702', ...) = <integrated_komega_explorer.DatasetPair object at 0x702ea752d0>.status
+E        +      where <integrated_komega_explorer.DatasetPair object at 0x702ea752d0> = <integrated_komega_explorer.IntegratedKomegaExplorer object at 0x702ea747f0>.primary
+
+Code/Tests/test_integrated_komega_explorer.py:335: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+---------------------------- Captured stderr setup -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 167.42file/s]
+----------------------------- Captured stdout call -----------------------------
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_20x20x59_dt_11_88_dx_0_43_331e231dce41a3a580cab56a60024ddaa23db97d59ae8dc5a0cf65444a07a2c4.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_2_2_shape_16x16x80_dt_11_88_dx_0_43_112af0be664e3a8e384a0b9436c700dc67329ccc2b501123f05e0b24352aaa7e.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_2_2_shape_20x20x59_dt_11_88_dx_0_43_a12771c8bfb1b56716d3a4612184651325835d927e47e37cd196ae0839ee3b63.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_2_2_shape_16x16x80_dt_11_88_dx_0_43_112af0be664e3a8e384a0b9436c700dc67329ccc2b501123f05e0b24352aaa7e.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_2_2_shape_20x20x59_dt_11_88_dx_0_43_a12771c8bfb1b56716d3a4612184651325835d927e47e37cd196ae0839ee3b63.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+----------------------------- Captured stderr call -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 286.33file/s]
+=========================== short test summary info ============================
+FAILED Code/Tests/test_integrated_komega_explorer.py::test_filter_changes_update_both_right_plots_without_touching_left_or_solving[central_k-2.2]
+FAILED Code/Tests/test_integrated_komega_explorer.py::test_filter_changes_update_both_right_plots_without_touching_left_or_solving[width_k-3.2]
+FAILED Code/Tests/test_integrated_komega_explorer.py::test_filter_changes_update_both_right_plots_without_touching_left_or_solving[central_f-2.5]
+FAILED Code/Tests/test_integrated_komega_explorer.py::test_filter_changes_update_both_right_plots_without_touching_left_or_solving[width_f-2.2]
+4 failed, 109 passed, 2 skipped, 3093 warnings in 129.69s (0:02:09)
+
+Rerun of the four filter-status checks after concurrent edits completed:
+....                                                                     [100%]
+4 passed, 34 deselected, 266 warnings in 10.95s
+
+Static comparison checks:
+...                                                                      [100%]
+3 passed, 4 deselected, 12 warnings in 31.19s

@@ -1,0 +1,17 @@
+{
+  "files": [
+    "integrated_komega_explorer.py",
+    "coherence_bokeh.py"
+  ],
+  "source_folder_archive_identical": true,
+  "archive_entries": 18575,
+  "archive_sha256": "dd3aaf022c02c3a4aae32363e31bf11dd7cda9e4e87a9be8126260665b4029e8",
+  "focused_tests": 3,
+  "broader_tests": 83,
+  "browser_native_grid": [
+    64,
+    96
+  ],
+  "browser_data": "deterministic Fourier regression fixture",
+  "limitation": "Saved hx_100g simulation verification hit cloud-backed filesystem read errors."
+}

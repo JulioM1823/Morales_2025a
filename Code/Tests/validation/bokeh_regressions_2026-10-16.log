@@ -1,0 +1,30 @@
+........................................................................ [ 27%]
+........................................................................ [ 55%]
+...............................F............................s........... [ 82%]
+.............................................                            [100%]
+=================================== FAILURES ===================================
+________ test_all_models_demo_notebook_is_small_valid_and_user_editable ________
+
+    def test_all_models_demo_notebook_is_small_valid_and_user_editable():
+        notebook = nbformat.read(DEMO_NOTEBOOK, as_version=4)
+        nbformat.validate(notebook)
+        code = "\n".join(cell.source for cell in notebook.cells if cell.cell_type == "code")
+    
+        assert len(notebook.cells) == 3
+        assert "DATASET_PATH =" in code
+        assert "MODEL_NAME =" not in code
+        assert "standalone_pair" in code
+        assert "COMPARISON_ROW_LABELS" not in code
+        assert "load_komega_fits_dataset" in code
+        assert "generate_standalone_komega_comparison" in code
+        assert "seven_row_comparison" in code
+        for cell in notebook.cells:
+            if cell.cell_type == "code":
+>               assert cell.execution_count is None
+E               assert 1 is None
+E                +  where 1 = {'cell_type': 'code', 'execution_count': 1, 'id': 'setup', 'metadata': {}, 'outputs': [], 'source': "from copy import ..._local_module('komega_demo_dispersion', TD_DIR / 'dispersion_comparison.py')\nconfig = deepcopy(config_module.config)"}.execution_count
+
+Code/Tests/test_dispersion_comparison.py:376: AssertionError
+=========================== short test summary info ============================
+FAILED Code/Tests/test_dispersion_comparison.py::test_all_models_demo_notebook_is_small_valid_and_user_editable
+1 failed, 259 passed, 1 skipped, 4557 warnings in 208.51s (0:03:28)

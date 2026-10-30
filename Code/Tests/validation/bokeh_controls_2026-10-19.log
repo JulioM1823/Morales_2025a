@@ -1,0 +1,35 @@
+......................................................................s. [ 60%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+Code/Tests/test_integrated_komega_explorer.py: 3286 warnings
+Code/Tests/test_komega_explorer.py: 144 warnings
+Code/Tests/test_coherence_switching.py: 404 warnings
+Code/Tests/test_spectral_coherence.py: 450 warnings
+Code/Tests/test_komega_layout_sync.py: 20 warnings
+Code/Tests/test_bokeh_responsiveness.py: 248 warnings
+Code/Tests/test_integrated_visibility.py: 444 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+Code/Tests/test_integrated_komega_explorer.py::test_existing_figure_context_initializes_integrated_dataset_and_named_model_inputs[paired_cubes-0.0]
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+119 passed, 1 skipped, 5007 warnings in 189.33s (0:03:09)

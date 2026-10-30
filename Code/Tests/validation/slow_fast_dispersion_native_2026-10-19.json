@@ -1,0 +1,51 @@
+{
+  "grid": [
+    120,
+    241
+  ],
+  "parameters": {
+    "a": 14.6,
+    "cs": 7.05246440457191,
+    "theta_deg": -87.0,
+    "phi_deg": 0.26121180203181327,
+    "dz": 100.0
+  },
+  "models": {
+    "slow_mode": {
+      "visible_slots": [
+        10897,
+        10897
+      ],
+      "warning_cells": 18023,
+      "root_slots": 57840,
+      "finite_slots": 21794,
+      "labels": [
+        "Slow magnetoacoustic; upward energy propagation",
+        "Slow magnetoacoustic; downward energy propagation"
+      ],
+      "max_visible_residual": 3.0676166121706764e-15,
+      "visible_cells_in_0_to_8_Mm_inverse_0_to_11_mHz": [
+        4610,
+        4610
+      ]
+    },
+    "fast_mode": {
+      "visible_slots": [
+        10659,
+        10659
+      ],
+      "warning_cells": 18261,
+      "root_slots": 57840,
+      "finite_slots": 32299,
+      "labels": [
+        "Fast magnetoacoustic; upward energy propagation",
+        "Fast magnetoacoustic; downward energy propagation"
+      ],
+      "max_visible_residual": 1.4563960447374277e-15,
+      "visible_cells_in_0_to_8_Mm_inverse_0_to_11_mHz": [
+        4481,
+        4481
+      ]
+    }
+  }
+}

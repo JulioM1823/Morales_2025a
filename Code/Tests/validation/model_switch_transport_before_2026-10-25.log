@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_live_attachment_publishes_the_completed_image ______________
+Code/Tests/test_model_switch_transport.py:45: in test_live_attachment_publishes_the_completed_image
+    np.testing.assert_array_equal(client.get_model_by_id(source.id).data['image'][0], expected)
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:79: in inner
+    return func(*args, **kwds)
+E   AssertionError: 
+E   Arrays are not equal
+E   
+E   Mismatched elements: 12 / 12 (100%)
+E   Max absolute difference: 16777216
+E   Max relative difference: 0.00392157
+E    x: array([[0, 0, 0, 0],
+E          [0, 0, 0, 0],
+E          [0, 0, 0, 0]], dtype=uint32)
+E    y: array([[4278190080, 4278190081, 4278190082, 4278190083],
+E          [4278190084, 4278190085, 4278190086, 4278190087],
+E          [4278190088, 4278190089, 4278190090, 4278190091]], dtype=uint32)
+=========================== short test summary info ============================
+FAILED Code/Tests/test_model_switch_transport.py::test_live_attachment_publishes_the_completed_image
+1 failed in 0.38s

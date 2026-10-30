@@ -1,0 +1,14 @@
+{
+  "focused_tests_passed": 27,
+  "clean_environment": "Python 3.10, pinned requirements installed successfully",
+  "browser_platform": "macOS",
+  "browser_checks": [
+    "first-use directory form",
+    "persistent saved directory",
+    "comparison gallery",
+    "saved height-pair figure",
+    "exact figure to Bokeh bridge on selected port",
+    "Gaussian input 1.5 to 1.6 and server-side filtering"
+  ],
+  "other_operating_systems_tested": false
+}

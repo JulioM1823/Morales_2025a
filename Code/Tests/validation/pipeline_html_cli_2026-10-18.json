@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "commands": [
+    {
+      "command": [
+        "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/bin/python",
+        "Code/Time-Distance/html_output_paths.py",
+        "--figures",
+        "/tmp/morales-pipeline-cli-check/Figures",
+        "--data",
+        "/tmp/morales-pipeline-cli-check/Data",
+        "--scope",
+        "simulations/rho/North"
+      ],
+      "returncode": 0,
+      "stdout": "Generated 3 galleries in 1 configuration scopes"
+    },
+    {
+      "command": [
+        "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/bin/python",
+        "Code/Time-Distance/regenerate_html_figures.py",
+        "--figure-root",
+        "/tmp/morales-pipeline-cli-check/Figures",
+        "--cube-root",
+        "/tmp/morales-pipeline-cli-check/cubes",
+        "--scope",
+        "simulations/rho/North"
+      ],
+      "returncode": 0,
+      "stdout": "Regenerated scoped galleries in 1 configurations."
+    }
+  ],
+  "local_references": 14,
+  "source_image_unchanged": true,
+  "other_direction_untouched": true
+}

@@ -1,0 +1,335 @@
+.............................FFF..F..................................... [ 52%]
+..................................................................       [100%]
+=================================== FAILURES ===================================
+________ test_single_cube_physical_heights_are_relative_to_photosphere _________
+
+tmp_path = PosixPath('/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-207/test_single_cube_physical_heig0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x703be1fd90>
+
+    def test_single_cube_physical_heights_are_relative_to_photosphere(tmp_path: Path, monkeypatch):
+        cube_file = tmp_path / "synthetic_single_cube_offset_heights.nc"
+        cube_file.touch()
+        fake_dataset = _FakeNetCDFDataset(
+            {
+                "t": _FakeNetCDFVariable([0.0, 30.0, 60.0, 90.0], units="s"),
+                "xc1": _FakeNetCDFVariable([0.0, 0.5, 1.0], units="Mm"),
+                "xc2": _FakeNetCDFVariable([0.0, 0.5, 1.0], units="Mm"),
+                "xc3": _FakeNetCDFVariable([150.0, 450.0], units="km"),
+            }
+        )
+        monkeypatch.setattr(td, "nc", SimpleNamespace(Dataset=lambda path: fake_dataset))
+    
+        resolved_heights = td.infer_netcdf_height_pair_km(cube_file, 0, 1)
+        assert resolved_heights["h1_km"] == pytest.approx(0.0)
+        assert resolved_heights["h2_km"] == pytest.approx(300.0)
+    
+        config = config_module.get_config(optimized_filtering={'mode':'manual'},
+            source_type="single_cube",
+            file_path=str(cube_file),
+            observable="v3",
+            h1=0,
+            h2=1,
+            data_output_dir=str(tmp_path / "data"),
+            figure_dir=str(tmp_path / "figures"),
+            animation_dir=str(tmp_path / "animations"),
+        )
+    
+>       _, runtime_config, pipeline = td.build_pipeline(config_file=CONFIG_PATH, config_override=config)
+
+Code/Tests/test_single_cube_orientation.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Code/Time-Distance/pipeline.py:6225: in build_pipeline
+    config = prepare_runtime_config(config)
+Code/Time-Distance/pipeline.py:3946: in prepare_runtime_config
+    output_paths.configure_outputs(runtime_config)
+Code/Time-Distance/output_paths.py:678: in configure_outputs
+    context = build_runtime_output_paths(config, paths['data_output_dir'], paths.get('figure_dir'), create=create)
+Code/Time-Distance/output_paths.py:503: in build_runtime_output_paths
+    identity = output_identity(config)
+Code/Time-Distance/output_paths.py:494: in output_identity
+    category=resolve_category(config).as_posix(), organization_prefix=organization_prefix(config).as_posix(), geometry=geometry,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'atmospheric_profiles': {'directory': '/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_pr...netogram': {'enabled': False, 'fill_value': 0.0, 'selection': 'magnetic', 'threshold_G': 3.0}}, 'mode': 'manual'}, ...}
+
+    def resolve_category(config):
+        """Model field strength is independent of the spatial mask threshold."""
+        data = config['data']
+        options = config.get('output', {})
+        category = options.get('category', data.get('category'))
+        strength = options.get('field_strength_G', data.get('field_strength_G'))
+        if data['source_type'] == 'single_cube':
+            path = data.get('file', data.get('single_cube', {}).get('file', ''))
+            match = re.search(r'(hx|vx|z0)[/_-](\d+(?:_\d+)?)[gG]', str(path), re.I)
+            if match:
+                inferred = match[1].lower()
+                inferred_strength = float(match[2].replace('_', '.'))
+                if category is not None and category != inferred:
+                    raise ValueError('Explicit output category disagrees with simulation identity.')
+                if strength is not None and float(strength) != inferred_strength:
+                    raise ValueError('Explicit output field strength disagrees with simulation identity.')
+                category, strength = inferred, inferred_strength
+        if category == 'z0':
+            if strength not in (None, 0, 0.): raise ValueError('z0 cannot have a nonzero model field strength.')
+            return Path('z0')
+        if category in {'hx', 'vx'} and strength is not None:
+            if float(strength) not in (10., 50., 100.):
+                raise ValueError('hx/vx model strength must be 10, 50, or 100 G.')
+            return Path(category) / f'{category[0]}{float(strength):g}G'
+        if data['source_type'] == 'paired_cubes' and category is None:
+            # Observations do not carry a CO5BOLD model orientation/field strength.
+            # Preserve their scientific meaning without manufacturing a category.
+            return Path('.')
+>       raise ValueError('Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.')
+E       ValueError: Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.
+
+Code/Time-Distance/output_paths.py:428: ValueError
+_________ test_single_cube_model_atmosphere_is_interpolated_per_layer __________
+
+tmp_path = PosixPath('/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-207/test_single_cube_model_atmosph0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7031ead5d0>
+
+    def test_single_cube_model_atmosphere_is_interpolated_per_layer(tmp_path: Path, monkeypatch):
+        cube_file = tmp_path / "synthetic_single_cube_with_atmosphere.nc"
+        cube_file.touch()
+        fake_dataset = _FakeNetCDFDataset(
+            {
+                "t": _FakeNetCDFVariable([0.0, 30.0, 60.0, 90.0], units="s"),
+                "xc1": _FakeNetCDFVariable([0.0, 0.5, 1.0], units="Mm"),
+                "xc2": _FakeNetCDFVariable([0.0, 0.5, 1.0], units="Mm"),
+                "xc3": _FakeNetCDFVariable([150.0, 250.0, 450.0], units="km"),
+            }
+        )
+        monkeypatch.setattr(td, "nc", SimpleNamespace(Dataset=lambda path: fake_dataset))
+    
+        model_file = tmp_path / "model_atmosphere.dat"
+        np.savetxt(
+            model_file,
+            np.array(
+                [
+                    [0.0, 0.0, 0.0, 10.0, 0.0, 2.0e6],
+                    [0.1, 0.0, 0.0, 8.0, 0.0, 2.2e6],
+                    [0.2, 0.0, 0.0, 6.0, 0.0, 2.4e6],
+                    [0.3, 0.0, 0.0, 4.0, 0.0, 2.6e6],
+                ],
+                dtype=np.float64,
+            ),
+        )
+    
+        config = config_module.get_config(optimized_filtering={'mode':'manual'},
+            source_type="single_cube",
+            file_path=str(cube_file),
+            observable="v3",
+            h1=0,
+            h2=2,
+            model_atmosphere_path=str(model_file),
+            data_output_dir=str(tmp_path / "data"),
+            figure_dir=str(tmp_path / "figures"),
+            animation_dir=str(tmp_path / "animations"),
+        )
+    
+>       _, runtime_config, pipeline = td.build_pipeline(config_file=CONFIG_PATH, config_override=config)
+
+Code/Tests/test_single_cube_orientation.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Code/Time-Distance/pipeline.py:6225: in build_pipeline
+    config = prepare_runtime_config(config)
+Code/Time-Distance/pipeline.py:3946: in prepare_runtime_config
+    output_paths.configure_outputs(runtime_config)
+Code/Time-Distance/output_paths.py:678: in configure_outputs
+    context = build_runtime_output_paths(config, paths['data_output_dir'], paths.get('figure_dir'), create=create)
+Code/Time-Distance/output_paths.py:503: in build_runtime_output_paths
+    identity = output_identity(config)
+Code/Time-Distance/output_paths.py:494: in output_identity
+    category=resolve_category(config).as_posix(), organization_prefix=organization_prefix(config).as_posix(), geometry=geometry,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'atmospheric_profiles': {'directory': '/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_pr...netogram': {'enabled': False, 'fill_value': 0.0, 'selection': 'magnetic', 'threshold_G': 3.0}}, 'mode': 'manual'}, ...}
+
+    def resolve_category(config):
+        """Model field strength is independent of the spatial mask threshold."""
+        data = config['data']
+        options = config.get('output', {})
+        category = options.get('category', data.get('category'))
+        strength = options.get('field_strength_G', data.get('field_strength_G'))
+        if data['source_type'] == 'single_cube':
+            path = data.get('file', data.get('single_cube', {}).get('file', ''))
+            match = re.search(r'(hx|vx|z0)[/_-](\d+(?:_\d+)?)[gG]', str(path), re.I)
+            if match:
+                inferred = match[1].lower()
+                inferred_strength = float(match[2].replace('_', '.'))
+                if category is not None and category != inferred:
+                    raise ValueError('Explicit output category disagrees with simulation identity.')
+                if strength is not None and float(strength) != inferred_strength:
+                    raise ValueError('Explicit output field strength disagrees with simulation identity.')
+                category, strength = inferred, inferred_strength
+        if category == 'z0':
+            if strength not in (None, 0, 0.): raise ValueError('z0 cannot have a nonzero model field strength.')
+            return Path('z0')
+        if category in {'hx', 'vx'} and strength is not None:
+            if float(strength) not in (10., 50., 100.):
+                raise ValueError('hx/vx model strength must be 10, 50, or 100 G.')
+            return Path(category) / f'{category[0]}{float(strength):g}G'
+        if data['source_type'] == 'paired_cubes' and category is None:
+            # Observations do not carry a CO5BOLD model orientation/field strength.
+            # Preserve their scientific meaning without manufacturing a category.
+            return Path('.')
+>       raise ValueError('Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.')
+E       ValueError: Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.
+
+Code/Time-Distance/output_paths.py:428: ValueError
+_____ test_single_cube_magnetic_orientation_metadata_includes_alfven_ratio _____
+
+tmp_path = PosixPath('/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-207/test_single_cube_magnetic_orie0')
+
+    def test_single_cube_magnetic_orientation_metadata_includes_alfven_ratio(tmp_path: Path):
+        pytest.importorskip("netCDF4")
+    
+        cube_file = tmp_path / "synthetic_single_cube_ratio.nc"
+        model_file = tmp_path / "synthetic_model_atmosphere.dat"
+        _write_synthetic_single_cube(cube_file)
+        _write_synthetic_model_atmosphere(model_file)
+    
+        config = config_module.get_config(optimized_filtering={'mode':'manual'},
+            source_type="single_cube",
+            file_path=str(cube_file),
+            observable="v3",
+            h1=0,
+            h2=1,
+            model_atmosphere_path=str(model_file),
+            data_output_dir=str(tmp_path / "data"),
+            figure_dir=str(tmp_path / "figures"),
+            animation_dir=str(tmp_path / "animations"),
+        )
+    
+>       _, runtime_config, pipeline = td.build_pipeline(config_file=CONFIG_PATH, config_override=config)
+
+Code/Tests/test_single_cube_orientation.py:226: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Code/Time-Distance/pipeline.py:6225: in build_pipeline
+    config = prepare_runtime_config(config)
+Code/Time-Distance/pipeline.py:3946: in prepare_runtime_config
+    output_paths.configure_outputs(runtime_config)
+Code/Time-Distance/output_paths.py:678: in configure_outputs
+    context = build_runtime_output_paths(config, paths['data_output_dir'], paths.get('figure_dir'), create=create)
+Code/Time-Distance/output_paths.py:503: in build_runtime_output_paths
+    identity = output_identity(config)
+Code/Time-Distance/output_paths.py:494: in output_identity
+    category=resolve_category(config).as_posix(), organization_prefix=organization_prefix(config).as_posix(), geometry=geometry,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'atmospheric_profiles': {'directory': '/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_pr...netogram': {'enabled': False, 'fill_value': 0.0, 'selection': 'magnetic', 'threshold_G': 3.0}}, 'mode': 'manual'}, ...}
+
+    def resolve_category(config):
+        """Model field strength is independent of the spatial mask threshold."""
+        data = config['data']
+        options = config.get('output', {})
+        category = options.get('category', data.get('category'))
+        strength = options.get('field_strength_G', data.get('field_strength_G'))
+        if data['source_type'] == 'single_cube':
+            path = data.get('file', data.get('single_cube', {}).get('file', ''))
+            match = re.search(r'(hx|vx|z0)[/_-](\d+(?:_\d+)?)[gG]', str(path), re.I)
+            if match:
+                inferred = match[1].lower()
+                inferred_strength = float(match[2].replace('_', '.'))
+                if category is not None and category != inferred:
+                    raise ValueError('Explicit output category disagrees with simulation identity.')
+                if strength is not None and float(strength) != inferred_strength:
+                    raise ValueError('Explicit output field strength disagrees with simulation identity.')
+                category, strength = inferred, inferred_strength
+        if category == 'z0':
+            if strength not in (None, 0, 0.): raise ValueError('z0 cannot have a nonzero model field strength.')
+            return Path('z0')
+        if category in {'hx', 'vx'} and strength is not None:
+            if float(strength) not in (10., 50., 100.):
+                raise ValueError('hx/vx model strength must be 10, 50, or 100 G.')
+            return Path(category) / f'{category[0]}{float(strength):g}G'
+        if data['source_type'] == 'paired_cubes' and category is None:
+            # Observations do not carry a CO5BOLD model orientation/field strength.
+            # Preserve their scientific meaning without manufacturing a category.
+            return Path('.')
+>       raise ValueError('Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.')
+E       ValueError: Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.
+
+Code/Time-Distance/output_paths.py:428: ValueError
+_________ test_single_cube_orientation_metadata_saved_to_komega_header _________
+
+tmp_path = PosixPath('/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-207/test_single_cube_orientation_m0')
+
+    def test_single_cube_orientation_metadata_saved_to_komega_header(tmp_path: Path):
+        pytest.importorskip("matplotlib")
+        pytest.importorskip("netCDF4")
+    
+        cube_file = tmp_path / "synthetic_single_cube.nc"
+        model_file = tmp_path / "synthetic_model_atmosphere.dat"
+        _write_synthetic_single_cube(cube_file)
+        _write_synthetic_model_atmosphere(model_file)
+    
+        config = config_module.get_config(optimized_filtering={'mode':'manual'},
+            source_type="single_cube",
+            file_path=str(cube_file),
+            observable="v3",
+            h1=0,
+            h2=1,
+            model_atmosphere_path=str(model_file),
+            data_output_dir=str(tmp_path / "data"),
+            figure_dir=str(tmp_path / "figures"),
+            animation_dir=str(tmp_path / "animations"),
+        )
+    
+>       _, _, pipeline = td.build_pipeline(config_file=CONFIG_PATH, config_override=config)
+
+Code/Tests/test_single_cube_orientation.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+Code/Time-Distance/pipeline.py:6225: in build_pipeline
+    config = prepare_runtime_config(config)
+Code/Time-Distance/pipeline.py:3946: in prepare_runtime_config
+    output_paths.configure_outputs(runtime_config)
+Code/Time-Distance/output_paths.py:678: in configure_outputs
+    context = build_runtime_output_paths(config, paths['data_output_dir'], paths.get('figure_dir'), create=create)
+Code/Time-Distance/output_paths.py:503: in build_runtime_output_paths
+    identity = output_identity(config)
+Code/Time-Distance/output_paths.py:494: in output_identity
+    category=resolve_category(config).as_posix(), organization_prefix=organization_prefix(config).as_posix(), geometry=geometry,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+config = {'atmospheric_profiles': {'directory': '/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_pr...netogram': {'enabled': False, 'fill_value': 0.0, 'selection': 'magnetic', 'threshold_G': 3.0}}, 'mode': 'manual'}, ...}
+
+    def resolve_category(config):
+        """Model field strength is independent of the spatial mask threshold."""
+        data = config['data']
+        options = config.get('output', {})
+        category = options.get('category', data.get('category'))
+        strength = options.get('field_strength_G', data.get('field_strength_G'))
+        if data['source_type'] == 'single_cube':
+            path = data.get('file', data.get('single_cube', {}).get('file', ''))
+            match = re.search(r'(hx|vx|z0)[/_-](\d+(?:_\d+)?)[gG]', str(path), re.I)
+            if match:
+                inferred = match[1].lower()
+                inferred_strength = float(match[2].replace('_', '.'))
+                if category is not None and category != inferred:
+                    raise ValueError('Explicit output category disagrees with simulation identity.')
+                if strength is not None and float(strength) != inferred_strength:
+                    raise ValueError('Explicit output field strength disagrees with simulation identity.')
+                category, strength = inferred, inferred_strength
+        if category == 'z0':
+            if strength not in (None, 0, 0.): raise ValueError('z0 cannot have a nonzero model field strength.')
+            return Path('z0')
+        if category in {'hx', 'vx'} and strength is not None:
+            if float(strength) not in (10., 50., 100.):
+                raise ValueError('hx/vx model strength must be 10, 50, or 100 G.')
+            return Path(category) / f'{category[0]}{float(strength):g}G'
+        if data['source_type'] == 'paired_cubes' and category is None:
+            # Observations do not carry a CO5BOLD model orientation/field strength.
+            # Preserve their scientific meaning without manufacturing a category.
+            return Path('.')
+>       raise ValueError('Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.')
+E       ValueError: Cannot identify hx/vx/z0 category; supply output.category and field_strength_G.
+
+Code/Time-Distance/output_paths.py:428: ValueError
+=========================== short test summary info ============================
+FAILED Code/Tests/test_single_cube_orientation.py::test_single_cube_physical_heights_are_relative_to_photosphere
+FAILED Code/Tests/test_single_cube_orientation.py::test_single_cube_model_atmosphere_is_interpolated_per_layer
+FAILED Code/Tests/test_single_cube_orientation.py::test_single_cube_magnetic_orientation_metadata_includes_alfven_ratio
+FAILED Code/Tests/test_single_cube_orientation.py::test_single_cube_orientation_metadata_saved_to_komega_header
+4 failed, 134 passed, 1601 warnings in 17.95s

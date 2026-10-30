@@ -1,0 +1,61 @@
+{
+  "unchanged_scientific_definitions": [
+    "infer_netcdf_time_step_seconds",
+    "infer_netcdf_pixel_scale_Mm",
+    "infer_netcdf_sampling",
+    "infer_netcdf_height_coordinates_km",
+    "infer_netcdf_height_pair_km",
+    "compute_phase_difference_correction",
+    "build_komega_axes",
+    "build_coherence_axes",
+    "azimuthal_average_positive_frequency_slices",
+    "azimuthal_average_fft_phase",
+    "azimuthal_average_fft_complex_oana",
+    "prepare_xcorrj_geometry",
+    "parallel_loop",
+    "chunked_parallel_loop",
+    "finalize_chunked_xcorrj_results",
+    "TimeDistance.resolve_phase_analysis_cube_order",
+    "TimeDistance.compute_single_cube_magnetic_orientation_metadata",
+    "TimeDistance.compute_komega_diagram",
+    "TimeDistance.compute_coherence_diagram",
+    "TimeDistance.xcorrj"
+  ],
+  "filter_module_byte_identical": true,
+  "real_observation_files": [
+    "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/25Apr2019/25Apr2019.ibis.to.hmi.vel.k7699.fits",
+    "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/25Apr2019/25Apr2019.ibis.to.hmi.vel.fe7090.fits"
+  ],
+  "bounded_cube_shape": [
+    64,
+    32,
+    32
+  ],
+  "checks": {
+    "compute_komega_diagram": {
+      "shape": [
+        16,
+        32
+      ],
+      "max_absolute_difference": 0.0
+    },
+    "compute_coherence_diagram": {
+      "shape": [
+        16,
+        31
+      ],
+      "max_absolute_difference": 0.0
+    },
+    "xcorrj": {
+      "shape": [
+        5,
+        64
+      ],
+      "phase_shape": [
+        5,
+        64
+      ],
+      "max_absolute_difference": 0.0
+    }
+  }
+}

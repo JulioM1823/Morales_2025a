@@ -1,0 +1,19 @@
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 327.33file/s]
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_16x16x80_dt_11_88_dx_0_43_bac4cf88a32dd7e2225eb371dcfd33cf50607066681eb4f2ccd6f19b95457201.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.00 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.00 s
+Computing k-omega phase-difference diagram
+Confirmed: baseline executes a queued solve from the previous model activation.

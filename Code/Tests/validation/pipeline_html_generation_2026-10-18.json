@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "timestamp_utc": "2026-10-18T18:05:21.249462+00:00",
+  "tests": {
+    "passed": 162,
+    "deselected": 1,
+    "log": "pipeline_html_tests_2026-10-18.log",
+    "unrelated_existing_failure": {
+      "nodeid": "Code/Tests/test_dispersion_comparison.py::test_all_models_demo_notebook_is_small_valid_and_user_editable",
+      "reason": "Saved execution_count=1; template assertion requires None. Demonstration notebook unchanged.",
+      "independent_run": "failed",
+      "log": "pipeline_html_unrelated_demo_2026-10-18.log"
+    }
+  },
+  "notebook_edits": {
+    "plots": {
+      "changed_code_cells": [
+        0,
+        1,
+        3
+      ],
+      "outputs_execution_counts_and_metadata_preserved": true
+    },
+    "batch": {
+      "changed_code_cells": [
+        0
+      ],
+      "outputs_execution_counts_and_metadata_preserved": true
+    }
+  },
+  "scope_coverage": {
+    "simulation_observables": [
+      "v1",
+      "v2",
+      "v3",
+      "bb1",
+      "bb2",
+      "bb3",
+      "rho",
+      "temp",
+      "pressure",
+      "plasma_beta"
+    ],
+    "observational_quantities": [
+      "doppler_velocity"
+    ],
+    "geometries": [
+      "Annulus",
+      "East",
+      "West",
+      "North",
+      "South"
+    ]
+  },
+  "cli_validation": "pipeline_html_cli_2026-10-18.json",
+  "existing_scope_validation": "pipeline_html_existing_scope_2026-10-18.json",
+  "browser_validation": "No new browser-rendering claim; local file navigation remains blocked by browser automation policy.",
+  "source_sha256": {
+    "Code/Time-Distance/plots.ipynb": "417b8acb40455068d9056fdda10b438d65a03295e0ae3681e540c086e77adb3a",
+    "Code/Time-Distance/batch.ipynb": "a98d2bcd4a3fb5d57ba32e886f97444519178d6db2069f0b11291a4bf0b64665",
+    "Code/Time-Distance/comparison_gallery.py": "a25549ae0af01fb1ad21e2c6ca53c80e4d5a38b0eee49d32c5b86ff39adbf04d",
+    "Code/Time-Distance/html_output_paths.py": "5f38211f8a62aaa835ec0ba4c940b8f74f59abfc5e5d8d83d1f97bac2cff2684",
+    "Code/Time-Distance/regenerate_html_figures.py": "fb3a5291e46da7422b0f6f796243740dd36e039ab4d5b9d957f3862381cab0b8"
+  }
+}

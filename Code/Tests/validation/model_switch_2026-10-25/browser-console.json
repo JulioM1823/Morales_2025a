@@ -1,0 +1,14 @@
+[
+  {
+    "level": "warn",
+    "message": "Deprecation warning: allowHTML will default to false in a future release. To render HTML in Choices, you will need to set it to true. Setting allowHTML will suppress this message.",
+    "timestamp": "2026-10-26T08:03:06.921Z",
+    "url": "http://127.0.0.1:5015/static/js/bokeh-widgets.min.js?v=eb1cfd8b7fe8603425819260489a92d46879e840b07eac63ac1467155b1b6cd56960325af5982ccc5a7e6ff61dc4d616376f462967ef3ec514165d0c44b95bec"
+  },
+  {
+    "level": "warn",
+    "message": "Deprecation warning: allowHTML will default to false in a future release. To render HTML in Choices, you will need to set it to true. Setting allowHTML will suppress this message.",
+    "timestamp": "2026-10-26T08:03:06.923Z",
+    "url": "http://127.0.0.1:5015/static/js/bokeh-widgets.min.js?v=eb1cfd8b7fe8603425819260489a92d46879e840b07eac63ac1467155b1b6cd56960325af5982ccc5a7e6ff61dc4d616376f462967ef3ec514165d0c44b95bec"
+  }
+]

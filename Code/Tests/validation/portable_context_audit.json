@@ -1,0 +1,7 @@
+{
+  "validation": "HTML resources, unchanged dataset IDs and presence of recorded input files; no scientific recomputation",
+  "local_resource_references": 42362,
+  "missing_resources": [],
+  "launch_contexts": 735,
+  "context_failures": []
+}

@@ -1,0 +1,30 @@
+.............................................................            [100%]
+=============================== warnings summary ===============================
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+Code/Tests/test_integrated_komega_explorer.py: 3286 warnings
+Code/Tests/test_integrated_visibility.py: 444 warnings
+Code/Tests/test_komega_layout_sync.py: 20 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+Code/Tests/test_integrated_komega_explorer.py::test_existing_figure_context_initializes_integrated_dataset_and_named_model_inputs[paired_cubes-0.0]
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+61 passed, 3761 warnings in 264.96s (0:04:24)

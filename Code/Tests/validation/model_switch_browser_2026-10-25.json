@@ -1,0 +1,16 @@
+{
+  "model": "nc2009",
+  "solution": "6",
+  "grid": "120 x 241 native dataset bins",
+  "flow": [
+    "HTML figure to Bokeh",
+    "3D MAG solution 6",
+    "MT1981 solution 2",
+    "return to 3D MAG restores solution 6"
+  ],
+  "browser_errors": [],
+  "viewport_tested": {
+    "width": 1624,
+    "height": 1000
+  }
+}

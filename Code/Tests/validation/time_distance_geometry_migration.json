@@ -1,0 +1,20 @@
+{
+  "migration": {
+    "flagged": 9643,
+    "linked": 4755
+  },
+  "linked_by_output": {
+    "Data": 4337,
+    "Figures": 418
+  },
+  "cloud_only_hash_deferred": 2959,
+  "separation_diagnostic_groups": 216,
+  "link_or_directory_errors": [],
+  "ordering_errors": [],
+  "finder_natural_sort_errors": [],
+  "flagged_reasons": {
+    "Original dataset/ordered heights/filter identity not unique ": 1610,
+    "could not convert string to float: 'unknown'": 45,
+    "No single-pair diagnostic identity ": 7988
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "scope": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/simulations/v3/Annulus",
+  "directories": [
+    "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/simulations/v3/Annulus/HTML"
+  ],
+  "galleries": {
+    "field_strength_comparison": {
+      "plot_count": 15,
+      "full_resolution_pages": 15
+    },
+    "field_orientation_comparison": {
+      "plot_count": 15,
+      "full_resolution_pages": 15
+    },
+    "gaussian_filter_comparison": {
+      "plot_count": 30,
+      "full_resolution_pages": 30
+    }
+  },
+  "unrelated_html_files_unchanged": 0,
+  "seconds": 1012.5940534169786
+}

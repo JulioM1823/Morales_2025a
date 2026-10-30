@@ -1,0 +1,23 @@
+......                                                              [100%]
+=============================== warnings summary ===============================
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+Code/Tests/test_bokeh_startup.py::test_live_initial_construction_resolves_graph_once
+  <frozen importlib._bootstrap>:241: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+6 passed, 11 warnings, 5 subtests passed in 4.81s

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/100G/simulation_hx_100G_33570s_48000s.nc",
+    "model": "SVGd3r16bhCcp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc",
+    "model": "SVGd3r17bh1cp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/50G/simulation_hx_50G_33570s_48000s.nc",
+    "model": "SVGd3r15bh5cp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/100G/simulation_vx_100G_33570s_47970s.nc",
+    "model": "SVGd3r13bvCcp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/10G/simulation_vx_10G_33570s_47970s.nc",
+    "model": "SVGd3r12bv1cp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/50G/simulation_vx_50G_47970s_62370s.nc",
+    "model": "SVGd3r09bv5cp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  },
+  {
+    "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/z0/0G/simulation_z0_0G_14400s_28800s.nc",
+    "model": "SVGd3r05bn0cp1p",
+    "pressure_present": false,
+    "plasma_beta_present": false
+  }
+]

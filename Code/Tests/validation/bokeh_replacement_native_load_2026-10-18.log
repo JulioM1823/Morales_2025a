@@ -1,0 +1,6 @@
+Validated /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc
+Loading Dopplergrams:   0%|          | 0/1 [00:00<?, ?file/s]Loading Dopplergrams: 100%|██████████| 1/1 [00:08<00:00,  8.12s/file]Loading Dopplergrams: 100%|██████████| 1/1 [00:08<00:00,  8.12s/file]
+Computing k-omega phase-difference diagram
+Loaded (120, 241) cubes (482, 240, 240)
+Recalculation error: None
+Seconds 14.541225166991353

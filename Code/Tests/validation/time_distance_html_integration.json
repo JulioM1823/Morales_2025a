@@ -1,0 +1,47 @@
+{
+  "automated_regressions": {
+    "additional_distinct_checks_passed": 3,
+    "combined_run_passed": 221,
+    "final_focused_launch_run_passed": 25,
+    "scientific_checks": "Dopplergram reconstruction, spectral coherence, model synchronization, spatial phase arrays and axes, atmospheric profile extraction, magnetogram workflow"
+  },
+  "browser_validation": {
+    "fixtures": "isolated observational pair and vector-magnetic simulation cubes",
+    "limitation": "In-app browser policy blocks file:// navigation; direct-file megaplot clicks were not browser-tested. Their relative links and embedded exact launch payloads were audited.",
+    "tested": [
+      "explicit dataset initialization",
+      "3D MAG, slow, fast and Alfven model switching",
+      "exact numerical controls",
+      "coherence weighting",
+      "spatial frequency selection: 11 to 3 positive FFT bins",
+      "magnetic strength 20 G and inclination 60 deg",
+      "contour smoothing disabled",
+      "selected subplot Gaussian parameters: 0.75, 2.25, 3.0, 2.0",
+      "observational height separation: 100 km"
+    ]
+  },
+  "counts": {
+    "comparison_images": 60,
+    "html_pages": 4980,
+    "launch_contexts": 1455,
+    "relative_links": 12420,
+    "subplot_targets": 4575
+  },
+  "failures": [],
+  "production_service": {
+    "exact_context_initialized": true,
+    "health": "http://127.0.0.1:5013/health returned morales-komega",
+    "loaded": true,
+    "observed_gaussian_parameters": [
+      0.75,
+      2.25,
+      3.0,
+      2.0
+    ],
+    "observed_height_separation_km": 100.0,
+    "pid": [
+      "37880"
+    ],
+    "refreshed": true
+  }
+}

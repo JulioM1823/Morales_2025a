@@ -1,0 +1,25 @@
+....................................                                     [100%]
+=============================== warnings summary ===============================
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+Code/Tests/test_komega_explorer.py: 144 warnings
+Code/Tests/test_bokeh_responsiveness.py: 12 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+36 passed, 3 deselected, 166 warnings in 20.48s

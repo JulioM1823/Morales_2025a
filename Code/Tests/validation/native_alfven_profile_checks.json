@@ -1,0 +1,20 @@
+[
+  {
+    "model": "SVGd3r16bhCcp1p",
+    "native_layer": 90,
+    "native_height_cm": 220991552.0,
+    "mean_alfven_from_staggered_fields_km_s": 22.22012641082578,
+    "supplied_alfven_km_s": 22.220125,
+    "relative_difference": 6.349315233526954e-08,
+    "definition": "Mean of local physical |B|/sqrt(mu0 rho); staggered faces centred before magnitude, CO5BOLD internal field converted by sqrt(4pi)."
+  },
+  {
+    "model": "SVGd3r13bvCcp1p",
+    "native_layer": 90,
+    "native_height_cm": 220991552.0,
+    "mean_alfven_from_staggered_fields_km_s": 32.39390999524704,
+    "supplied_alfven_km_s": 32.39391,
+    "relative_difference": 1.4672373179462141e-10,
+    "definition": "Mean of local physical |B|/sqrt(mu0 rho); staggered faces centred before magnitude, CO5BOLD internal field converted by sqrt(4pi)."
+  }
+]

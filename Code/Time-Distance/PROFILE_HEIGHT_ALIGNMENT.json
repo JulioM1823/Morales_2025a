@@ -1,0 +1,194 @@
+{
+  "simulations": [
+    {
+      "model": "SVGd3r16bhCcp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/100G/simulation_hx_100G_33570s_48000s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r16bhCcp1p_t00044400s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r16bhCcp1p_t00044400s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.915461818182,
+        2689.915578181818
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.915461818182,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1100.0001163636366
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r17bh1cp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r17bh1cp1p_t00044400s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r17bh1cp1p_t00044400s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.915461818182,
+        2689.915578181818
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.915461818182,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1100.0001163636366
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r15bh5cp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/50G/simulation_hx_50G_33570s_48000s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r15bh5cp1p_t00044400s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r15bh5cp1p_t00044400s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.915461818182,
+        2689.915578181818
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.915461818182,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1100.0001163636366
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r13bvCcp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/100G/simulation_vx_100G_33570s_47970s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r13bvCcp1p_t00044400s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r13bvCcp1p_t00044400s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.91552,
+        2689.91552
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.9155200000002,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1099.9999999999998
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r12bv1cp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/10G/simulation_vx_10G_33570s_47970s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r12bv1cp1p_t00044400s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r12bv1cp1p_t00044400s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.91552,
+        2689.91552
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.9155200000002,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1099.9999999999998
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r09bv5cp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/50G/simulation_vx_50G_47970s_62370s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r09bv5cp1p_t00058020s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r09bv5cp1p_t00058020s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.91552,
+        2689.91552
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.9155200000002,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1099.9999999999998
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    },
+    {
+      "model": "SVGd3r05bn0cp1p",
+      "cube": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/z0/0G/simulation_z0_0G_14400s_28800s.nc",
+      "thermal_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r05bn0cp1p_t00024000s_atmos_param.h5",
+      "density_profile": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/co5bold_1d_profiles/SVGd3r05bn0cp1p_t00024000s_density_profile.h5",
+      "cube_centre_range_native_km": [
+        1589.91552,
+        2689.91552
+      ],
+      "cube_boundary_range_native_km": [
+        1479.91552,
+        2799.91552
+      ],
+      "full_profile_range_native_km": [
+        25.0,
+        2789.91552
+      ],
+      "common_origin_native_km": 1589.9155200000002,
+      "displayed_profile_and_cube_range_km": [
+        0.0,
+        1099.9999999999998
+      ],
+      "native_profile_levels": 120,
+      "simulation_levels": 6,
+      "thermal_density_heights_identical": true,
+      "profiles_cover_simulation": true
+    }
+  ],
+  "definition": "Full profiles remain unchanged. Diagnostic curves are restricted to simulation cell-centre range using a common origin; only display endpoints are interpolated."
+}

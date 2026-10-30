@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-25",
+  "fix": "Do not freeze the live Bokeh model-reference graph while sending incremental updates.",
+  "scope": "Display synchronization; solver implementation, input data and scientific calculations unchanged.",
+  "before": {
+    "regression": "test_live_attachment_publishes_the_completed_image",
+    "result": "failed as expected",
+    "stale_pixels": 12,
+    "total_pixels": 12
+  },
+  "after": {
+    "regression_tests_passed": 2,
+    "models": 7,
+    "solutions": 18,
+    "round_trips": 2,
+    "filtered_and_unfiltered_raster_checks": 72,
+    "standalone_wire_messages_replayed": 1607,
+    "standalone_elapsed_seconds": 81.46
+  },
+  "browser": {
+    "model": "nc2009",
+    "solution": "6",
+    "grid": "120 x 241 native dataset bins",
+    "flow": [
+      "HTML figure to Bokeh",
+      "3D MAG solution 6",
+      "MT1981 solution 2",
+      "return to 3D MAG restores solution 6"
+    ],
+    "browser_errors": [],
+    "viewport_tested": {
+      "width": 1624,
+      "height": 1000
+    }
+  },
+  "shared_module_sha256": "7bfe5850a049edc747318f65c182703e580873ae1a468de5c81af7a736f15896",
+  "archive": {
+    "bytes": 2016448430,
+    "crc_error": null,
+    "sha256": "3a08c8a7cc0e2ca67dd5c481986d8cfc229989f0db249e4880b98a949d945183",
+    "entries": 18575,
+    "changed_entries": [
+      "Morales-Tools/Code/Time-Distance/bokeh_ui_helpers.py"
+    ],
+    "unchanged_other_entries_verified": true,
+    "private_environment_excluded": true
+  },
+  "limits": "Focused transport regression and macOS browser acceptance; broader cloud-backed suite was not completed."
+}

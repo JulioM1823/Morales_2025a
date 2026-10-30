@@ -1,0 +1,16 @@
+Integrated k–ω workspace: http://127.0.0.1:5015/integrated_komega_bokeh_app
+Magnetogram workspace: http://127.0.0.1:5015/magnetogram_bokeh_app
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]Loading Dopplergrams:  50%|█████     | 1/2 [00:00<00:00,  9.92file/s]Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00,  8.45file/s]Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00,  8.20file/s]
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_128x128x192_dt_30_dx_0_16_faeb77e61533efc1d7828cb1008570e44fffc1648959acd9866ff7f507e0077b.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.39 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.44 s
+Computing k-omega phase-difference diagram
+Loaded Gaussian filter cache: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Filters/gaussian_filter_gauss_ck_1_5_wk_4_cf_3_wf_3_shape_128x128x192_dt_30_dx_0_16_faeb77e61533efc1d7828cb1008570e44fffc1648959acd9866ff7f507e0077b.npy
+Applying Gaussian filter in Fourier space to cube 1/2
+Finished Gaussian filter for cube 1/2 in 0.21 s
+Applying Gaussian filter in Fourier space to cube 2/2
+Finished Gaussian filter for cube 2/2 in 0.26 s
+Computing k-omega phase-difference diagram

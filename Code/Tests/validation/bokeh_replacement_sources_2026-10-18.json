@@ -1,0 +1,29 @@
+{
+  "active_figure_root": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures",
+  "saved_launch_records": 1455,
+  "unique_dataset_ids": 735,
+  "original_simulation_sources": 7,
+  "unavailable_original_sources": [],
+  "source_audit": "Embedded input-reference inventory and source existence; not a full rerun of all 735 datasets.",
+  "real_launch": {
+    "field": "horizontal 10 G",
+    "observable": "v3",
+    "heights_km": [
+      440.0,
+      660.0001163636362
+    ],
+    "shape_k_nu": [
+      120,
+      241
+    ],
+    "dopplergram_shape": [
+      482,
+      240,
+      240
+    ],
+    "recalculation_error": null,
+    "initial_native_load_seconds": 14.541225166991353
+  },
+  "sidecar_audit_limit": "An attempted all-context sidecar cross-check blocked on a Google Drive read and was stopped. The real launch and fixture sidecar validation passed.",
+  "native_fft_and_atmospheric_values": "Unchanged; regression tests compare arrays and atmospheric parameter dictionaries exactly."
+}

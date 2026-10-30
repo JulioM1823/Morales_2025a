@@ -1,0 +1,20 @@
+[
+  {
+    "manifest": "observations_raw_relocation",
+    "status": "verified",
+    "files": 71,
+    "bytes": 5031311903,
+    "verification": "inode, size and mtime; content checksums not read",
+    "errors": [],
+    "compatibility_link": true
+  },
+  {
+    "manifest": "phase_coherence_relocation",
+    "status": "verified",
+    "files": 4,
+    "bytes": 1060948,
+    "verification": "SHA-256, size, inode and mtime",
+    "errors": [],
+    "compatibility_link": true
+  }
+]

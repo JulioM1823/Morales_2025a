@@ -1,0 +1,14 @@
+{
+  "platform": "macOS arm64",
+  "python_downloaded": "3.11.17",
+  "uv_version": "0.13.3",
+  "python_initially_absent_from_PATH": true,
+  "first_install_succeeded": true,
+  "pip_check_passed": true,
+  "all_scientific_imports_passed": true,
+  "subsequent_start_with_stdin_closed_passed": true,
+  "local_server_startup_passed": true,
+  "data_setup_page_and_index_passed": true,
+  "focused_tests_passed": 23,
+  "windows_and_linux_execution_tested": false
+}

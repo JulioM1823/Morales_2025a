@@ -1,0 +1,11 @@
+{
+  "bytes": 2016448430,
+  "crc_error": null,
+  "sha256": "3a08c8a7cc0e2ca67dd5c481986d8cfc229989f0db249e4880b98a949d945183",
+  "entries": 18575,
+  "changed_entries": [
+    "Morales-Tools/Code/Time-Distance/bokeh_ui_helpers.py"
+  ],
+  "unchanged_other_entries_verified": true,
+  "private_environment_excluded": true
+}

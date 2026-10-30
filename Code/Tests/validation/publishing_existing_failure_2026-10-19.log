@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_missing_source_and_empty_collection_report_errors ____________
+
+app = <observation_komega_explorer.ObservationKomegaExplorer object at 0x13032ee00>
+tmp_path = PosixPath('/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-311/test_missing_source_and_empty_0')
+
+    def test_missing_source_and_empty_collection_report_errors(app, tmp_path):
+        path = app.data.observation.files[0]
+        path.unlink()
+        select_id = app.selected_id
+        app._perform_load(select_id)
+>       assert app.data is None
+E       AssertionError: assert ObservationData(observation=Observation(id='fits:/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-ju...rce_cubes/06may2019_ca8542_fe5434_v2.fits', 167040, 1792392154213084577, 1792392154213084577)]}, pre_gaussian_raw=None) is None
+E        +  where ObservationData(observation=Observation(id='fits:/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-ju...rce_cubes/06may2019_ca8542_fe5434_v2.fits', 167040, 1792392154213084577, 1792392154213084577)]}, pre_gaussian_raw=None) = <observation_komega_explorer.ObservationKomegaExplorer object at 0x13032ee00>.data
+
+Code/Tests/test_observation_komega_explorer.py:284: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+Computing k-omega phase-difference diagram
+---------------------------- Captured stderr setup -----------------------------
+
+Loading Dopplergrams:   0%|          | 0/2 [00:00<?, ?file/s]
+Loading Dopplergrams: 100%|██████████| 2/2 [00:00<00:00, 281.14file/s]
+=========================== short test summary info ============================
+FAILED Code/Tests/test_observation_komega_explorer.py::test_missing_source_and_empty_collection_report_errors
+1 failed, 10 warnings in 1.99s

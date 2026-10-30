@@ -1,0 +1,32 @@
+{
+  "integration_suite": {
+    "passed": 223,
+    "failed": 0,
+    "log": "/tmp/td_all_final.log"
+  },
+  "final_focused_checks": {
+    "passed": 135,
+    "failed": 0,
+    "log": "/tmp/td_last_checks.log",
+    "note": "overlaps the integration suite; includes atmospheric profile path checks"
+  },
+  "spatial_readback": {
+    "passed": 18,
+    "failed": 0,
+    "log": "/tmp/td_spatial_final.log"
+  },
+  "source_and_notebook_compilation": "passed",
+  "numerical_report": "time_distance_geometry_numerical.json",
+  "migration_report": "time_distance_geometry_migration.json",
+  "runtime": "Vesa_2026/.venv Python 3.10; same runtime for frozen/current numerical comparisons",
+  "final_geometry_checks": {
+    "passed": 67,
+    "failed": 0,
+    "log": "/tmp/td_geometry_final.log"
+  },
+  "final_atmospheric_profile_checks": {
+    "passed": 19,
+    "failed": 0,
+    "log": "/tmp/td_profiles_final.log"
+  }
+}

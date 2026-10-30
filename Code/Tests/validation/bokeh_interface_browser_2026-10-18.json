@@ -1,0 +1,552 @@
+{
+  "typed": {
+    "model": "mt1981",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 97.5% of root slots; 19 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available)",
+    "values": {
+      "cs": 8.125,
+      "H": 125.0,
+      "N2": 0.000958009204470743,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "cs": 8.125,
+      "H": 125.0,
+      "N2": 0.000958009204470743,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885521,
+      3.1
+    ],
+    "contours": 0,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "b753e9fedd75f1ab5b94f9cabc09651f88e46b48008c87991fabb625bb4ae941"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": true,
+        "dirty": false
+      }
+    ]
+  },
+  "rapid": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available); panel identity is non-unique for coincident or numerically indistinguishable k_z sheets; the prior slot order was retained",
+    "values": {
+      "a": 0.0,
+      "cs": 8.125,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 8.125,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885521,
+      3.1
+    ],
+    "contours": 0,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "b753e9fedd75f1ab5b94f9cabc09651f88e46b48008c87991fabb625bb4ae941"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": false
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": false
+      }
+    ]
+  },
+  "band": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available); panel identity is non-unique for coincident or numerically indistinguishable k_z sheets; the prior slot order was retained",
+    "values": {
+      "a": 0.0,
+      "cs": 8.200000000000001,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 8.200000000000001,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 220.0,
+      "g": 0.274
+    },
+    "dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_dataset": "fits:/private/tmp/morales-inline-browser-fixtures/observations/06may2019_fe5434_fe7090_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 2.1044\u20135.2609 mHz (4 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      2.1043771043771042,
+      5.26094276094276
+    ],
+    "contours": 0,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "44ec49447064a28a8fed5d5c3677c36f585e53af4edac6f119824eb2fbbe3b9e"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": false
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": true
+      }
+    ]
+  },
+  "simulation": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available)",
+    "values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885526,
+      3.1
+    ],
+    "contours": 1,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "521c1047794143e5045446772ac6e3f1f04058e988936f6f01252a3a78965b91"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": true
+      }
+    ]
+  },
+  "strength": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available)",
+    "values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885526,
+      3.1
+    ],
+    "contours": 0,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "521c1047794143e5045446772ac6e3f1f04058e988936f6f01252a3a78965b91"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": true
+      }
+    ]
+  },
+  "inclination": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available)",
+    "values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885526,
+      3.1
+    ],
+    "contours": 0,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "521c1047794143e5045446772ac6e3f1f04058e988936f6f01252a3a78965b91"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": true
+      }
+    ]
+  },
+  "restored": {
+    "model": "nc2009",
+    "dirty": false,
+    "status": "<b>Warnings:</b> 8 grid cells had failed polynomial solves; 8 grid cells are masked as numerical warnings; finite k_z coverage is 32.5% of root slots; 320 cells have ambiguous branch identity near a degeneracy or crossing (the roots themselves remain available)",
+    "values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "result_values": {
+      "a": 0.0,
+      "cs": 7.8,
+      "N2": 0.000958009204470743,
+      "wac": 0.0312,
+      "theta_deg": -80.0,
+      "phi_deg": 10.0,
+      "dz": 200.0,
+      "g": 0.274
+    },
+    "dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_dataset": "simulation_fits:/private/tmp/morales-inline-browser-fixtures/simulations/b_komega.fits",
+    "spatial_status": "<p style=\"color:#166534\">Selected 1.0522\u20132.1044 mHz (2 FFT bins). Lower minus higher phase, from the complex band average. Zero-power phase is undefined.</p>",
+    "band": [
+      1.0521885521885526,
+      3.1
+    ],
+    "contours": 1,
+    "spatial_maps": [
+      "dc7d43f4c3c2c3965d8c145ed7da29306acfc6a480308343b6d0006d549daf0e",
+      "521c1047794143e5045446772ac6e3f1f04058e988936f6f01252a3a78965b91"
+    ],
+    "models": [
+      {
+        "key": "nc2009",
+        "active": true,
+        "dirty": false
+      },
+      {
+        "key": "alfven_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "slow_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "fast_mode",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "bunte1993",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1982",
+        "active": false,
+        "dirty": true
+      },
+      {
+        "key": "mt1981",
+        "active": false,
+        "dirty": true
+      }
+    ]
+  },
+  "browser_layout": {
+    "spatial_collapse_reflow_pixels": 1775.7890625,
+    "viewports": [
+      {
+        "width": 600,
+        "client_width": 600,
+        "scroll_width": 600
+      },
+      {
+        "width": 360,
+        "client_width": 360,
+        "scroll_width": 360
+      }
+    ],
+    "comparison_controls_independent": true,
+    "javascript_errors_observed": [],
+    "data_kind": "temporary source-backed FITS and NetCDF fixtures"
+  },
+  "html_regeneration": {
+    "galleries": 3,
+    "html_pages": 314,
+    "validated_launches": 97,
+    "directory": "/tmp/morales-interface-regenerated-html"
+  },
+  "real_dataset_validation": {
+    "status": "blocked",
+    "initial_error": "OSError 11: Resource deadlock avoided",
+    "subsequent_error": "FileNotFoundError at astropy.io.fits.open",
+    "missing_directory": "Morales_2025a et al/Figures_backup_2026-10-17",
+    "source_alias_changed_by_this_task": false
+  },
+  "validation_environment": {
+    "python": "3.10.10",
+    "bokeh": "3.2.2",
+    "fonttools": "4.63.0",
+    "fonttools_test_copy": "/tmp/morales-test-vendor",
+    "permanent_environment_changed": false
+  }
+}

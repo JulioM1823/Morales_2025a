@@ -1,0 +1,65 @@
+[
+  {
+    "dataset": "z0_0g k-omega diagram",
+    "model": "SVGd3r05bn0cp1p",
+    "heights_km": [
+      440.0,
+      659.9999999999998
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "hx_10g k-omega diagram",
+    "model": "SVGd3r17bh1cp1p",
+    "heights_km": [
+      440.0,
+      660.0001163636362
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "hx_50g k-omega diagram",
+    "model": "SVGd3r15bh5cp1p",
+    "heights_km": [
+      440.0,
+      660.0001163636362
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "hx_100g k-omega diagram",
+    "model": "SVGd3r16bhCcp1p",
+    "heights_km": [
+      440.0,
+      660.0001163636362
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "vx_10g k-omega diagram",
+    "model": "SVGd3r12bv1cp1p",
+    "heights_km": [
+      440.0,
+      659.9999999999998
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "vx_50g k-omega diagram",
+    "model": "SVGd3r09bv5cp1p",
+    "heights_km": [
+      440.0,
+      659.9999999999998
+    ],
+    "embedded": true
+  },
+  {
+    "dataset": "vx_100g k-omega diagram",
+    "model": "SVGd3r13bvCcp1p",
+    "heights_km": [
+      440.0,
+      659.9999999999998
+    ],
+    "embedded": true
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "scope": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/simulations/v3/Annulus",
+  "html_files": 9564,
+  "local_references": 32769,
+  "external_references": 0,
+  "references_by_attribute": {
+    "href": 8904,
+    "data-source-path": 5040,
+    "src": 9675,
+    "target.src": 4575,
+    "target.figureHref": 4575
+  },
+  "missing_references": [],
+  "archive_references": [],
+  "target_arrays": 60,
+  "interactive_launches": 1455,
+  "launch_scopes": {
+    "v3/annulus": 1455
+  },
+  "galleries": {
+    "field_orientation_comparison.html": {
+      "image_count": 15
+    },
+    "field_strength_comparison.html": {
+      "image_count": 15
+    },
+    "gaussian_filter_comparison.html": {
+      "image_count": 30
+    }
+  },
+  "unique_local_files": 13311,
+  "image_paths": 8770,
+  "broken_image_paths": [],
+  "recovered_originals": 486,
+  "recovered_original_hash_failures": [],
+  "previous_recorded_hashes_verified": 316,
+  "seconds": 3.957977999933064,
+  "status": "passed",
+  "browser_validation": "Local file navigation blocked by browser automation policy; no rendered-browser claim.",
+  "source_path_contract": "Hotspot data-source-path is relative to the figure root; active src/href URLs and target image/page URLs are relative to each HTML document."
+}

@@ -1,0 +1,10 @@
+{
+  "root": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures",
+  "scope": "simulations/v3/Annulus",
+  "megaplots": {
+    "field_orientation_comparison": 15,
+    "field_strength_comparison": 15,
+    "gaussian_filter_comparison": 30
+  },
+  "images_exist": true
+}

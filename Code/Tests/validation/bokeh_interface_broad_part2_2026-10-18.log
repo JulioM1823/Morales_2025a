@@ -1,0 +1,5 @@
+Completed first part: 251 tests; skipped: ['Code/Tests/test_coherence_switching.py::test_latest_saved_megaplot_launch_context_preserves_identity_and_parameters', 'Code/Tests/test_vesa_solver_numerics.py::test_high_precision_cross_check_on_selected_point']
+Only the persistent cache location is redirected; the native filter implementation and metadata keys are unchanged.
+..................................                                       [100%]
+----------- generated xml file: /tmp/morales-interface-remaining.xml -----------
+34 passed, 495 warnings in 24.24s

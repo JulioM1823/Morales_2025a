@@ -1,0 +1,20 @@
+.Timeout (0:00:50)!
+Thread 0x000000702d607000 (most recent call first):
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/concurrent/futures/thread.py", line 81 in _worker
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/threading.py", line 953 in run
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/threading.py", line 1016 in _bootstrap_inner
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/threading.py", line 973 in _bootstrap
+
+Thread 0x00000001f1877f80 (most recent call first):
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/abc.py", line 119 in __instancecheck__
+  File "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/bases.py", line 551 in validate
+  File "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/bases.py", line 330 in is_valid
+  File "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/either.py", line 97 in <genexpr>
+.                                                                       [100%]
+=============================== warnings summary ===============================
+Code/Tests/test_model_switch_transport.py: 98 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Deliverables/Morales-Tools/.local/venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 98 warnings in 79.07s (0:01:19)

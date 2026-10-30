@@ -1,0 +1,6 @@
+Figure root: /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures
+Timeout (0:00:40)!
+Thread 0x00000001f1877f80 (most recent call first):
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/pathlib.py", line 1135 in read_text
+  File "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Code/Time-Distance/komega_bokeh_context.py", line 164 in validate_context
+  File "/tmp/morales_validate_replacement_contexts.py", line 17 in <module>

@@ -1,0 +1,83 @@
+........................................................................ [ 91%]
+.......                                                                  [100%]
+=============================== warnings summary ===============================
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: 5 warnings
+Code/Tests/test_atmospheric_profiles.py: 23 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:88: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    parse = parser.parseString(pattern)
+
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: 5 warnings
+Code/Tests/test_atmospheric_profiles.py: 23 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_fontconfig_pattern.py:92: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    parser.resetCache()
+
+../Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:30: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'
+    ParserElement.enablePackrat()
+
+Code/Tests/test_recorded_bokeh_inputs.py: 20 warnings
+Code/Tests/test_komega_bokeh_integration.py: 160 warnings
+Code/Tests/test_scoped_html_outputs.py: 2 warnings
+Code/Tests/test_integrated_visibility.py: 444 warnings
+Code/Tests/test_atmospheric_profiles.py: 140 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/bokeh/core/property/bases.py:273: DeprecationWarning: elementwise comparison failed; this will raise an error in the future.
+    return new == old
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1829: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.space          = oneOf(self._space_widths)("space")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1831: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.style_literal  = oneOf(
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1839: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+    )("sym").leaveWhitespace()
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1844: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    Optional(r"\math" + oneOf(self._fontnames)("font")) + "{")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1847: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    p.delim          = oneOf(self._delims)
+
+Code/Tests/test_atmospheric_profiles.py: 71 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1806: PyparsingDeprecationWarning: 'setName' deprecated - use 'set_name'
+    val.setName(key)
+
+Code/Tests/test_atmospheric_profiles.py: 62 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1809: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    val.setParseAction(getattr(self, key))
+
+Code/Tests/test_atmospheric_profiles.py: 12 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1649: PyparsingDeprecationWarning: 'setParseAction' deprecated - use 'set_parse_action'
+    return Empty().setParseAction(raise_error)
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1948: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'
+    + OneOrMore(oneOf(["_", "^"]) - p.placeable)("subsuper")
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1968: PyparsingDeprecationWarning: 'unquoteResults' argument is deprecated, use 'unquote_results'
+    p.math_string   = QuotedString('$', '\\', unquoteResults=False)
+
+Code/Tests/test_atmospheric_profiles.py::test_profile_figure_is_automatic_and_not_duplicated
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1969: PyparsingDeprecationWarning: 'leaveWhitespace' deprecated - use 'leave_whitespace'
+    p.non_math      = Regex(r"(?:(?:\\[$])|[^$])*").leaveWhitespace()
+
+Code/Tests/test_atmospheric_profiles.py: 356 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:1992: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    result = self._expression.parseString(s)
+
+Code/Tests/test_atmospheric_profiles.py: 380 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:2019: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'
+    return self._math_expression.parseString(toks[0][1:-1])
+
+Code/Tests/test_atmospheric_profiles.py: 356 warnings
+  /Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/.venv/lib/python3.10/site-packages/matplotlib/_mathtext.py:2000: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'
+    self._expression.resetCache()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+79 passed, 2068 warnings in 42.09s
