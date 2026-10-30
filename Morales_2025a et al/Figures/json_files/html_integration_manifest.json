@@ -1,0 +1,770 @@
+{
+  "flagged": [],
+  "imported": [
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h1/megaplots/eb9c51fe0486f74c548c98d0_field_orientation_comparison_v3_0km_220km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h1"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_0km_220km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h2/megaplots/1d8e9b8dab511bc199176ace_field_orientation_comparison_v3_0km_440km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_0km_440km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h3/megaplots/ce9fab42c12bc33f92edcb21_field_orientation_comparison_v3_0km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_0km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h4/megaplots/7884096ad462e7ca8073cbac_field_orientation_comparison_v3_0km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_0km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h5/megaplots/96435e5d4fed1420c1a8d105_field_orientation_comparison_v3_0km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_0km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h2/megaplots/3a27a5bf7e6182df07e65f70_field_orientation_comparison_v3_220km_440km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_220km_440km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h3/megaplots/6b3c11d07635cc557033c152_field_orientation_comparison_v3_220km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_220km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h4/megaplots/705f239ca414c8d5dbb75810_field_orientation_comparison_v3_220km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_220km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h5/megaplots/e069cf49f04229bf68644dcf_field_orientation_comparison_v3_220km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_220km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h3/megaplots/a8f035c446d4ec3e1cfb7ed6_field_orientation_comparison_v3_440km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_440km_660km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h4/megaplots/1f600b51a42b202cdfe11f63_field_orientation_comparison_v3_440km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_440km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h5/megaplots/22a61bb409ce05747b6bf9df_field_orientation_comparison_v3_440km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_440km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h4/megaplots/a6e5a5df486958bec1bca370_field_orientation_comparison_v3_660km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_660km_880km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h5/megaplots/d468961443cab5a5e84a2420_field_orientation_comparison_v3_660km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_660km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h4_vs_h5/megaplots/fb89fe9a11b690cc0e15abf4_field_orientation_comparison_v3_880km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/hx/h10G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h4_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_orientation_comparison_v3_880km_1100km_h10g_v10g_h50g_v50g_h100g_v100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h1/megaplots/e735a95ed789f2684a301b30_field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h1"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h2/megaplots/ffa6a4c1fd23da51d7c791f4_field_strength_comparison_v3_0km_440km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_0km_440km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h3/megaplots/d29e234e1dbe0e3383b0be63_field_strength_comparison_v3_0km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_0km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h4/megaplots/c3f11d76aac03ce303382659_field_strength_comparison_v3_0km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_0km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h5/megaplots/0a0dca1a2f3970febb0c3cec_field_strength_comparison_v3_0km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_0km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h2/megaplots/295cfdac69b8b823d60ab002_field_strength_comparison_v3_220km_440km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_220km_440km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h3/megaplots/5d9ca6a85c32c9cb96936fa8_field_strength_comparison_v3_220km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_220km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h4/megaplots/b81efc2dfaeac3fb303b5618_field_strength_comparison_v3_220km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_220km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h5/megaplots/e18e44757c9e6d7abc0855b0_field_strength_comparison_v3_220km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_220km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h3/megaplots/95a0170badf7a4b87facae56_field_strength_comparison_v3_440km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_440km_660km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h4/megaplots/968673d268a0c11ea297b97c_field_strength_comparison_v3_440km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_440km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h5/megaplots/4dc436a8d99dd73f98fbe14c_field_strength_comparison_v3_440km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_440km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h4/megaplots/10c8d779db5022489ce225f1_field_strength_comparison_v3_660km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_660km_880km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h5/megaplots/60400c126c655395ee56e9dd_field_strength_comparison_v3_660km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_660km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h4_vs_h5/megaplots/6e4fc2c81d0e8b67fc5f5382_field_strength_comparison_v3_880km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h4_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/field_strength_comparison_v3_880km_1100km_z0_0g_hx_10g_50g_100g_vx_10g_50g_100g_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h1/megaplots/2f4d50eb523122e91f9bd5a0_gaussian_filter_comparison_v3_0km_220km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_69e9798bfeee.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h1"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_220km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_69e9798bfeee.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h1/megaplots/8e10d90cc883384cb141d974_gaussian_filter_comparison_v3_0km_220km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_e07e41c38b76.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h1",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h1",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h1"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_220km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_e07e41c38b76.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h2/megaplots/37c6f2b6405810f8f343d311_gaussian_filter_comparison_v3_0km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_1af8dc780e2c.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_1af8dc780e2c.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h2/megaplots/a2262293cd8eda29d4da0d1e_gaussian_filter_comparison_v3_0km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_7940259512b1.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_7940259512b1.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h3/megaplots/4cc3facf63528435b30ae2d4_gaussian_filter_comparison_v3_0km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_e538ea1b44d3.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_e538ea1b44d3.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h3/megaplots/a69c301729d1974c5f1a4e24_gaussian_filter_comparison_v3_0km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_49fd50413759.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_49fd50413759.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h4/megaplots/eb14bfdd183f94dddb07a686_gaussian_filter_comparison_v3_0km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_87ee94c1c2f3.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_87ee94c1c2f3.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h4/megaplots/d885664b6e766d5150f77aa8_gaussian_filter_comparison_v3_0km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_24c63be63035.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_24c63be63035.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h5/megaplots/290cd3443dfafa370335b410_gaussian_filter_comparison_v3_0km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_4b0ab7577b26.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_cf_4b0ab7577b26.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h0_vs_h5/megaplots/b8bc3376696f1b10df2cafaf_gaussian_filter_comparison_v3_0km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_925c27929b11.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h0_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h0_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h0_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_0km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_cf_925c27929b11.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h2/megaplots/ffe31c4c77d7e768f835fdcb_gaussian_filter_comparison_v3_220km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_54af981057b4.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_54af981057b4.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h2/megaplots/5fd2cfabe2f06015436d3661_gaussian_filter_comparison_v3_220km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_a253b620455b.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h2",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h2",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h2"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_440km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_a253b620455b.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h3/megaplots/e3d445f62dc6a9387e9c576d_gaussian_filter_comparison_v3_220km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_81f1fba6d874.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_81f1fba6d874.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h3/megaplots/95a95b8f9b29aa2bea00cdaa_gaussian_filter_comparison_v3_220km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_dedf447dc71d.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_dedf447dc71d.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h4/megaplots/41590d7a2906da8e2bae64a8_gaussian_filter_comparison_v3_220km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_bfbcbc33aad5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_bfbcbc33aad5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h4/megaplots/7b348ea567a15826fac08c61_gaussian_filter_comparison_v3_220km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_eceae2a9c893.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_eceae2a9c893.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h5/megaplots/109ef54f29a3063b4fc87703_gaussian_filter_comparison_v3_220km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_7cea4e787d80.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_7cea4e787d80.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h1_vs_h5/megaplots/034f6fca52a56571b244b5ce_gaussian_filter_comparison_v3_220km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_22ac722004e4.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h1_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h1_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h1_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_220km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_22ac722004e4.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h3/megaplots/b104b084cd5de6cf1ab6bfec_gaussian_filter_comparison_v3_440km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_e3a4de8e1010.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_e3a4de8e1010.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h3/megaplots/b2877ca5d0deeb73fb4edbdd_gaussian_filter_comparison_v3_440km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_3043f680eb5a.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h3",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h3",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h3"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_660km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_3043f680eb5a.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h4/megaplots/5ca046702fe8aae643a39363_gaussian_filter_comparison_v3_440km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_8dddeb39e7d4.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_8dddeb39e7d4.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h4/megaplots/8bf3275e854685a273a3c7a0_gaussian_filter_comparison_v3_440km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_92d0f70573e3.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_92d0f70573e3.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h5/megaplots/023cd79847bc1356f0b5a265_gaussian_filter_comparison_v3_440km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_9f79baa123d5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_9f79baa123d5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h2_vs_h5/megaplots/2032cc680b31938758d48ccf_gaussian_filter_comparison_v3_440km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_005039b168cd.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h2_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h2_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h2_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_440km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_005039b168cd.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h4/megaplots/12d133230ffd8599fa7522eb_gaussian_filter_comparison_v3_660km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_6000d78493a2.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_660km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_c_6000d78493a2.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h4/megaplots/923eddf500199677a3a1c022_gaussian_filter_comparison_v3_660km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_b803d1091b9c.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h4",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h4",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h4"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_660km_880km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_c_b803d1091b9c.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h5/megaplots/bc82ddc398344064ca0d7cb6_gaussian_filter_comparison_v3_660km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_1e14fb214799.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_660km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_1e14fb214799.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h3_vs_h5/megaplots/c60de2139cc97112bf743e7f_gaussian_filter_comparison_v3_660km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_938650ee93c5.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h3_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h3_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h3_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_660km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_938650ee93c5.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h4_vs_h5/megaplots/1e90b9d95f48ca9747fa6c16_gaussian_filter_comparison_v3_880km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_3723f14f4b43.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h4_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_880km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_1_5_cf_2_wf_2_f4_gauss_ck_1_wk_1_3723f14f4b43.jpeg"
+    },
+    {
+      "destination": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Figures/simulations/v3/Annulus/HTML/misc_files/comparison_views/h4_vs_h5/megaplots/3aa893979a18e7a0ae41768b_gaussian_filter_comparison_v3_880km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_41ca5773c953.jpeg",
+      "scopes": [
+        "simulations/v3/Annulus/z0/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h10G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h50G/h4_vs_h5",
+        "simulations/v3/Annulus/hx/h100G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v10G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v50G/h4_vs_h5",
+        "simulations/v3/Annulus/vx/v100G/h4_vs_h5"
+      ],
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/gaussian_filter_comparison_v3_880km_1100km_filters_6_f1_gauss_ck_2_wk_1_5_cf_2_wf_2_f2_gauss_ck_0_5_wk_1_5_cf_2_wf_2_f3_gauss_ck_2_wk_5_cf_2_wf_3_5_f4_gauss_ck_1_wk_1_41ca5773c953.jpeg"
+    }
+  ]
+}

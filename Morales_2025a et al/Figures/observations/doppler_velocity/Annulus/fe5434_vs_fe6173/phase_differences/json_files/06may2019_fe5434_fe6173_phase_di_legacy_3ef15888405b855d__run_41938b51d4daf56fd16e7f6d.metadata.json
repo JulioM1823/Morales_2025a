@@ -1,0 +1,124 @@
+{
+  "artifact": {
+    "sha256": "c2d09eceb1d79d81dee49d39c969f6abc6c6961f5a72e9a9e6de3fcdd07f0150",
+    "size_bytes": 206333
+  },
+  "diagnostic_directory": "phase_differences",
+  "extra": {
+    "automatic_reuse": false,
+    "migration_source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Observations/06may2019_fe5434_fe6173_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_phase_diff.jpeg",
+    "source_sha256": "c2d09eceb1d79d81dee49d39c969f6abc6c6961f5a72e9a9e6de3fcdd07f0150",
+    "verification": "same underlying file and SHA256"
+  },
+  "filter_configuration": {
+    "mode": "historical",
+    "provenance": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/observations/nonmagneto/06may2019/komega/annulus/v1/06may2019_fe5434_fe6173_komega.inputs.json"
+  },
+  "identity": {
+    "category": ".",
+    "dataset_id": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.ibis.to.hmi.vel.fe5434.fits|/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.HMIdop.ibis.aligned.fits",
+    "diagnostic_parameters": {},
+    "filtering": {
+      "enabled": true,
+      "filter_sequence": [
+        "gaussian"
+      ],
+      "gaussian": {
+        "central_f": 1.5,
+        "central_k": 2.0,
+        "enabled": true,
+        "width_f": 1.5,
+        "width_k": 2.0
+      },
+      "magnetogram": {
+        "enabled": false,
+        "fill_value": 0.0,
+        "selection": "nonmagnetic",
+        "threshold_G": ""
+      }
+    },
+    "geometry": {
+      "delta_z_km": null,
+      "delta_z_rounded_km": null,
+      "grouping_status": "unavailable: absolute observational formation heights were not recorded",
+      "heights_km": null,
+      "labels": [
+        "fe5434",
+        "fe6173"
+      ],
+      "pair": "fe5434_vs_fe6173"
+    },
+    "implementation": {
+      "status": "legacy implementation not fully recorded"
+    },
+    "legacy_provenance": {
+      "processing_parameters_status": "only recorded parameters; remaining values unknown",
+      "reference": {
+        "data": {
+          "h1": 0,
+          "h2": 1,
+          "source_type": "paired_cubes",
+          "v1": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.ibis.to.hmi.vel.fe5434.fits",
+          "v2": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.HMIdop.ibis.aligned.fits"
+        },
+        "filtering": {
+          "enabled": true,
+          "filter_sequence": [
+            "gaussian"
+          ],
+          "gaussian": {
+            "central_f": 1.5,
+            "central_k": 2.0,
+            "enabled": true,
+            "width_f": 1.5,
+            "width_k": 2.0
+          },
+          "magnetogram": {
+            "enabled": false,
+            "fill_value": 0.0,
+            "selection": "nonmagnetic",
+            "threshold_G": ""
+          }
+        },
+        "magnetogram_mode": {
+          "single_cube": "bottom"
+        },
+        "provenance": "legacy canonical paired-line product name; unique eligible original cubes in configured observation roots",
+        "sampling": {
+          "dt": 11.88,
+          "p_dx_Mm": 0.43
+        },
+        "schema_version": 1
+      },
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/observations/nonmagneto/06may2019/komega/annulus/v1/06may2019_fe5434_fe6173_komega.fits"
+    },
+    "magnetogram_mode": {
+      "single_cube": "bottom"
+    },
+    "observable": "v1",
+    "organization_prefix": "observations/Annulus",
+    "phase_calibration_sha256": "f7878ade053f7858b8363ca01f858e512dbfa424e490203afc38c9416422319a",
+    "processing": {
+      "dt": 11.88,
+      "p_dx_Mm": 0.43,
+      "xcorr_geometry": "annulus"
+    },
+    "schema_version": 2,
+    "source_type": "paired_cubes",
+    "sources": [
+      {
+        "mtime_ns": 1724702822415710210,
+        "path": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.ibis.to.hmi.vel.fe5434.fits",
+        "size_bytes": 83975040
+      },
+      {
+        "mtime_ns": 1724702821911683559,
+        "path": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2026/Data/06May2019/06May2019.HMIdop.ibis.aligned.fits",
+        "size_bytes": 83972160
+      }
+    ]
+  },
+  "product": "phase_difference",
+  "run_id": "41938b51d4daf56fd16e7f6dcc01223a3d9854908f94525b1a1d33a353861d7e",
+  "schema_version": 2
+}
