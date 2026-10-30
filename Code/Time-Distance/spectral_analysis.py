@@ -1,3 +1,25 @@
+'''
+Purpose
+-------
+Provide Fourier spectra, phase-delay corrections, radial averages, and legacy Gaussian
+filtering helpers.
+
+Each helper documents its array ordering; frequency axes use mHz where stated
+and angular-frequency parameters use rad/s. Existing notebook conventions
+are retained by these numerical utilities.
+
+Inputs
+------
+None
+
+Outputs
+-------
+exports: functions and classes
+    Numerical helpers or publication interfaces defined below; importing the
+    module does not execute the command-line pipeline.
+'''
+
+# Import the relevant libraries and shared project helpers.
 import copy
 
 import numpy as np
@@ -83,7 +105,8 @@ def cross_spectrum1D(time_series1, time_series2):
     '''
     Purpose
     -------
-    Compute the complex cross-spectrum of two time-series cubes along the time axis only.
+    Compute the complex cross-spectrum of two time-series cubes along the time axis
+    only.
 
     Inputs
     ------
@@ -366,7 +389,8 @@ def azimuthal_averaging2(mid_time, end_time, array, mid_space, radial_meshgrid, 
     '''
     Purpose
     -------
-    Azimuthally average the positive-frequency half of a 3D FFT cube with a configurable bin width.
+    Azimuthally average the positive-frequency half of a 3D FFT cube with a configurable
+    bin width.
 
     Inputs
     ------
@@ -798,7 +822,8 @@ def filter_data(filter_cube, data_cube):
     '''
     Purpose
     -------
-    Apply a Fourier-space filter to a time-series cube and transform it back to real space.
+    Apply a Fourier-space filter to a time-series cube and transform it back to real
+    space.
 
     Inputs
     ------
