@@ -1,0 +1,266 @@
+{
+  "provenance": {
+    "cube": {
+      "path": "/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-308/test_all_seven_models_initiali0/renamed.nc",
+      "size_bytes": 11449,
+      "mtime_ns": 1792392050854041323,
+      "current_path": "/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-308/test_all_seven_models_initiali0/renamed.nc"
+    },
+    "profile": {
+      "path": "/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-308/test_all_seven_models_initiali0/TEST_t00000020s_atmos_param.h5",
+      "size_bytes": 10194,
+      "mtime_ns": 1792392050856026200,
+      "current_path": "/private/var/folders/p5/s6c93d_s38j4sy11sd_js3s40000gn/T/pytest-of-juliomorales/pytest-308/test_all_seven_models_initiali0/TEST_t00000020s_atmos_param.h5",
+      "sha256": "726b6597c43c66c3f3762c4a705acd721d57595029a1f54d9d6f2232f42d7b66"
+    },
+    "snapshot_time_s": 20.0,
+    "cube_frame": 1,
+    "source_model": "TEST",
+    "height_origin_native_km": 0.0,
+    "height_coordinate": "native xc3 minus xc3[0], as in the time_distance pipeline",
+    "height_units": "km; unitless legacy profile z verified against recorded cube bins in cm",
+    "source_units": {
+      "sound_speed": {
+        "unit": "cm/s",
+        "source": "file attribute"
+      },
+      "adiabatic_index": {
+        "unit": "dimensionless",
+        "source": "file attribute"
+      },
+      "brunt_vaisala_freq": {
+        "unit": "rad/s",
+        "source": "file attribute"
+      },
+      "acoustic_cutoff_freq_isothermal": {
+        "unit": "rad/s",
+        "source": "file attribute"
+      },
+      "acoustic_cutoff_freq_non_isothermal": {
+        "unit": "rad/s",
+        "source": "file attribute"
+      },
+      "temperature": {
+        "unit": "K",
+        "source": "file attribute"
+      }
+    },
+    "density_units": "gm/cm^3",
+    "native_profiles": {},
+    "legacy_units": {
+      "acoustic_cutoff_freq_isothermal": "rad/s",
+      "acoustic_cutoff_freq_non_isothermal": "rad/s",
+      "adiabatic_index": "dimensionless",
+      "alfven_speed": "cm/s",
+      "brunt_vaisala_freq": "rad/s",
+      "sound_speed": "cm/s",
+      "temperature": "K"
+    },
+    "co5bold_magnetic_convention": "internal",
+    "density_derivative_source": "cube density; native profile absent",
+    "unit_contract_basis": "User confirmed cm/s sound speed and rad/s frequencies on 2026-10-13. Temperature follows the notebook K-to-kK convention. The adiabatic-index diagnostic is dimensionless; its thermodynamic definition remains unverified.",
+    "magnetic_units": "Cube fields converted to physical G; physical convention, factor 1. CO5BOLD internal B/sqrt(4pi) follows the original MHD manual.",
+    "reduction": "horizontal means of the exact profile snapshot; cube fields are already vertically binned",
+    "density_cell_methods": "xc1, xc2: mean",
+    "unavailable_inputs": {},
+    "alfven_limitation": "Fallback Alfven speed of independently horizontally averaged components/density; not a horizontal mean of local speeds.",
+    "temporal_limitation": "One atmospheric snapshot represents the full time series used by the k\u2013omega diagram.",
+    "vertical_limitation": "Magnetic components retain the cube resolution; density derivatives use the native profile when supplied. Interpolation cannot recover unresolved magnetic structure.",
+    "scale_height_definition": "H_rho = -1/(d ln rho/dz), nonuniform-coordinate gradient before height averaging",
+    "cutoff_definition": "isothermal acoustic cutoff for the existing locally isothermal NC2009 relation; non-isothermal cutoff retained in diagnostics",
+    "buoyancy_definition": "N2 = -g*d ln rho/dz - g\u00b2/cs\u00b2 (Newington & Cally 2010 Eq. 4); signed s^-2",
+    "buoyancy_assumption": "NC2010 Eq. 4 assumes a hydrostatic adiabatic background. Pressure-gradient buoyancy and hydrostatic gravity are diagnostic comparisons when pressure is supplied; dynamic snapshot averages need not obey hydrostatic balance. Gamma1_effective is not assumed to equal Cp/Cv.",
+    "gravity_km_s2": 0.274,
+    "gravity_source": "explicit atmospheric_profiles.gravity_km_s2, default solar magnitude 0.274; absent from files",
+    "geometry": "bb1=x=xc1, bb2=y=xc2, bb3=z=xc3 upward; x-z propagation plane is the xc1-xc3 plane",
+    "propagation_limitation": "The k_h diagram is horizontally azimuth-averaged; phi is relative to the selected xc1 reference plane, not a measured unique propagation direction.",
+    "stored_frequency_limitation": "Legacy real N does not encode signed N2; stored cutoff retained only for diagnostic comparison.",
+    "algorithm_version": 3,
+    "sampled_profiles_sha256": "eeba96c7798f2e8025195f684878ce30d9d7033ad6d44fbe6f9c4abaad6dc091",
+    "implementation_sha256": "479ea4024272ab04143b21e12dba509dc6501910b206e2476883ff05635ec303",
+    "diagnostic_layout_version": 5,
+    "diagnostic_height_pair_km": [
+      300.0,
+      700.0
+    ],
+    "diagnostic_thermodynamic_profiles": {
+      "pressure": {
+        "status": "unavailable",
+        "reason": "No matched stored profile file."
+      },
+      "plasma_beta": {
+        "status": "unavailable",
+        "reason": "No matched stored profile file."
+      }
+    },
+    "diagnostic_height_alignment": {
+      "origin_native_km": 0.0,
+      "displayed_range_km": [
+        0.0,
+        700.0000000000001
+      ],
+      "domain": "simulation cell centres; common origin subtracted from all profiles",
+      "resampling": "retain native profile samples and interpolate only display endpoints; no vertical binning"
+    }
+  },
+  "samples": {
+    "height_km": [
+      0.0,
+      50.00000000000001,
+      100.00000000000001,
+      200.00000000000003,
+      300.0,
+      400.00000000000006,
+      700.0000000000001
+    ],
+    "quantities": {
+      "cs": [
+        6.000000000000001,
+        6.050000000000001,
+        6.1000000000000005,
+        6.2,
+        6.3,
+        6.4,
+        6.7
+      ],
+      "gamma_profile": [
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4,
+        1.4
+      ],
+      "N_stored": [
+        0.02,
+        0.0205,
+        0.021,
+        0.022,
+        0.023,
+        0.024,
+        0.027
+      ],
+      "wac": [
+        0.014999999999999911,
+        0.015124999999999932,
+        0.015249999999999951,
+        0.01549999999999997,
+        0.015749999999999993,
+        0.015999999999999986,
+        0.01674999999999997
+      ],
+      "wac_nonisothermal": [
+        0.03,
+        0.0305,
+        0.031,
+        0.032,
+        0.033,
+        0.034,
+        0.037
+      ],
+      "temperature": [
+        6000.0,
+        6000.0,
+        6000.0,
+        6000.0,
+        6000.0,
+        6000.0,
+        6000.0
+      ],
+      "rho": [
+        1e-10,
+        8.032653298563167e-11,
+        6.065306597126335e-11,
+        4.148304099305316e-11,
+        2.2313016014842982e-11,
+        1.7489696596690197e-11,
+        3.01973834223185e-12
+      ],
+      "N2": [
+        -0.0007154444444444521,
+        -0.0006811167269995286,
+        -0.0006476296694437023,
+        -0.0005830697190426666,
+        -0.0005215595867976831,
+        -0.00046291015625000097,
+        -0.00030244375139229507
+      ],
+      "wac_stored": [
+        0.025,
+        0.025500000000000002,
+        0.026000000000000002,
+        0.027000000000000003,
+        0.028,
+        0.029,
+        0.032
+      ]
+    },
+    "cube_height_km": [
+      0.0,
+      100.00000000000001,
+      300.0,
+      700.0000000000001
+    ],
+    "components_G": [
+      [
+        3.0,
+        4.0,
+        6.0,
+        10.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    ],
+    "density_cgs": [
+      1e-10,
+      6.065306597126335e-11,
+      2.2313016014842982e-11,
+      3.01973834223185e-12
+    ],
+    "density_scale_height_km": [
+      200.00000000000122,
+      200.00000000000094,
+      200.00000000000065,
+      200.00000000000037,
+      200.0000000000001,
+      200.00000000000017,
+      200.00000000000037
+    ],
+    "density_scale_height_coordinate_km": [
+      0.0,
+      50.00000000000001,
+      100.00000000000001,
+      200.00000000000003,
+      300.0,
+      400.00000000000006,
+      700.0000000000001
+    ],
+    "density_height_km": [
+      0.0,
+      100.00000000000001,
+      300.0,
+      700.0000000000001
+    ],
+    "density_native_cgs": [
+      1e-10,
+      6.065306597126335e-11,
+      2.2313016014842982e-11,
+      3.01973834223185e-12
+    ]
+  },
+  "outputs": [
+    "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/_atmospheric_profiles/b42f258068a40b4c/simulation_atmospheric_profiles_TEST_heights_b11d2163df7c.pdf",
+    "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/_atmospheric_profiles/b42f258068a40b4c/simulation_atmospheric_profiles_TEST_heights_b11d2163df7c.png"
+  ]
+}
