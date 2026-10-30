@@ -1,3 +1,25 @@
+'''
+Purpose
+-------
+Load observational/simulation cubes and apply configured Fourier and magnetic-field
+filters.
+
+AGWFilter uses [t, y, x] at its cube interfaces; legacy standalone Fourier
+helpers use their explicitly documented spatial-spatial-time ordering.
+Persistent filter artifacts include metadata and content digests.
+
+Inputs
+------
+None
+
+Outputs
+-------
+exports: functions and classes
+    Numerical helpers or publication interfaces defined below; importing the
+    module does not execute the command-line pipeline.
+'''
+
+# Import the relevant libraries and shared project helpers.
 import hashlib
 import json
 import os
@@ -46,7 +68,7 @@ def require_netcdf4():
 
 
 MAGNETOGRAM_PATTERN = '*HMImag*.fits'
-FILTER_CACHE_VERSION = 1
+FILTER_CACHE_VERSION = 2
 FILTER_CACHE_DIGEST_LENGTH = 64
 FILTER_CACHE_DIRNAME = 'Filters'
 
@@ -54,9 +76,24 @@ FILTER_CACHE_DIRNAME = 'Filters'
 def _filter_cache_slugify(value):
 
     '''
+    Purpose
+    -------
     Convert a cache filename fragment into the same slug style used by pipeline outputs.
+
+    Inputs
+    ------
+    value: object
+        Filename fragment converted to text.
+
+    Outputs
+    -------
+    slug: str
+        Lowercase ASCII-style token with nonalphanumerics collapsed to
+        underscores.
     '''
 
+    # Apply the same normalization rules to cache and numerical-output filename
+    # fragments.
     value = str(value).strip().lower()
     value = value.replace('å', 'a')
     value = re.sub(r'angstrom', 'a', value, flags = re.IGNORECASE)
@@ -69,9 +106,22 @@ def _filter_cache_slugify(value):
 def _filter_cache_join_slug(parts):
 
     '''
+    Purpose
+    -------
     Join cache filename fragments while dropping empty components.
+
+    Inputs
+    ------
+    parts: iterable
+        Filename fragments converted with _filter_cache_slugify().
+
+    Outputs
+    -------
+    slug: str
+        Underscore-joined nonempty normalized fragments.
     '''
 
+    # Drop empty fragments both before and after normalization.
     parts = [_filter_cache_slugify(part) for part in parts if str(part).strip() != '']
     parts = [part for part in parts if part != '']
 
@@ -81,27 +131,69 @@ def _filter_cache_join_slug(parts):
 def _filter_cache_float_slug(value):
 
     '''
+    Purpose
+    -------
     Format a floating-point parameter using the existing compact output-token style.
+
+    Inputs
+    ------
+    value: float-like
+        Number formatted with general floating-point formatting.
+
+    Outputs
+    -------
+    slug: str
+        Compact normalized numeric filename token.
     '''
 
+    # Use general numeric formatting before making the value filename-safe.
     return _filter_cache_slugify(f'{float(value):g}')
 
 
 def _filter_cache_shape_slug(shape):
 
     '''
+    Purpose
+    -------
     Build a deterministic shape token for cache filenames.
+
+    Inputs
+    ------
+    shape: iterable of int
+        Array axis lengths in their stored order.
+
+    Outputs
+    -------
+    slug: str
+        Shape token such as shape_10x20x30.
     '''
 
+    # Include every axis length so differently shaped transfers have distinct cache
+    # tokens.
     return 'shape_' + 'x'.join(str(int(axis_length)) for axis_length in shape)
 
 
 def resolve_filter_cache_dir(config):
 
     '''
+    Purpose
+    -------
     Resolve the persistent filter cache directory.
+
+    Inputs
+    ------
+    config: dict
+        Runtime paths including optional project_dir or data_output_dir.
+
+    Outputs
+    -------
+    directory: Path
+        Resolved Data/Filters location, inferred from project/data-output paths
+        or the module project root. Does not create the directory.
     '''
 
+    # Prefer the explicit project root, then infer the shared Data directory from output
+    # paths.
     paths = config.get('paths', {})
     project_dir = paths.get('project_dir', '')
 
@@ -119,15 +211,30 @@ def resolve_filter_cache_dir(config):
 
         return data_output_path.parent / FILTER_CACHE_DIRNAME
 
+    # Fall back to this module's project root when no path hints are configured.
     return Path(__file__).resolve().parents[2] / 'Data' / FILTER_CACHE_DIRNAME
 
 
 def _filter_cache_jsonable(value):
 
     '''
+    Purpose
+    -------
     Convert cache metadata into a stable JSON-serializable structure.
+
+    Inputs
+    ------
+    value: object
+        Nested dictionaries/sequences, Paths, and NumPy scalar metadata.
+
+    Outputs
+    -------
+    normalized: object
+        Sorted dictionary keys and JSON-native list/scalar equivalents;
+        unsupported values pass through unchanged.
     '''
 
+    # Normalize nested metadata recursively while sorting dictionary keys.
     if isinstance(value, dict):
         return {
             str(key): _filter_cache_jsonable(value[key])
@@ -137,6 +244,7 @@ def _filter_cache_jsonable(value):
     if isinstance(value, (list, tuple)):
         return [_filter_cache_jsonable(item) for item in value]
 
+    # Convert filesystem and NumPy scalar wrappers into JSON-native values.
     if isinstance(value, Path):
         return str(value)
 
@@ -155,9 +263,23 @@ def _filter_cache_jsonable(value):
 def _filter_cache_metadata_json(metadata):
 
     '''
+    Purpose
+    -------
     Serialize cache metadata deterministically for hashing and embedded diagnostics.
+
+    Inputs
+    ------
+    metadata: dict
+        Filter cache identity and diagnostic metadata.
+
+    Outputs
+    -------
+    serialized: str
+        Deterministic compact JSON with sorted keys after metadata
+        normalization.
     '''
 
+    # Serialize normalized metadata with stable key order and no formatting whitespace.
     return json.dumps(
         _filter_cache_jsonable(metadata),
         sort_keys = True,
@@ -168,9 +290,22 @@ def _filter_cache_metadata_json(metadata):
 def _filter_cache_digest(metadata):
 
     '''
+    Purpose
+    -------
     Return a collision-resistant digest for a filter cache metadata payload.
+
+    Inputs
+    ------
+    metadata: dict
+        Filter cache metadata serialized deterministically.
+
+    Outputs
+    -------
+    digest: str
+        Full SHA-256 hexadecimal digest of UTF-8 encoded metadata.
     '''
 
+    # Hash the exact deterministic UTF-8 metadata serialization.
     encoded_metadata = _filter_cache_metadata_json(metadata).encode('utf-8')
 
     return hashlib.sha256(encoded_metadata).hexdigest()
@@ -179,9 +314,22 @@ def _filter_cache_digest(metadata):
 def _filter_cache_array_digest(array):
 
     '''
+    Purpose
+    -------
     Hash an array's dtype, shape, and contiguous bytes for cache key construction.
+
+    Inputs
+    ------
+    array: array-like
+        Array whose content contributes to a cache identity.
+
+    Outputs
+    -------
+    digest: str
+        SHA-256 digest including dtype, shape, and C-contiguous bytes.
     '''
 
+    # Include dtype and shape before hashing contiguous array bytes.
     contiguous_array = np.ascontiguousarray(array)
     digest = hashlib.sha256()
     digest.update(str(contiguous_array.dtype).encode('utf-8'))
@@ -194,9 +342,31 @@ def _filter_cache_array_digest(array):
 def _filter_cache_file(cache_dir, filename_prefix, metadata, extension):
 
     '''
+    Purpose
+    -------
     Build the final cache path and full metadata digest.
+
+    Inputs
+    ------
+    cache_dir: Path
+        Parent cache directory.
+
+    filename_prefix: str
+        Human-readable filename fragment normalized to a slug.
+
+    metadata: dict
+        Cache identity used to compute the filename digest.
+
+    extension: str
+        Filename extension without its leading dot.
+
+    Outputs
+    -------
+    file_path, digest: tuple
+        Cache Path and full hexadecimal metadata digest; no file is created.
     '''
 
+    # Combine readable filter identity with the configured digest prefix.
     digest = _filter_cache_digest(metadata)
     digest_token = digest[:FILTER_CACHE_DIGEST_LENGTH]
     filename = f'{_filter_cache_slugify(filename_prefix)}_{digest_token}.{extension}'
@@ -207,23 +377,46 @@ def _filter_cache_file(cache_dir, filename_prefix, metadata, extension):
 def _atomic_save_npy(file_path, array):
 
     '''
+    Purpose
+    -------
     Save a NumPy array atomically so concurrent readers never see partial files.
+
+    Inputs
+    ------
+    file_path: Path
+        Destination NPY file; create its parent directories.
+
+    array: array-like
+        Array saved with allow_pickle=False.
+
+    Outputs
+    -------
+    None
+        Write a uniquely named temporary NPY and rename it into place if the
+        destination is absent. Remove the temporary file on failure or when a
+        completed destination already exists.
     '''
 
+    # Create a unique temporary file beside the destination for same-directory
+    # replacement.
     file_path.parent.mkdir(parents = True, exist_ok = True)
     temporary_path = file_path.with_name(
         f'.{file_path.name}.{os.getpid()}.{time.time_ns()}.tmp'
     )
 
+    # Write the complete artifact before making it visible at the final cache path.
     try:
         with temporary_path.open('wb') as handle:
             np.save(handle, np.asarray(array), allow_pickle = False)
 
+        # Preserve a cache artifact already completed by another writer.
         if file_path.exists():
             temporary_path.unlink(missing_ok = True)
             return
 
+        # Publish the completed temporary artifact with a filesystem replacement.
         os.replace(temporary_path, file_path)
+    # Remove partial temporary output before propagating the write failure.
     except Exception:
         temporary_path.unlink(missing_ok = True)
         raise
@@ -232,23 +425,45 @@ def _atomic_save_npy(file_path, array):
 def _atomic_save_npz(file_path, **arrays):
 
     '''
+    Purpose
+    -------
     Save one or more NumPy arrays atomically in a compressed NPZ artifact.
+
+    Inputs
+    ------
+    file_path: Path
+        Destination compressed NPZ file; create its parent directories.
+
+    **arrays: dict
+        Named arrays forwarded to np.savez_compressed().
+
+    Outputs
+    -------
+    None
+        Write through a unique temporary file, preserving an already-existing
+        destination and cleaning up temporary files on exceptions.
     '''
 
+    # Create a unique temporary file beside the destination for same-directory
+    # replacement.
     file_path.parent.mkdir(parents = True, exist_ok = True)
     temporary_path = file_path.with_name(
         f'.{file_path.name}.{os.getpid()}.{time.time_ns()}.tmp'
     )
 
+    # Write the complete artifact before making it visible at the final cache path.
     try:
         with temporary_path.open('wb') as handle:
             np.savez_compressed(handle, **arrays)
 
+        # Preserve a cache artifact already completed by another writer.
         if file_path.exists():
             temporary_path.unlink(missing_ok = True)
             return
 
+        # Publish the completed temporary artifact with a filesystem replacement.
         os.replace(temporary_path, file_path)
+    # Remove partial temporary output before propagating the write failure.
     except Exception:
         temporary_path.unlink(missing_ok = True)
         raise
@@ -257,9 +472,22 @@ def _atomic_save_npz(file_path, **arrays):
 def build_gaussian_filter_cache_slug(gaussian_config):
 
     '''
+    Purpose
+    -------
     Build the Gaussian parameter slug used by both outputs and filter cache files.
+
+    Inputs
+    ------
+    gaussian_config: dict
+        central_k/width_k in Mm^-1 and central_f/width_f in mHz.
+
+    Outputs
+    -------
+    slug: str
+        Ordered gauss/ck/wk/cf/wf numeric token used by outputs and cache names.
     '''
 
+    # Keep Gaussian center/width fields in a fixed identity order.
     return _filter_cache_join_slug([
         'gauss',
         'ck', f"{float(gaussian_config['central_k']):g}",
@@ -272,9 +500,26 @@ def build_gaussian_filter_cache_slug(gaussian_config):
 def build_magnetogram_filter_cache_slug(selection, threshold_G):
 
     '''
+    Purpose
+    -------
     Build the magnetic-threshold slug used by output names and filter cache files.
+
+    Inputs
+    ------
+    selection: str
+        magnetic retains fields above the threshold; nonmagnetic retains fields
+        at or below it.
+
+    threshold_G: float
+        Absolute magnetic-field threshold (G).
+
+    Outputs
+    -------
+    slug: str
+        b_gt_*g or b_le_*g token; unsupported selections raise ValueError.
     '''
 
+    # Encode the retained-field comparison and threshold into the cache name.
     selection = str(selection).strip().lower()
     threshold_slug = _filter_cache_float_slug(threshold_G)
 
@@ -323,9 +568,23 @@ def resolve_dataset_directory(dataset_path):
 def _is_hmimag_fits(path):
 
     '''
+    Purpose
+    -------
     Return whether a file matches the paired-cubes HMImag magnetogram convention.
+
+    Inputs
+    ------
+    path: Path
+        Candidate magnetogram file.
+
+    Outputs
+    -------
+    matches: bool
+        True for an existing .fits file with hmimag in its case-insensitive
+        filename.
     '''
 
+    # Restrict automatic observational magnetograms to existing HMImag FITS files.
     return (
         path.is_file()
         and path.suffix.lower() == '.fits'
@@ -409,6 +668,10 @@ def find_paired_cubes_magnetogram(v1_path, v2_path = None, *, data_dir = None, r
 
     required: bool, optional
         If True, missing magnetograms raise FileNotFoundError. If False, return None.
+
+
+    v1_path: str or Path or None
+        First paired-cube path used to resolve the common dataset directory.
 
     Outputs
     -------
@@ -551,12 +814,13 @@ def create_filter(array, frequency_array, wavenumber_array_kx, wavenumber_array_
     e1 = np.exp(-((frequency_array - float(central_f))**2.0)/(2.0*fsig**2.0)) + np.exp(
         -((frequency_array + float(central_f))**2.0)/(2.0*fsig**2.0))
 
-    # Reuse the same 1D work array to match the original filter implementation
+    # Each spatial Fourier cell has an independent frequency transfer.
     filt1D = np.zeros(frequency_array.shape, dtype = np.float64)
 
     # Build the full 3D filter
     for i in tqdm(range(0, nx), desc = 'Creating Filter'):
         for j in range(0, ny):
+            filt1D.fill(0.0)
 
             # Compute the horizontal-wavenumber magnitude for the current spatial pixel.
             k_horizontal = np.sqrt(wavenumber_array_kx[i]**2.0 + wavenumber_array_ky[j]**2.0)
@@ -587,9 +851,76 @@ def create_filter(array, frequency_array, wavenumber_array_kx, wavenumber_array_
                     filt1D = filt1D / max_freq_filter
 
                 # Store the one-dimensional filter profile at the current spatial pixel.
-                filt3D[j, i, :] = filt1D
+                filt3D[i, j, :] = filt1D
 
-    return filt3D
+    # A real Dopplergram requires G(-k,-omega)=conjugate(G(k,omega)).
+    # In particular, the legacy even-length suppressor is centred between bins.
+    # Its symmetric part is the exact real transfer formerly implemented by
+    # taking .real after the inverse FFT, now explicit before reconstruction.
+    return hermitian_real_transfer(filt3D)
+
+
+def hermitian_real_transfer(centered_transfer):
+    '''
+    Purpose
+    -------
+    Symmetrize a real transfer under simultaneous Fourier-index reversal.
+
+    Inputs
+    ------
+    centered_transfer: array-like
+        Finite three-dimensional transfer in FFT-shifted ordering.
+
+    Outputs
+    -------
+    transfer: np.ndarray
+        Float64 centered transfer averaged with its unshifted (-index)
+        counterpart, with the input shape. Invalid dimensionality or nonfinite
+        values raise ValueError.
+    '''
+
+    # Require a finite real 3D transfer before enforcing Fourier reversal symmetry.
+    transfer = np.asarray(centered_transfer, dtype=np.float64)
+    if transfer.ndim != 3 or not np.all(np.isfinite(transfer)):
+        raise ValueError('Expected a finite three-dimensional Fourier transfer.')
+    # Pair opposite unshifted Fourier indices, including the wrapped Nyquist bins.
+    unshifted = np.fft.ifftshift(transfer)
+    opposite = np.ix_(*[(-np.arange(n)) % n for n in transfer.shape])
+    return np.fft.fftshift((unshifted + unshifted[opposite]) * .5)
+
+
+def checked_real_cube(values, *, label='Filtered Dopplergram'):
+    '''
+    Purpose
+    -------
+    Validate finite inverse-FFT samples before discarding roundoff imaginary parts.
+
+    Inputs
+    ------
+    values: array-like
+        Nonempty real or complex reconstruction samples.
+
+    label: str
+        Diagnostic name included in validation errors.
+
+    Outputs
+    -------
+    real: np.ndarray
+        Float64 real component when the largest imaginary residual is at most
+        max(1e-12, 1e-10*max(abs(real))). Nonfinite/significantly complex input
+        raises ValueError.
+    '''
+
+    # Reject nonfinite reconstruction samples before assessing imaginary roundoff.
+    values = np.asarray(values)
+    if not np.all(np.isfinite(values)):
+        raise ValueError(f'{label} contains nonfinite samples; no implicit NaN filling is applied.')
+    # Scale the allowed imaginary residual by the largest reconstructed real amplitude.
+    real_scale = float(np.max(np.abs(values.real)))
+    residual = float(np.max(np.abs(values.imag))) if np.iscomplexobj(values) else 0.
+    if residual > max(1e-12, 1e-10 * real_scale):
+        raise ValueError(f'{label} has a significant imaginary residual ({residual:g}); check Fourier Hermitian symmetry.')
+    return np.asarray(values.real, dtype=np.float64)
 
 
 def make_fourier_grid(dt, dx, array, threeD = False):
@@ -698,6 +1029,13 @@ def filter_data(filter_cube, data_cube):
     Julio M. Morales, March 16th, 2026
     '''
 
+    if np.shape(filter_cube) != np.shape(data_cube) or np.ndim(data_cube) != 3:
+        raise ValueError('Fourier transfer and Dopplergram must have identical three-dimensional shapes.')
+    if not np.all(np.isfinite(data_cube)):
+        raise ValueError('Gaussian FFT requires finite Dopplergrams; no implicit NaN filling is applied.')
+    if np.all(np.asarray(filter_cube) == 1.):
+        # Exact identity avoids adding roundoff to undefined zero-power phases.
+        return np.array(data_cube,dtype=np.complex128,copy=True)
     # Shift the filter back to the uncentered FFT ordering.
     shift_filter = np.fft.ifftshift(filter_cube)
 
@@ -792,12 +1130,45 @@ def masked_IBIS_cubes_based_on_masked_magnetogram(diagnostic_map, magnetic_map_m
 
 
 class spectral_analysis:
+    '''
+    Purpose
+    -------
+    Expose legacy spectral helper names as static methods.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    namespace: class
+        Compatibility access to make_fourier_grid, create_filter, and
+        filter_data.
+    '''
+
+    # Preserve notebook-style namespace access to the local Fourier helpers.
     make_fourier_grid = staticmethod(make_fourier_grid)
     create_filter = staticmethod(create_filter)
     filter_data = staticmethod(filter_data)
 
 
 class isothermal_dispersion_equations:
+    '''
+    Purpose
+    -------
+    Expose the local f-mode and Lamb-frequency helpers as static methods.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    namespace: class
+        Compatibility access to surface_fmodes and lamb_frequency.
+    '''
+
+    # Preserve the legacy static namespace for the two dispersion-frequency helpers.
     surface_fmodes = staticmethod(surface_fmodes)
     lamb_frequency = staticmethod(lamb_frequency)
 
@@ -834,8 +1205,45 @@ def normalize_source_type(source_type):
 
 class AGWFilter:
 
+    '''
+    Purpose
+    -------
+    Load input cubes and apply the configured filter sequence.
+
+    Inputs
+    ------
+    config: dict
+        Runtime data/time_distance settings and optional filtering settings.
+
+    Outputs
+    -------
+    instance: AGWFilter
+        Loader/filter object sharing the supplied configuration dictionaries.
+    '''
+
+    # Expose automatic paired-cube magnetogram discovery through the loader class.
+    find_paired_cubes_magnetogram = staticmethod(find_paired_cubes_magnetogram)
+
     def __init__(self, config):
 
+        '''
+        Purpose
+        -------
+        Store references to the loader and filter configuration sections.
+
+        Inputs
+        ------
+        config: dict
+            Runtime data, time_distance, and optional filtering dictionaries.
+
+        Outputs
+        -------
+        None
+            Populate self.config, self.data, self.time_distance, and self.filtering.
+        '''
+
+        # Share the supplied data, sampling, and filtering dictionaries with the runtime
+        # pipeline.
         self.config = config
         self.data = config['data']
         self.time_distance = config['time_distance']
@@ -845,9 +1253,24 @@ class AGWFilter:
     def is_zero_field_simulation_path(file_path):
 
         '''
+        Purpose
+        -------
         Return whether a simulation path encodes the zero-field z0/0G case.
+
+        Inputs
+        ------
+        file_path: str or Path
+            Simulation path inspected for z0 components or zero-Gauss tokens.
+
+        Outputs
+        -------
+        is_zero: bool
+            True when a z0 component or recognized zero-field strength token is
+            found; both are not required.
         '''
 
+        # Inspect path components and a compact case-token fallback for zero-field
+        # identifiers.
         path = Path(file_path)
         component = ''
         strength_token = ''
@@ -861,6 +1284,7 @@ class AGWFilter:
             if re.fullmatch(r'0+(?:[._]0+)?g', lower_part):
                 strength_token = lower_part
 
+        # Try the encoded z0/zero-Gauss pattern when separate components are absent.
         if component == '' or strength_token == '':
             match = re.search(
                 r'(z0)[_\-/](0+(?:[._]0+)?g)',
@@ -877,9 +1301,22 @@ class AGWFilter:
     def is_netcdf_magnetic_variable_name(variable_name):
 
         '''
+        Purpose
+        -------
         Return whether a NetCDF variable name is a recognized magnetic component.
+
+        Inputs
+        ------
+        variable_name: str
+            NetCDF field name normalized to lowercase.
+
+        Outputs
+        -------
+        recognized: bool
+            True for one of the explicit Cartesian/line-of-sight magnetic aliases.
         '''
 
+        # Match only the explicit supported magnetic-component aliases.
         normalized_name = str(variable_name).strip().lower()
         magnetic_names = {
             'bb1', 'bb2', 'bb3',
@@ -950,6 +1387,27 @@ class AGWFilter:
         datasets = {}
 
         def visit_datasets(name, obj):
+            '''
+            Purpose
+            -------
+            Collect three-dimensional HDF5 datasets during recursive traversal.
+
+            Inputs
+            ------
+            name: str
+                Object name relative to the HDF5 root.
+
+            obj: HDF5 object
+                Visited group or dataset.
+
+            Outputs
+            -------
+            None
+                Store name-to-dataset references in the enclosing datasets dictionary
+                only for three-dimensional h5py.Dataset objects.
+            '''
+
+            # Retain only actual three-dimensional HDF5 datasets as cube candidates.
             if isinstance(obj, h5py.Dataset) and obj.ndim == 3:
                 datasets[name] = obj
 
@@ -1107,7 +1565,8 @@ class AGWFilter:
         '''
         Purpose
         -------
-        Normalize a user-facing observable name to the corresponding NetCDF variable name.
+        Normalize a user-facing observable name to the corresponding NetCDF variable
+        name.
 
         Inputs
         ------
@@ -1169,6 +1628,11 @@ class AGWFilter:
 
         configured_variable = self.normalize_netcdf_observable_name(
             self.data.get('observable', self.data.get('cube_variable', '')).strip())
+        from simulation_observables import normalize, FIELD_NAMES, select_field
+        scalar_field = normalize(configured_variable)
+        if scalar_field in FIELD_NAMES:
+            # Require the actual space/time field; never use a profile or ei.
+            return select_field(netcdf_file.variables, scalar_field, ndim=4)
         preferred_names = ['v3', 'v2', 'v1', 'bb3', 'bb2', 'bb1', 'velocity', 'vel', 'data', 'cube']
 
         return self.select_netcdf_field_variable(
@@ -1193,7 +1657,8 @@ class AGWFilter:
             Optional variable name provided by the configuration file.
 
         preferred_names: list
-            Ordered list of preferred variable names to try when the config does not specify one.
+            Ordered list of preferred variable names to try when the config does not
+            specify one.
 
         field_label: str
             Field label used in the error messages.
@@ -1461,14 +1926,14 @@ class AGWFilter:
 
         with nc.Dataset(file_path) as netcdf_file:
             variable_name, variable = self.select_netcdf_observable_variable(netcdf_file)
+            self.data['observable_units'] = getattr(variable, 'units', '')
             axis_order = self.infer_netcdf_axis_order(variable)
             height_coordinates, height_variable_name = self.load_netcdf_height_coordinates(netcdf_file, variable)
-            cube = np.asarray(variable[:], dtype = np.float64)
-
-        cube = np.transpose(cube, (axis_order['t'], axis_order['z'], axis_order['y'], axis_order['x']))
-        nz = cube.shape[1]
-        height_index_1 = self.resolve_netcdf_height_index(h1, nz, 'h1')
-        height_index_2 = self.resolve_netcdf_height_index(h2, nz, 'h2')
+            nz = variable.shape[axis_order['z']]
+            height_index_1 = self.resolve_netcdf_height_index(h1, nz, 'h1')
+            height_index_2 = self.resolve_netcdf_height_index(h2, nz, 'h2')
+            v1, v2 = self.read_netcdf_height_slices(variable, axis_order,
+                                                 [height_index_1, height_index_2])
 
         # Store the resolved heights for downstream inspection and plotting
         self.data['resolved_h1_index'] = height_index_1
@@ -1480,12 +1945,45 @@ class AGWFilter:
             self.data['resolved_h2_value'] = float(height_coordinates[height_index_2])
             self.data['height_coordinate'] = 'xc3'
 
-        v1 = cube[:, height_index_1, :, :]
-        v2 = cube[:, height_index_2, :, :]
-
         return v1, v2
 
-    def load_netcdf_magnetic_cube(self, file_path):
+    @staticmethod
+    def read_netcdf_height_slices(variable, axis_order, indices):
+        '''
+        Purpose
+        -------
+        Read only requested layers, retaining the native [t, y, x] convention.
+
+        Inputs
+        ------
+        variable: NetCDF variable
+            Four-dimensional source field with time, height, y, and x axes.
+
+        axis_order: dict
+            Mapping from t, z, y, x names to native axis numbers.
+
+        indices: iterable of int
+            Height-layer indices read in the supplied order.
+
+        Outputs
+        -------
+        slices: list of np.ndarray
+            Requested layers as float64 [t, y, x] cubes; only the selected layers
+            are read.
+        '''
+        # Derive the surviving axis permutation after indexing out the native height
+        # axis.
+        remaining = [i for i in range(4) if i != axis_order['z']]
+        order = tuple(remaining.index(axis_order[key]) for key in ('t', 'y', 'x'))
+        slices = []
+        # Read and transpose only the requested height slices into [t, y, x].
+        for index in indices:
+            selection = [slice(None)] * 4
+            selection[axis_order['z']] = index
+            slices.append(np.transpose(np.asarray(variable[tuple(selection)], dtype=np.float64), order))
+        return slices
+
+    def load_netcdf_magnetic_cube(self, file_path, selected_heights=None):
 
         '''
         Purpose
@@ -1496,6 +1994,12 @@ class AGWFilter:
         ------
         file_path: str or pathlib.Path
             Path to the NetCDF file that contains the 4D magnetic-field cube.
+
+
+        selected_heights: iterable of int, str or None
+            Requested layer indices, bottom for the minimum physical layer, or None
+            for all layers. Selected output uses [t, n_selected, y, x] order and
+            records selected indices in self.data.
 
         Outputs
         -------
@@ -1539,6 +2043,19 @@ class AGWFilter:
 
             axis_order = self.infer_netcdf_axis_order(variable)
             height_coordinates, height_variable_name = self.load_netcdf_height_coordinates(netcdf_file, variable)
+            if selected_heights is not None:
+                nz = variable.shape[axis_order['z']]
+                indices = ([self.resolve_netcdf_bottom_height_index(height_coordinates, nz)]
+                           if selected_heights == 'bottom' else
+                           [self.resolve_netcdf_height_index(i, nz, 'magnetogram') for i in selected_heights])
+                if synthetic_zero_field:
+                    shape = tuple(variable.shape[axis_order[key]] for key in ('t', 'y', 'x'))
+                    slices = [np.zeros(shape, dtype=np.float64) for i in indices]
+                    variable_name = 'synthetic_zero_field'
+                else:
+                    slices = self.read_netcdf_height_slices(variable, axis_order, indices)
+                self.data['magnetogram_selected_indices'] = indices
+                return np.stack(slices, axis=1), variable_name, height_coordinates, height_variable_name
             if synthetic_zero_field:
                 cube = np.zeros(variable.shape, dtype = np.float64)
                 variable_name = 'synthetic_zero_field'
@@ -1552,9 +2069,28 @@ class AGWFilter:
     def resolve_netcdf_bottom_height_index(self, height_coordinates, nz):
 
         '''
+        Purpose
+        -------
         Resolve the lowest simulation height index for bottom-mode magnetograms.
+
+        Inputs
+        ------
+        height_coordinates: array-like or None
+            Physical height coordinate; a finite minimum determines the bottom
+            layer.
+
+        nz: int
+            Compatibility argument retained in the signature; unused by this method.
+
+        Outputs
+        -------
+        index: int
+            Index of the minimum finite height, or zero when no finite coordinate is
+            available.
         '''
 
+        # Use the minimum physical height when available, otherwise retain native layer
+        # zero.
         if height_coordinates is not None and np.any(np.isfinite(height_coordinates)):
             return int(np.nanargmin(height_coordinates))
 
@@ -1578,9 +2114,8 @@ class AGWFilter:
             Synthetic magnetogram cube in [t, y, x] order.
         '''
 
-        cube, variable_name, height_coordinates, height_variable_name = self.load_netcdf_magnetic_cube(file_path)
-        nz = cube.shape[1]
-        bottom_height_index = self.resolve_netcdf_bottom_height_index(height_coordinates, nz)
+        cube, variable_name, height_coordinates, height_variable_name = self.load_netcdf_magnetic_cube(file_path, 'bottom')
+        bottom_height_index = self.data['magnetogram_selected_indices'][0]
 
         if height_coordinates is not None and np.any(np.isfinite(height_coordinates)):
             self.data['resolved_magnetogram_bottom_value'] = float(height_coordinates[bottom_height_index])
@@ -1589,7 +2124,7 @@ class AGWFilter:
         self.data['resolved_magnetogram_bottom_index'] = bottom_height_index
         self.data['magnetogram_cube_variable'] = variable_name
 
-        return cube[:, bottom_height_index, :, :]
+        return cube[:, 0, :, :]
 
     def load_netcdf_height_pair_magnetograms(self, file_path):
 
@@ -1609,16 +2144,14 @@ class AGWFilter:
             Magnetic maps for h1 and h2 in [t, y, x] order.
         '''
 
-        cube, variable_name, height_coordinates, height_variable_name = self.load_netcdf_magnetic_cube(file_path)
-        nz = cube.shape[1]
-
         if self.data.get('h1', '') in ['', None] or self.data.get('h2', '') in ['', None]:
             raise ValueError(
                 "single_cube magnetogram_mode = 'per_height_pair' requires resolved h1 and h2 height indices."
             )
 
-        height_index_1 = self.resolve_netcdf_height_index(self.data['h1'], nz, 'h1 magnetogram')
-        height_index_2 = self.resolve_netcdf_height_index(self.data['h2'], nz, 'h2 magnetogram')
+        cube, variable_name, height_coordinates, height_variable_name = self.load_netcdf_magnetic_cube(
+            file_path, [self.data['h1'], self.data['h2']])
+        height_index_1, height_index_2 = self.data['magnetogram_selected_indices']
 
         self.data['resolved_magnetogram_h1_index'] = height_index_1
         self.data['resolved_magnetogram_h2_index'] = height_index_2
@@ -1629,14 +2162,30 @@ class AGWFilter:
             self.data['resolved_magnetogram_h2_value'] = float(height_coordinates[height_index_2])
             self.data['magnetogram_height_coordinate'] = height_variable_name
 
-        return cube[:, height_index_1, :, :], cube[:, height_index_2, :, :]
+        return cube[:, 0, :, :], cube[:, 1, :, :]
 
     def load_netcdf_top_layer_magnetogram(self, file_path):
 
         '''
+        Purpose
+        -------
         Backward-compatible alias for the explicit bottom-layer magnetogram mode.
+
+        Inputs
+        ------
+        file_path: str or Path
+            Single-cube NetCDF file.
+
+        Outputs
+        -------
+        magnetogram: np.ndarray
+            Bottom-layer magnetic-field map returned by
+            load_netcdf_bottom_layer_magnetogram(); the historical method name is
+            retained as an alias.
         '''
 
+        # Keep the historical method name routed to the explicit bottom-layer
+        # implementation.
         return self.load_netcdf_bottom_layer_magnetogram(file_path)
 
     def load_dopplergrams(self):
@@ -1729,7 +2278,7 @@ class AGWFilter:
         cache_metadata = {
             'filter_cache_version': FILTER_CACHE_VERSION,
             'filter_type': 'gaussian_fourier',
-            'algorithm': 'agw_create_filter_bartlett_gaussian_v1',
+            'algorithm': 'agw_create_filter_bartlett_gaussian_hermitian_v2',
             'shape_xyt': cube_xyt_shape,
             'dt_s': dt,
             'dx_Mm': dx_Mm,
@@ -1820,13 +2369,13 @@ class AGWFilter:
         # Filter the first cube and keep the timing information for progress logs.
         print('Applying Gaussian filter in Fourier space to cube 1/2')
         t0 = time.time()
-        v1_filt = spectral_analysis.filter_data(filter3D, v1_xyt).real
+        v1_filt = checked_real_cube(spectral_analysis.filter_data(filter3D, v1_xyt), label='Filtered cube 1')
         print(f'Finished Gaussian filter for cube 1/2 in {time.time() - t0:.2f} s')
 
         # Filter the second cube with the same Fourier-space mask.
         print('Applying Gaussian filter in Fourier space to cube 2/2')
         t0 = time.time()
-        v2_filt = spectral_analysis.filter_data(filter3D, v2_xyt).real
+        v2_filt = checked_real_cube(spectral_analysis.filter_data(filter3D, v2_xyt), label='Filtered cube 2')
         print(f'Finished Gaussian filter for cube 2/2 in {time.time() - t0:.2f} s')
 
         # Restore the filtered cubes to the pipeline standard [t, y, x] order.
@@ -1902,6 +2451,28 @@ class AGWFilter:
         # any magnetic-field threshold in physical units.
         def convert_observational_hmi_magnetogram(cube, file_path):
             # Convert HMImag FITS cubes from deci-Gauss to Gauss before thresholding.
+            '''
+            Purpose
+            -------
+            Convert observational HMImag files from deci-Gauss to Gauss.
+
+            Inputs
+            ------
+            cube: array-like
+                Loaded magnetogram values.
+
+            file_path: str or Path
+                Source filename used to recognize HMImag FITS input.
+
+            Outputs
+            -------
+            magnetogram: np.ndarray
+                Float64 values divided by ten for HMImag FITS files; other inputs retain
+                their numeric scale.
+            '''
+
+            # Identify the observational HMImag FITS convention before rescaling its
+            # values.
             path = Path(file_path)
             name = path.name.lower()
             if path.suffix.lower() in ['.fits', '.fit', '.fts'] and 'hmimag' in name:
@@ -1913,9 +2484,22 @@ class AGWFilter:
     def get_single_cube_magnetogram_mode(self):
 
         '''
+        Purpose
+        -------
         Return the validated single_cube magnetogram mode.
+
+        Inputs
+        ------
+        None
+
+        Outputs
+        -------
+        mode: str
+            Validated bottom or per_height_pair mode, defaulting to bottom. Invalid
+            settings/type or a paired_cubes override raise an error.
         '''
 
+        # Validate the mode dictionary before choosing its single-cube policy.
         mode_config = self.config.get('magnetogram_mode', {})
         if mode_config in ['', None]:
             mode_config = {}
@@ -1926,6 +2510,7 @@ class AGWFilter:
                 "magnetogram_mode must not define paired_cubes. Observational magnetograms are always auto-discovered."
             )
 
+        # Accept only the two supported simulation magnetogram selections.
         single_cube_mode = str(mode_config.get('single_cube', 'bottom')).strip().lower()
         if single_cube_mode not in {'bottom', 'per_height_pair'}:
             raise ValueError(
@@ -1938,12 +2523,33 @@ class AGWFilter:
     def standardize_magnetogram_pair(self, magnetograms, source_type):
 
         '''
+        Purpose
+        -------
         Normalize a single magnetogram or two magnetograms into one mask input per cube.
+
+        Inputs
+        ------
+        magnetograms: np.ndarray or sequence
+            One shared magnetogram, a one-item observational sequence, or two
+            simulation-layer magnetograms.
+
+        source_type: str
+            paired_cubes or single_cube, including the supported legacy alias.
+
+        Outputs
+        -------
+        map_1, map_2, metadata: tuple
+            One magnetic map per Dopplergram plus kind/mode metadata. Shared maps
+            are returned by reference; invalid counts or source modes raise
+            ValueError.
         '''
 
+        # Normalize source mode and distinguish a shared map from a supplied map
+        # sequence.
         source_type = normalize_source_type(source_type)
         is_sequence = isinstance(magnetograms, (tuple, list))
 
+        # Observational paired cubes share exactly one dataset magnetogram.
         if source_type == 'paired_cubes':
             if is_sequence:
                 if len(magnetograms) != 1:
@@ -1959,6 +2565,7 @@ class AGWFilter:
                 'magnetogram_mode': 'dataset',
             }
 
+        # Simulation cubes may share one map or use a map for each selected height.
         if source_type == 'single_cube':
             single_cube_mode = self.get_single_cube_magnetogram_mode()
             if is_sequence:
@@ -1981,7 +2588,29 @@ class AGWFilter:
     def compute_magnetogram_filter_masks(self, abs_magnetogram_for_v1, abs_magnetogram_for_v2, selection, threshold_G):
 
         '''
+        Purpose
+        -------
         Build boolean magnetogram masks from absolute magnetic-field maps.
+
+        Inputs
+        ------
+        abs_magnetogram_for_v1: np.ndarray
+            Absolute field map (G) for the first cube.
+
+        abs_magnetogram_for_v2: np.ndarray
+            Absolute field map (G) for the second cube.
+
+        selection: str
+            magnetic or nonmagnetic retained-region selection.
+
+        threshold_G: float
+            Absolute field threshold (G).
+
+        Outputs
+        -------
+        removed_mask_v1, removed_mask_v2: tuple of np.ndarray
+            Boolean removal masks. magnetic removes values <= threshold; nonmagnetic
+            removes values > threshold. Unsupported selections raise ValueError.
         '''
 
         # Build the boolean masks for the requested magnetic-field selection.
@@ -2001,7 +2630,8 @@ class AGWFilter:
         '''
         Purpose
         -------
-        Load the magnetogram cubes and build the boolean masks used by the magnetic filter.
+        Load the magnetogram cubes and build the boolean masks used by the magnetic
+        filter.
 
         Inputs
         ------
@@ -2010,10 +2640,12 @@ class AGWFilter:
         Outputs
         -------
         removed_mask_v1: np.array, bool
-            Boolean mask marking the first Dopplergram pixels removed by the magnetic filter.
+            Boolean mask marking the first Dopplergram pixels removed by the magnetic
+            filter.
 
         removed_mask_v2: np.array, bool
-            Boolean mask marking the second Dopplergram pixels removed by the magnetic filter.
+            Boolean mask marking the second Dopplergram pixels removed by the magnetic
+            filter.
 
         mask_metadata: dict
             Dictionary containing the masking selection, threshold, and magnetograms.
@@ -2122,7 +2754,7 @@ class AGWFilter:
 
         return removed_mask_v1, removed_mask_v2, mask_metadata
 
-    def apply_magnetogram_filter(self, v1, v2):
+    def apply_magnetogram_filter(self, v1, v2, masks=None):
 
         '''
         Purpose
@@ -2136,6 +2768,11 @@ class AGWFilter:
 
         v2: np.array, float
             Second Dopplergram cube in [t, y, x] order.
+
+
+        masks: tuple or None
+            Optional precomputed per-cube removal masks; None loads masks from the
+            configured magnetograms.
 
         Outputs
         -------
@@ -2153,7 +2790,12 @@ class AGWFilter:
         # Read the magnetogram filter parameters and build the boolean masks
         magnetogram_config = self.filtering.get('magnetogram', {})
         fill_value = float(magnetogram_config.get('fill_value', 0.0))
-        removed_mask_v1, removed_mask_v2, _ = self.load_magnetogram_filter_masks()
+        if masks is None:
+            removed_mask_v1, removed_mask_v2, _ = self.load_magnetogram_filter_masks()
+        else:
+            removed_mask_v1, removed_mask_v2 = masks
+        if removed_mask_v1.shape != v1.shape or removed_mask_v2.shape != v2.shape:
+            raise ValueError('Magnetogram and Dopplergram must have identical aligned [t, y, x] dimensions.')
 
         # Apply the boolean masks to copies of the two Dopplergram cubes.
         v1_filt = np.ma.masked_array(np.array(v1, copy = True), mask = removed_mask_v1, fill_value = fill_value, hard_mask = True)

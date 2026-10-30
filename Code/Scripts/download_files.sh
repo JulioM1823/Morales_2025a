@@ -1,4 +1,17 @@
 #!/usr/bin/env zsh
+# Purpose
+# -------
+# Download and bin a list of CO5BOLD resources with controlled concurrency.
+#
+# Inputs
+# ------
+# $1: text URL list; $2: output directory; environment overrides are listed below.
+#
+# Outputs
+# -------
+# Write subset NetCDF files, progress/job statistics, and failed_urls.txt.
+# Missing prerequisites and invalid settings terminate before processing.
+
 # download_files.sh
 #
 # Purpose:
@@ -48,11 +61,33 @@ WORK_TMP_ROOT="/tmp/morales_2025a_download_tmp"
 # ---------------------------
 # Helpers
 # ---------------------------
+# Purpose
+# -------
+# Print one labeled processing message.
+#
+# Inputs
+# ------
+# $1: step label; remaining arguments: message words.
+#
+# Outputs
+# -------
+# Write [step] message to standard output.
 log() { # log <step> <message>
   local step="$1"; shift
   echo "[$step] $*"
 }
 
+# Purpose
+# -------
+# Print and remove a completed worker log.
+#
+# Inputs
+# ------
+# $1: worker log file path.
+#
+# Outputs
+# -------
+# Write the existing log between blank lines, then remove it; absent logs are ignored.
 emit_log_block() {
   local log_file="$1"
 
@@ -64,6 +99,17 @@ emit_log_block() {
   rm -f "${log_file}"
 }
 
+# Purpose
+# -------
+# Remove temporary directories belonging to the specified downloader run.
+#
+# Inputs
+# ------
+# $1: run identifier; OUT_DIR and WORK_TMP_ROOT select the search roots.
+#
+# Outputs
+# -------
+# Delete matching run scratch directories; return silently when none exist.
 cleanup_run_tmpdirs() {
   local run_id="$1"
   local tmp_matches=( "${OUT_DIR}"/.tmp_*_run${run_id}(N) )
@@ -76,11 +122,33 @@ cleanup_run_tmpdirs() {
   rm -rf -- "${tmp_matches[@]}"
 }
 
+# Purpose
+# -------
+# Append one failed resource URL to the current run failure report.
+#
+# Inputs
+# ------
+# $1: failed URL; FAILED_URLS_FILE: current report destination.
+#
+# Outputs
+# -------
+# Append the URL as one literal line.
 record_failed_url() {
   local url="$1"
   print -r -- "${url}" >> "${FAILED_URLS_FILE}"
 }
 
+# Purpose
+# -------
+# Report progress with an exponentially smoothed remaining-time estimate.
+#
+# Inputs
+# ------
+# $1: completed count; $2: total count; $3: starting SECONDS value.
+#
+# Outputs
+# -------
+# Print completed/total and estimated minutes remaining; update SMOOTHED_ETA_SECONDS.
 print_progress_estimate() {
   local completed="$1"
   local total="$2"
@@ -97,6 +165,7 @@ print_progress_estimate() {
     raw_eta_seconds="$(awk -v elapsed="${elapsed_seconds}" -v completed="${completed}" -v remaining="${remaining_files}" 'BEGIN { printf "%.6f", (elapsed/completed)*remaining }')"
   fi
 
+  # Smooth the raw completion-rate estimate with 70 percent previous weight
   if [[ -z "${SMOOTHED_ETA_SECONDS:-}" ]]; then
     SMOOTHED_ETA_SECONDS="${raw_eta_seconds}"
   else
@@ -107,11 +176,33 @@ print_progress_estimate() {
   echo "[progress] ${completed}/${total} files complete - estimated time remaining: ${eta_minutes} minutes"
 }
 
+# Purpose
+# -------
+# Print a fatal downloader error and terminate the current shell.
+#
+# Inputs
+# ------
+# All arguments: error message words.
+#
+# Outputs
+# -------
+# Write to standard error and exit with status 1.
 die() {
   echo "[ERROR] $*" >&2
   exit 1
 }
 
+# Purpose
+# -------
+# Require an executable before starting the download workflow.
+#
+# Inputs
+# ------
+# $1: command name to resolve on PATH.
+#
+# Outputs
+# -------
+# Return successfully when found; otherwise call die.
 need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
 }
@@ -127,8 +218,21 @@ else
 fi
 
 # Remote-run wrapper: hard timeout + retries + quadratic backoff.
+# Purpose
+# -------
+# Run a command with bounded retries, increasing timeouts, and quadratic backoff.
+#
+# Inputs
+# ------
+# All arguments: executable and its arguments; REMOTE_* configure retry timing in seconds.
+#
+# Outputs
+# -------
+# Return the final command status; set REMOTE_RUN_LAST_ATTEMPTS and REMOTE_RUN_LAST_RC.
+# Remove the invocation scratch directory after success or exhausted retries.
 remote_run() {
   # Usage: remote_run <command...>
+  # Initialize retry diagnostics before allocating one command-scoped scratch directory
   local attempt=1
   local rc=0
   local attempt_timeout
@@ -140,6 +244,7 @@ remote_run() {
   scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/download_files_remote.XXXXXX")" || die "Unable to create remote scratch dir"
 
   while (( attempt <= REMOTE_RETRIES )); do
+    # Increase the hard timeout for each attempt and retain its exit status
     attempt_timeout=$(( REMOTE_TIMEOUT + (attempt - 1) * REMOTE_TIMEOUT_STEP ))
     set +e
     (
@@ -171,6 +276,17 @@ remote_run() {
 }
 
 # Create a stable output stem from a URL/path.
+# Purpose
+# -------
+# Convert a URL or local source path into a stable output filename stem.
+#
+# Inputs
+# ------
+# $1: resource URL or file path.
+#
+# Outputs
+# -------
+# Print text with the protocol removed and unsafe filename characters replaced by underscores.
 stem_from_url() {
   local url="$1"
   # Replace non-filename chars with underscores
@@ -178,11 +294,33 @@ stem_from_url() {
 }
 
 # Read first dimension size reported by: ncks --trd -m -v VAR FILE
+# Purpose
+# -------
+# Read the first dimension size from traditional NCO metadata.
+#
+# Inputs
+# ------
+# Standard input: ncks --trd -m -v VARIABLE FILE output.
+#
+# Outputs
+# -------
+# Print the first dimension-0 size, or print nothing when no match exists.
 dim0_size_from_ncks_meta() {
   awk -F'[,= ]+' '/dimension 0:/{for(i=1;i<=NF;i++) if($i=="size"){print $(i+1); exit}}'
 }
 
 # Read a named dimension size from `ncks -M` metadata output.
+# Purpose
+# -------
+# Read a named dimension length from a cached NCO header.
+#
+# Inputs
+# ------
+# $1: ncks -M metadata text; $2: dimension name.
+#
+# Outputs
+# -------
+# Print the matching numeric size, or print nothing when absent.
 dim_size_from_ncks_header() {
   local metadata="$1"
   local dim_name="$2"
@@ -197,6 +335,17 @@ dim_size_from_ncks_header() {
 }
 
 # Check whether a variable exists in `ncks -M` metadata output.
+# Purpose
+# -------
+# Test whether a named variable declaration occurs in an NCO header.
+#
+# Inputs
+# ------
+# $1: ncks -M metadata text; $2: variable name.
+#
+# Outputs
+# -------
+# Return status 0 when declared and 1 when absent; print no result.
 var_exists_in_ncks_header() {
   local metadata="$1"
   local var_name="$2"
@@ -328,7 +477,22 @@ fi
 # ---------------------------
 # Main per-URL processing
 # ---------------------------
+# Purpose
+# -------
+# Download and bin one CO5BOLD resource, retaining canonical coordinates and fields.
+#
+# Inputs
+# ------
+# $1: URL/path; $2: one-based item index; $3: total count; $4: run identifier.
+# Read global binning, timeout, output, and optional-field settings.
+#
+# Outputs
+# -------
+# Write one NetCDF output plus worker logs/statistics; return nonzero on failure.
+# Temporary products are run-scoped; velocity and optional thermodynamic fields
+# remain spatially resolved, while density follows the horizontal-mean convention.
 process_one() {
+  # Resolve this worker identity and buffer its output in a run-specific log
   local url="$1"
   local idx="$2"
   local total="$3"
@@ -433,6 +597,15 @@ process_one() {
     var_exists_in_ncks_header "${ncks_header}" bb2 && has_bb2=1
     var_exists_in_ncks_header "${ncks_header}" bb3 && has_bb3=1
 
+    # Keep optional thermodynamic fields spatially resolved, like velocities.
+    # Density retains its existing special horizontal-mean output below.
+    local extra_phys=() candidate
+    for candidate in pressure gas_pressure pgas p plasma_beta beta; do
+      if var_exists_in_ncks_header "${ncks_header}" "${candidate}"; then
+        extra_phys+=( "${candidate}" )
+      fi
+    done
+
     (( has_bb1 )) && log "4/8" "[${stem}] Found bb1"
     (( has_bb2 )) && log "4/8" "[${stem}] Found bb2"
     (( has_bb3 )) && log "4/8" "[${stem}] Found bb3"
@@ -486,7 +659,7 @@ process_one() {
     log "5/8" "[${stem}] Stripping _FillValue for coords + physical vars (NaN fill breaks NCO arithmetic) (5/8)"
 
     local coords=( xc1 xc2 xc3 xb1 xb2 xb3 )
-    local phys=( rho v1 v2 v3 ei )
+    local phys=( rho v1 v2 v3 ei "${extra_phys[@]}" )
     (( has_bb1 )) && phys+=( bb1 )
     (( has_bb2 )) && phys+=( bb2 )
     (( has_bb3 )) && phys+=( bb3 )
@@ -535,7 +708,7 @@ process_one() {
     expr+='xb3b[$xb3b]=xb3(0:'${xb3_last}':'${z_bin}');'
 
     # Variables to bin
-    local bin_vars=( rho v1 v2 v3 ei )
+    local bin_vars=( rho v1 v2 v3 ei "${extra_phys[@]}" )
     (( has_bb1 )) && bin_vars+=( bb1 )
     (( has_bb2 )) && bin_vars+=( bb2 )
     (( has_bb3 )) && bin_vars+=( bb3 )
@@ -584,7 +757,7 @@ process_one() {
 
     # Collect output variables
     local out_vars=( xc1b xc2b xc3b xb1b xb2b xb3b )
-    local keep_phys=( v1 v2 v3 ei )
+    local keep_phys=( v1 v2 v3 ei "${extra_phys[@]}" )
     (( has_bb1 )) && keep_phys+=( bb1 )
     (( has_bb2 )) && keep_phys+=( bb2 )
     (( has_bb3 )) && keep_phys+=( bb3 )

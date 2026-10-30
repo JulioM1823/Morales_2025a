@@ -1,13 +1,38 @@
 #!/usr/bin/env bash
+# Purpose
+# -------
+# Restart the local MESA star executable from a selected photo.
+#
+# Inputs
+# ------
+# $1: optional photo filename; omission selects the newest non-directory entry in photos/.
+#
+# Outputs
+# -------
+# Copy the selected photo to restart_photo, print timestamps, and run ./star.
+# Missing photos and failed copies exit 1; no explicit star-status check is made.
+
 
 shopt -u expand_aliases 
 
 photo_directory=photos
 
+# Purpose
+# -------
+# Select the newest non-directory photo entry by modification time.
+#
+# Inputs
+# ------
+# photo_directory: enclosing directory containing MESA restart snapshots.
+#
+# Outputs
+# -------
+# Print the first matching filename from ls -tp, or no text when unavailable.
 function most_recent_photo {
     ls -tp "$photo_directory" | grep -v / | head -1
 }
 
+# Select the supplied photo or the newest available restart snapshot
 if [ $# -eq 0 ]
 then
     photo=$(most_recent_photo)
@@ -15,12 +40,14 @@ else
     photo=$1
 fi
 
+# Reject absent photo names and missing source files before copying
 if [ -z "$photo" ] || ! [ -f "$photo_directory/$photo" ]
 then
     echo "specified photo ($photo) does not exist"
     exit 1
 fi
 
+# Copy the chosen photo into the filename consumed by the star executable
 echo "restart from $photo"
 if ! cp "$photo_directory/$photo" restart_photo
 then

@@ -1,4 +1,18 @@
-"""Configuration parameters for diagnostic diagram models."""
+'''
+Purpose
+-------
+Define atmospheric constants, field geometry, and dispersion-model input dictionaries.
+
+Inputs
+------
+None
+
+Outputs
+-------
+params: dict
+    Model settings built at import. Distances use km, speeds use km/s,
+    angular frequencies use rad/s, and magnetic orientation uses radians.
+'''
 
 from __future__ import annotations
 import numpy as np
@@ -15,17 +29,17 @@ g: float = 0.274  # km/s^2
 gamma: float = 5.0 / 3.0
 H: float = 125.0  # km
 N: float = sqrt((g / H) - (g ** 2 / cs ** 2))  # Hz
-tau: float = 200.0  # s
+tau: float = 50.0  # s
 wac: float = cs / (2.0 * H)  # Hz
 
 # Magnetic parameters
 B: float = 100.0  # Gauss
 epsilon: float = 0.0
-phi: float = 40.0 * pi / 180.0  # deg -> rad
-theta: float = 80.0 * pi / 180.0  # deg -> rad
+phi: float = 45.0 * pi / 180.0  # deg -> rad
+theta: float = -85.0 * pi / 180.0  # deg -> rad
 
 # Alfven velocity components
-a:  float = 0.33 * cs  # km/s
+a:  float = 0.75 * cs  # km/s
 ax: float = a * sin(theta) * cos(phi)
 ay: float = a * sin(theta) * sin(phi)
 az: float = a * cos(theta)

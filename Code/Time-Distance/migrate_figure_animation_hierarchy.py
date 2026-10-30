@@ -1,5 +1,22 @@
+'''
+Purpose
+-------
+Retain historical figure/animation classification and move planning; script execution
+delegates to recorded-provenance migration.
+
+Inputs
+------
+None
+
+Outputs
+-------
+Public helpers and constants
+    Definitions for migrate_figure_animation_hierarchy.py.
+'''
+
 from __future__ import annotations
 
+# Import the libraries and shared helpers used by this module
 import argparse
 from collections import Counter
 from dataclasses import dataclass
@@ -53,6 +70,32 @@ SIMULATION_PREFIX_RE = re.compile(
 
 @dataclass(frozen = True)
 class MigrationRecord:
+    '''
+    Purpose
+    -------
+    Hold one historical figure/animation migration decision.
+
+    Inputs
+    ------
+    source: pathlib.Path
+        Original artifact path.
+    destination: pathlib.Path
+        Planned output path.
+    filter_folder: str
+        Historical numbered filter-directory name.
+    filter_parameters: str
+        Recorded or inferred filter-setting text.
+    product: str
+        Registered diagnostic product kind.
+    action: str
+        Planned move or already-in-place skip action.
+
+    Outputs
+    -------
+    record: MigrationRecord
+        Frozen source/destination and filter/product/action metadata.
+    '''
+
     source: Path
     destination: Path
     filter_folder: str
@@ -63,20 +106,91 @@ class MigrationRecord:
 
 @dataclass(frozen = True)
 class UnclassifiedRecord:
+    '''
+    Purpose
+    -------
+    Record an artifact whose historical identity could not be classified.
+
+    Inputs
+    ------
+    source: pathlib.Path
+        Unclassified original artifact.
+    reason: str
+        Missing or unsupported historical identity information.
+
+    Outputs
+    -------
+    record: UnclassifiedRecord
+        Frozen source path and explicit classification failure reason.
+    '''
+
     source: Path
     reason: str
 
 
 class FilterRegistry:
-    """Preserve existing filter_x mappings and allocate new generic filter folders."""
+    '''
+    Purpose
+    -------
+    Preserve existing historical filter-text mappings and allocate additional folder
+    names.
+
+    Inputs
+    ------
+    root: str or pathlib.Path
+        Root directory for the paths managed by this helper.
+
+    Outputs
+    -------
+    registry: FilterRegistry
+        In-memory allocator for one historical figure/animation root.
+
+    Notes
+    -----
+    Preserve existing filter_x mappings and allocate new generic filter folders.
+    '''
 
     def __init__(self, root: Path):
+        '''
+        Purpose
+        -------
+        Initialize historical filter-folder mappings from an existing root.
+
+        Inputs
+        ------
+        root: str or pathlib.Path
+            Root directory for the paths managed by this helper.
+
+        Outputs
+        -------
+        None
+            Stores the resolved root, reads existing parameter files, and records the
+            largest folder number.
+        '''
+
+        # Initialize historical filter-folder mappings from an existing root
         self.root = Path(root).expanduser().resolve()
         self.text_to_name: dict[str, str] = {}
         self.max_number = 0
         self._load_existing()
 
     def _load_existing(self) -> None:
+        '''
+        Purpose
+        -------
+        Inventory direct numbered filter folders and their recorded parameter text.
+
+        Inputs
+        ------
+        None
+
+        Outputs
+        -------
+        None
+            Updates text_to_name and max_number without creating directories.
+        '''
+
+        # Inventory direct numbered filter folders and their recorded parameter text
         if not self.root.exists():
             return
 
@@ -92,6 +206,26 @@ class FilterRegistry:
                 self.text_to_name.setdefault(text, candidate.name)
 
     def resolve(self, config: dict) -> tuple[str, str]:
+        '''
+        Purpose
+        -------
+        Reuse or allocate a historical folder name for the supplied filter
+        configuration.
+
+        Inputs
+        ------
+        config: dict
+            Resolved pipeline configuration, including data, sampling, filtering, and
+            output settings.
+
+        Outputs
+        -------
+        name, text: tuple of str
+            In-memory folder mapping and serialized filter parameters.
+        '''
+
+        # Reuse or allocate a historical folder name for the supplied filter
+        # configuration
         text = output_paths.filter_parameter_text(config)
         if text in self.text_to_name:
             return self.text_to_name[text], text
@@ -104,15 +238,64 @@ class FilterRegistry:
 
 
 def target_dir_default() -> Path:
+    '''
+    Purpose
+    -------
+    Resolve the project's default figure-animation target tree.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    directory: pathlib.Path
+        Resolved Figures directory joined to Animations.
+    '''
+
+    # Resolve the project's default figure-animation target tree
     project_root = Path(__file__).resolve().parents[2]
-    return project_root / 'Morales 2025a et al' / 'Figures' / 'Animations'
+    return (project_root / 'Figures').resolve() / 'Animations'
 
 
 def number_token_to_float(token: str) -> float:
+    '''
+    Purpose
+    -------
+    Decode the underscore decimal notation in historical filename parameters.
+
+    Inputs
+    ------
+    token: str
+        Legacy numeric token whose underscores represent decimal points.
+
+    Outputs
+    -------
+    value: float
+        Parsed numeric value; malformed tokens raise ValueError.
+    '''
+
+    # Decode the underscore decimal notation in historical filename parameters
     return float(str(token).replace('_', '.'))
 
 
 def default_filtering() -> dict:
+    '''
+    Purpose
+    -------
+    Construct an inactive historical filtering metadata template.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    filtering: dict
+        New disabled Gaussian and magnetogram sections with blank unspecified values.
+    '''
+
+    # Construct an inactive historical filtering metadata template
     return {
         'enabled': False,
         'filter_sequence': [],
@@ -133,6 +316,23 @@ def default_filtering() -> dict:
 
 
 def filter_folder_from_path(path: Path) -> str | None:
+    '''
+    Purpose
+    -------
+    Locate a numbered filter directory component in a historical path.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    name: str or None
+        First exact filter_N path component, or None when absent.
+    '''
+
+    # Locate a numbered filter directory component in a historical path
     for part in path.parts:
         if re.fullmatch(r'filter_\d+', part):
             return part
@@ -141,6 +341,25 @@ def filter_folder_from_path(path: Path) -> str | None:
 
 
 def read_filter_parameters_for_folder(root: Path, filter_folder: str) -> str | None:
+    '''
+    Purpose
+    -------
+    Read parameter text from one historical numbered folder.
+
+    Inputs
+    ------
+    root: str or pathlib.Path
+        Root directory for the paths managed by this helper.
+    filter_folder: str
+        Historical filter_N folder relative to root.
+
+    Outputs
+    -------
+    text: str or None
+        UTF-8 filter_parameters.txt contents, or None when missing.
+    '''
+
+    # Read parameter text from one historical numbered folder
     parameter_file = root / filter_folder / 'filter_parameters.txt'
     if parameter_file.exists():
         return parameter_file.read_text(encoding = 'utf-8')
@@ -149,8 +368,28 @@ def read_filter_parameters_for_folder(root: Path, filter_folder: str) -> str | N
 
 
 def infer_filtering_from_filename(path: Path) -> dict:
-    """Infer filtering metadata from legacy filename fragments only."""
+    '''
+    Purpose
+    -------
+    Read only the filter metadata explicitly encoded in a historical filename.
 
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    filtering: dict
+        Inferred stage flags/values with unknown markers for omitted active-stage
+        parameters.
+
+    Notes
+    -----
+    Infer filtering metadata from legacy filename fragments only.
+    '''
+
+    # Read only the filter metadata explicitly encoded in a historical filename
     stem = path.stem.lower()
     filtering = default_filtering()
     sequence: list[str] = []
@@ -170,6 +409,7 @@ def infer_filtering_from_filename(path: Path) -> dict:
             filtering['gaussian']['central_f'] = 'unknown'
             filtering['gaussian']['width_f'] = 'unknown'
 
+    # Resolve separately encoded magnetic-stage settings and selection polarity
     magnetogram_match = MAGNETOGRAM_RE.search(stem)
     if 'magnetogram' in stem or magnetogram_match is not None:
         filtering['enabled'] = True
@@ -190,6 +430,24 @@ def infer_filtering_from_filename(path: Path) -> dict:
 
 
 def infer_geometry(path: Path) -> str:
+    '''
+    Purpose
+    -------
+    Resolve averaging geometry from path components or historical filename tokens.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    geometry: str
+        Recognized annulus/directional geometry, defaulting to annulus when no token
+        exists.
+    '''
+
+    # Resolve averaging geometry from path components or historical filename tokens
     for part in reversed(path.parts):
         lower_part = part.lower()
         if lower_part in GEOMETRIES:
@@ -204,6 +462,26 @@ def infer_geometry(path: Path) -> str:
 
 
 def infer_observable(path: Path, source_type: str) -> str:
+    '''
+    Purpose
+    -------
+    Resolve a supported observable from directories or a simulation filename prefix.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+    source_type: str
+        single_cube or paired_cubes, selecting the historical fallback rule.
+
+    Outputs
+    -------
+    observable: str
+        Matched field, paired-cube v1 fallback, or empty text for an unresolved
+        simulation field.
+    '''
+
+    # Resolve a supported observable from directories or a simulation filename prefix
     for part in reversed(path.parts):
         lower_part = part.lower()
         if lower_part in OBSERVABLES:
@@ -222,6 +500,26 @@ def infer_observable(path: Path, source_type: str) -> str:
 
 
 def infer_product(path: Path) -> str | None:
+    '''
+    Purpose
+    -------
+    Classify a historical image/animation into a diagnostic product family.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    product: str or None
+        Time-distance, phase, or komega product kind; retired orientation-validation and
+        unmatched artifacts return None.
+    '''
+
+    # Classify a historical image/animation into a diagnostic product family
+    if 'magnetic_orientation_validation' in path.stem.lower():
+        return None
     for part in reversed(path.parts):
         lower_part = part.lower()
         if lower_part == 'xcorr':
@@ -241,13 +539,30 @@ def infer_product(path: Path) -> str | None:
         or ('radius_animation' in stem and 'phase_diff' not in stem)
     ):
         return 'time_distance'
-    if any(token in stem for token in ['komega', 'gaussian_filter', 'dopplergram', 'composite', 'magnetic_orientation_validation']):
+    if any(token in stem for token in ['komega', 'gaussian_filter', 'dopplergram', 'composite']):
         return 'komega_diagram'
 
     return None
 
 
 def infer_source_type(path: Path) -> str | None:
+    '''
+    Purpose
+    -------
+    Classify simulation versus observation provenance from historical paths/names.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    source_type: str or None
+        single_cube, paired_cubes, or None when neither convention is present.
+    '''
+
+    # Classify simulation versus observation provenance from historical paths/names
     lower_parts = [part.lower() for part in path.parts]
     if 'simulations' in lower_parts:
         return 'single_cube'
@@ -262,6 +577,25 @@ def infer_source_type(path: Path) -> str | None:
 
 
 def infer_magnetogram_selection(path: Path, filtering: dict) -> str:
+    '''
+    Purpose
+    -------
+    Resolve the historical magnetic-selection folder label.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+    filtering: dict
+        Historical filter metadata used when no folder label exists.
+
+    Outputs
+    -------
+    folder: str
+        magneto/nonmagneto from explicit path components or inferred filter selection.
+    '''
+
+    # Resolve the historical magnetic-selection folder label
     lower_parts = [part.lower() for part in path.parts]
     if 'magneto' in lower_parts:
         return 'magneto'
@@ -276,6 +610,26 @@ def infer_magnetogram_selection(path: Path, filtering: dict) -> str:
 
 
 def infer_simulation_file_token(path: Path) -> str:
+    '''
+    Purpose
+    -------
+    Reconstruct a historical simulation label from orientation and field-strength
+    tokens.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    label: str
+        orientation/strength/migration_source.nc placeholder, retaining unknown markers
+        where needed.
+    '''
+
+    # Reconstruct a historical simulation label from orientation and field-strength
+    # tokens
     lower_parts = [part.lower() for part in path.parts]
     orientation = ''
     strength = ''
@@ -308,6 +662,23 @@ def infer_simulation_file_token(path: Path) -> str:
 
 
 def infer_observation_date_token(path: Path) -> str | None:
+    '''
+    Purpose
+    -------
+    Locate a compact observational date in path components or the filename.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    date: str or None
+        Lowercase compact date token, or None when absent.
+    '''
+
+    # Locate a compact observational date in path components or the filename
     for part in reversed(path.parts):
         if OBSERVATION_DATE_RE.fullmatch(part):
             return part.lower()
@@ -320,10 +691,30 @@ def infer_observation_date_token(path: Path) -> str | None:
 
 
 def build_inferred_config(path: Path) -> tuple[dict | None, str | None]:
+    '''
+    Purpose
+    -------
+    Construct limited source/filter metadata from a historical artifact path.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+
+    Outputs
+    -------
+    config, reason: tuple
+        Inferred dictionary and None, or (None, explicit missing-token reason). This
+        does not establish complete modern source/height provenance.
+    '''
+
+    # Construct limited source/filter metadata from a historical artifact path
     product = infer_product(path)
     if product is None:
         return None, 'missing product token'
 
+    # Require source and observable labels before constructing a historical placeholder
+    # configuration
     source_type = infer_source_type(path)
     if source_type is None:
         return None, 'missing source type token'
@@ -334,6 +725,7 @@ def build_inferred_config(path: Path) -> tuple[dict | None, str | None]:
     if observable == '':
         return None, 'missing observable token'
 
+    # Preserve an explicitly magnetic path's recorded selection semantics
     magnetogram_folder = infer_magnetogram_selection(path, filtering)
     if magnetogram_folder == 'magneto':
         filtering['enabled'] = True
@@ -349,6 +741,8 @@ def build_inferred_config(path: Path) -> tuple[dict | None, str | None]:
         'data': {'observable': observable},
     }
 
+    # Construct mode-specific historical source labels without asserting missing modern
+    # provenance
     if source_type == 'single_cube':
         config['data'].update({
             'source_type': 'single_cube',
@@ -369,6 +763,26 @@ def build_inferred_config(path: Path) -> tuple[dict | None, str | None]:
 
 
 def is_candidate_file(path: Path, target_dir: Path) -> bool:
+    '''
+    Purpose
+    -------
+    Recognize supported nonhidden figure/animation artifacts outside migration logs.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+    target_dir: pathlib.Path
+        Containing tree used to exclude migration_logs subdirectories.
+
+    Outputs
+    -------
+    accepted: bool
+        True for existing recognized media suffixes that are eligible for
+        classification.
+    '''
+
+    # Recognize supported nonhidden figure/animation artifacts outside migration logs
     if not path.is_file():
         return False
     if path.name == 'filter_parameters.txt':
@@ -382,12 +796,53 @@ def is_candidate_file(path: Path, target_dir: Path) -> bool:
 
 
 def iter_candidate_files(target_dir: Path):
+    '''
+    Purpose
+    -------
+    Yield eligible figure/animation paths in stable relative-path order.
+
+    Inputs
+    ------
+    target_dir: pathlib.Path
+        Historical figure/animation tree to search recursively.
+
+    Outputs
+    -------
+    paths: iterator of pathlib.Path
+        Candidate artifacts under target_dir.
+    '''
+
+    # Yield eligible figure/animation paths in stable relative-path order
     for path in sorted(target_dir.rglob('*'), key = lambda candidate: candidate.relative_to(target_dir).as_posix()):
         if is_candidate_file(path, target_dir):
             yield path
 
 
 def resolve_filter_folder(path: Path, target_dir: Path, config: dict, registry: FilterRegistry) -> tuple[str, str]:
+    '''
+    Purpose
+    -------
+    Preserve a recorded numbered folder or allocate a filter-text mapping.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+    target_dir: pathlib.Path
+        Historical root containing numbered filter folders.
+    config: dict
+        Resolved pipeline configuration, including data, sampling, filtering, and output
+        settings.
+    registry: FilterRegistry
+        Shared in-memory allocator used when no recorded folder exists.
+
+    Outputs
+    -------
+    name, text: tuple of str
+        Existing folder/parameter text or registry-allocated values.
+    '''
+
+    # Preserve a recorded numbered folder or allocate a filter-text mapping
     current_filter_folder = filter_folder_from_path(path.relative_to(target_dir))
     if current_filter_folder is not None:
         existing_text = read_filter_parameters_for_folder(target_dir, current_filter_folder)
@@ -399,6 +854,28 @@ def resolve_filter_folder(path: Path, target_dir: Path, config: dict, registry: 
 
 
 def resolve_collision(destination: Path, source: Path, reserved: set[Path]) -> Path:
+    '''
+    Purpose
+    -------
+    Choose a destination without overwriting existing or reserved artifacts.
+
+    Inputs
+    ------
+    destination: pathlib.Path
+        Initially requested output path.
+    source: pathlib.Path
+        Original artifact whose in-place destination is allowed.
+    reserved: set of pathlib.Path
+        Destinations already assigned by this plan; not mutated here.
+
+    Outputs
+    -------
+    destination: pathlib.Path
+        Original destination for an in-place artifact, otherwise the first available
+        _duplicate_N variant.
+    '''
+
+    # Choose a destination without overwriting existing or reserved artifacts
     if destination.resolve() == source.resolve():
         return destination
 
@@ -412,6 +889,30 @@ def resolve_collision(destination: Path, source: Path, reserved: set[Path]) -> P
 
 
 def build_destination(path: Path, target_dir: Path, registry: FilterRegistry, reserved: set[Path]) -> tuple[MigrationRecord | None, UnclassifiedRecord | None]:
+    '''
+    Purpose
+    -------
+    Classify one artifact and reserve its resolved historical migration destination.
+
+    Inputs
+    ------
+    path: str or pathlib.Path
+        Filesystem path operated on by this helper.
+    target_dir: pathlib.Path
+        Root used for the historical destination hierarchy.
+    registry: FilterRegistry
+        Shared numbered filter-folder mapping.
+    reserved: set of pathlib.Path
+        Already planned destinations, updated after successful classification.
+
+    Outputs
+    -------
+    record, unclassified: tuple
+        MigrationRecord and None, or None and UnclassifiedRecord; adds successful
+        destinations to reserved.
+    '''
+
+    # Classify one artifact and reserve its resolved historical migration destination
     config, reason = build_inferred_config(path)
     if config is None:
         return None, UnclassifiedRecord(source = path, reason = reason or 'unclassified')
@@ -442,6 +943,24 @@ def build_destination(path: Path, target_dir: Path, registry: FilterRegistry, re
 
 
 def build_migration_plan(target_dir: Path) -> tuple[list[MigrationRecord], list[UnclassifiedRecord]]:
+    '''
+    Purpose
+    -------
+    Collect classified and unclassified historical figure/animation records.
+
+    Inputs
+    ------
+    target_dir: pathlib.Path
+        Historical artifact tree to inspect.
+
+    Outputs
+    -------
+    records, unclassified: tuple of list
+        Collision-resolved plan and explicit missing-identity records; no media files
+        are moved.
+    '''
+
+    # Collect classified and unclassified historical figure/animation records
     target_dir = Path(target_dir).expanduser().resolve()
     registry = FilterRegistry(target_dir)
     reserved: set[Path] = set()
@@ -459,6 +978,29 @@ def build_migration_plan(target_dir: Path) -> tuple[list[MigrationRecord], list[
 
 
 def write_logs(log_dir: Path, records: list[MigrationRecord], unclassified: list[UnclassifiedRecord], *, dry_run: bool) -> tuple[Path, Path]:
+    '''
+    Purpose
+    -------
+    Write timestamped migration and unclassified-artifact reports.
+
+    Inputs
+    ------
+    log_dir: pathlib.Path
+        Directory created for migration reports.
+    records: list of MigrationRecord
+        Classified migration decisions.
+    unclassified: list of UnclassifiedRecord
+        Artifacts and their classification failure reasons.
+    dry_run: bool
+        Label the log as a dry-run or execution report.
+
+    Outputs
+    -------
+    migration_log, unclassified_log: tuple of pathlib.Path
+        Newly written log files describing the plan and requested execution mode.
+    '''
+
+    # Write timestamped migration and unclassified-artifact reports
     log_dir.mkdir(parents = True, exist_ok = True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     migration_log = log_dir / f'figure_animation_migration_{timestamp}.log'
@@ -483,6 +1025,28 @@ def write_logs(log_dir: Path, records: list[MigrationRecord], unclassified: list
 
 
 def apply_migration(target_dir: Path, records: list[MigrationRecord], *, dry_run: bool) -> Counter:
+    '''
+    Purpose
+    -------
+    Apply a historical migration plan or summarize its dry-run actions.
+
+    Inputs
+    ------
+    target_dir: pathlib.Path
+        Historical root receiving parameter files and output directories.
+    records: list of MigrationRecord
+        Classified and collision-resolved plan.
+    dry_run: bool
+        Count actions without moving or writing when True.
+
+    Outputs
+    -------
+    summary: collections.Counter
+        Move/skip/failure counts. Execution writes filter metadata, creates directories,
+        and moves files without overwriting newly occupied destinations.
+    '''
+
+    # Apply a historical migration plan or summarize its dry-run actions
     summary = Counter()
     if dry_run:
         summary['dry_run'] = sum(1 for record in records if record.action == 'move')
@@ -512,6 +1076,33 @@ def apply_migration(target_dir: Path, records: list[MigrationRecord], *, dry_run
 
 
 def print_plan(records: list[MigrationRecord], unclassified: list[UnclassifiedRecord], summary: Counter, migration_log: Path, unclassified_log: Path, *, limit: int) -> None:
+    '''
+    Purpose
+    -------
+    Print migration counts, log locations, and a bounded move preview.
+
+    Inputs
+    ------
+    records: list of MigrationRecord
+        Classified migration decisions.
+    unclassified: list of UnclassifiedRecord
+        Unclassified artifact records.
+    summary: collections.Counter
+        Applied or dry-run action counters.
+    migration_log: pathlib.Path
+        Migration report filename to print.
+    unclassified_log: pathlib.Path
+        Unclassified report filename to print.
+    limit: int
+        Maximum number of move mappings shown in the preview.
+
+    Outputs
+    -------
+    None
+        Writes the human-readable plan summary to standard output.
+    '''
+
+    # Print migration counts, log locations, and a bounded move preview
     print(f'planned_records={len(records)}')
     print(f'unclassified={len(unclassified)}')
     for key, value in sorted(summary.items()):
@@ -530,6 +1121,23 @@ def print_plan(records: list[MigrationRecord], unclassified: list[UnclassifiedRe
 
 
 def main() -> int:
+    '''
+    Purpose
+    -------
+    Parse and run the retained historical figure/animation migration command.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    status: int
+        Zero after planning/logging and optional moves. Direct script execution
+        currently delegates to migrate_geometry_outputs.main instead.
+    '''
+
+    # Parse and run the retained historical figure/animation migration command
     parser = argparse.ArgumentParser(
         description = 'Safely migrate figure and animation files into the filter/product hierarchy.'
     )
@@ -561,4 +1169,5 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    from migrate_geometry_outputs import main as geometry_migration_main
+    geometry_migration_main()

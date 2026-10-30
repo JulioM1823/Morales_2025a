@@ -1,3 +1,22 @@
+'''
+Purpose
+-------
+Define project defaults, discover supported observational inputs, and construct
+mode-aware pipeline configurations.
+
+Inputs
+------
+None
+
+Outputs
+-------
+config, batch_config, defaults, and configuration helpers
+    Construct the default exported runtime and discover configured observational
+    batch inputs at import time. Distances use km/Mm as named, cadence uses s,
+    model angular frequencies use rad/s, and signed N2 uses s^-2.
+'''
+
+# Import the libraries and shared helpers used by this module
 from copy import deepcopy
 from math import sqrt
 from pathlib import Path
@@ -14,19 +33,52 @@ import re
 
 # Shared project roots used by the pipeline and notebooks.
 research_dir = '/Users/juliomorales/Research/Projects'
-project_dir = '/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a'
+project_dir = str(Path(__file__).resolve().parents[2])
 
 # Default output directories for data products and figures.
-data_output_dir = f'{project_dir}/Data/Time-Distance'
-figure_dir = f'{project_dir}/Morales 2025a et al/Figures/'
+data_output_dir = f'{project_dir}/Data'
+from figure_locations import canonical_figure_root
+figure_dir = str(canonical_figure_root(Path(project_dir)/'Figures')) + '/'
 animation_dir = f'{figure_dir}Animations/'
 
 # Reference data locations used by the default single-run inputs.
-vesa_2025_dir = '/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2025/Data/25Apr2019'
-vesa_2025_data_root = '/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Vesa_2025/Data'
-co5bold_batch_root = f'{research_dir}/Morales_2025a/Data/co5bold'
+vesa_2025_data_root = str(Path(project_dir)/'Data/observations_raw')
+vesa_2025_dir = str(Path(vesa_2025_data_root)/'25Apr2019')
+co5bold_batch_root = f'{project_dir}/Data/co5bold'
+from portable_paths import bundle_root, co5bold_directory
+if bundle_root():
+    co5bold_batch_root = str(co5bold_directory())
+    vesa_2025_data_root = str(bundle_root()/'Data/observations_raw')
+    from portable_paths import data_directory
+    if data_directory():
+        vesa_2025_data_root = str(data_directory()/'observations_raw')
+        data_output_dir = str(data_directory())
+    vesa_2025_dir = str(Path(vesa_2025_data_root)/'25Apr2019')
 co5bold_dir = f'{co5bold_batch_root}/z0/0G'
 model_atmosphere_path = f'{project_dir}/Data/Time-Distance/model_atmosphere.dat'
+vesa_2026_dir = str(Path(project_dir).parent / 'Vesa_2026')
+if bundle_root():
+    vesa_2026_dir = str(bundle_root()/'vendor/Vesa_2026')
+
+# Snapshot profile units are absent in the legacy exports. Sound/frequency
+# units and horizontal snapshot averaging were confirmed on 2026-10-13.
+# Unitless z is separately verified against the cube's recorded vertical bins.
+default_atmospheric_profiles = {
+    'enabled': True,
+    # Verified against native staggered fields and the supplied Alfven profile.
+    # Only applied to cubes explicitly identified as CO5BOLD; physical-G
+    # exports may override this using magnetic_field_convention='physical'.
+    'co5bold_magnetic_convention': 'internal',
+    'gravity_km_s2': 0.274,  # Positive solar magnitude; not supplied by the cubes.
+    'directory': f'{co5bold_batch_root}/co5bold_1d_profiles',
+    'model_files': {},  # Optional explicit Model -> profile file mapping.
+    'legacy_units': {
+        'sound_speed': 'cm/s', 'alfven_speed': 'cm/s', 'adiabatic_index': 'dimensionless',
+        'brunt_vaisala_freq': 'rad/s',
+        'acoustic_cutoff_freq_isothermal': 'rad/s',
+        'acoustic_cutoff_freq_non_isothermal': 'rad/s', 'temperature': 'K',
+    },
+}
 
 
 # -----------------------------------------------------------------------------
@@ -50,7 +102,8 @@ paired_cubes_inputs = {
 # Default simulation inputs for a single NetCDF cube.
 single_cube_inputs = {
                 'file_path': f'{co5bold_dir}/simulation_z0_0G_14400s_28800s.nc',
-               'observable': 'v3',  # options: v1, v2, v3, bb1, bb2, bb3, rho
+               'observable': 'v3',  # options: v1, v2, v3, bb1, bb2, bb3, rho, pressure, plasma_beta
+               # pressure/plasma_beta require stored 4D variables in this file.
                        'h1': 2,
                        'h2': 4,
     'model_atmosphere_path': model_atmosphere_path,
@@ -80,7 +133,6 @@ default_filtering = {
     },
 }
 
-
 # -----------------------------------------------------------------------------
 # 4. Magnetogram Configuration
 # -----------------------------------------------------------------------------
@@ -102,12 +154,11 @@ default_time_distance = {
                  'dx_pixels': 1.0,
                   'nworkers': 12,
                 'maxdist_Mm': 10.0,
-           'xcorr_geometry': xcorr_geometry,
+            'xcorr_geometry': xcorr_geometry,
              'xcorrj_engine': 'chunked',
            'xcorrj_parallel': True,
       'xcorrj_chunk_centers': 'auto',
     'xcorrj_chunk_memory_mb': 128.0}
-
 
 # -----------------------------------------------------------------------------
 # 6. Plotting-Relevant Toggles
@@ -140,9 +191,9 @@ phi_deg: float = 40.0
 H: float = 125.0
 g: float = 0.274
 gamma: float = 5.0 / 3.0
-N: float = sqrt((g / H) - (g ** 2 / cs ** 2))  # Hz
+N: float = sqrt((g / H) - (g ** 2 / cs ** 2))  # rad/s
 tau: float = 200.0  # s
-wac: float = cs / (2.0 * H)  # Hz
+wac: float = cs / (2.0 * H)  # rad/s
 
 # Dispersion-curve model settings used by the k-omega and filter overlays.
 default_dispersion_curves = {
@@ -185,6 +236,108 @@ default_dispersion_curves = {
 dispersion_curve_inputs = deepcopy(default_dispersion_curves)
 
 
+# Detailed k-omega comparison settings.  These model parameters are consumed
+# by the authoritative Vesa_2026 DiagnosticDiagram implementation.  The
+# production height-pair interface replaces a, theta, phi, and dz with values
+# from the selected atmospheric layers.  The standalone notebook has explicit
+# config fallbacks below so it can run without a simulation/model atmosphere.
+default_komega_comparison = {
+    'enabled': True,
+    'bokeh_server_url': 'http://127.0.0.1:5013',
+    'vesa_2026_dir': vesa_2026_dir,
+    'max_k_samples': 64,
+    'max_frequency_samples': 64,
+    # Opt in to the slower mpmath cross-check at flagged k_z grid points.
+    'high_precision_validation': False,
+    'composite_width_px': 1800,
+    'phase_limits_deg': [-80.0, 80.0],
+    # Mirror the publication-style k-omega plot defaults in plots.ipynb.
+    'plot_style': {
+        'figsize': [10.0, 6.0],
+        'cmap': 'cmr.fusion',
+        'xlim_Mm_inverse': [0.0, 7.0],
+        'ylim_mHz': [0.0, 10.0],
+        'panel_box_aspect': 1.55,
+        'dpi': 300,
+        'use_tex': True,
+        'font_family': 'serif',
+    },
+    # Used only by komega_single_model_demo.ipynb when the selected FITS file
+    # does not contain simulation-derived layer metadata.  Production HTML
+    # generation remains strict and does not consume this fallback.
+    'standalone_pair': {
+        'a_km_s': a,
+        'theta_deg': theta_deg,
+        'phi_deg': phi_deg,
+        'dz_km': paired_cubes_inputs['delta_z_km'],
+    },
+    # Used only if a standalone notebook FITS file lacks k/frequency WCS cards.
+    'standalone_sampling': {
+        'p_dx_Mm': paired_cubes_inputs['p_dx_Mm'],
+        'dt_s': paired_cubes_inputs['dt'],
+    },
+    'models': {
+        'nc2009': {
+            'params': {
+                'cs': cs,
+                'g': g,
+                'N': N,
+                'wac': wac,
+            },
+        },
+        'alfven_mode': {
+            'params': {},
+        },
+        'slow_fast_mode': {
+            'params': {
+                'cs': cs,
+            },
+        },
+        'slow_mode': {
+            'params': {
+                'cs': cs,
+            },
+        },
+        'fast_mode': {
+            'params': {
+                'cs': cs,
+            },
+        },
+        'bunte1993': {
+            'params': {
+                'cs': cs,
+                'g': g,
+                'gamma': gamma,
+                'H': H,
+                'tau': tau,
+                'epsilon': 0.0,
+            },
+        },
+        'mt1982': {
+            'params': {
+                'cs': cs,
+                'g': g,
+                'gamma': gamma,
+                'H': H,
+                'N': N,
+                'tau': tau,
+            },
+        },
+        'mt1981': {
+            'params': {
+                'cs': cs,
+                'g': g,
+                'H': H,
+                'N': N,
+            },
+        },
+    },
+}
+
+
+komega_comparison_inputs = deepcopy(default_komega_comparison)
+
+
 # =============================================================================
 # BATCH CONFIGURATION
 # =============================================================================
@@ -215,10 +368,44 @@ paired_cube_batch_excluded_tokens = (
 
 
 def _has_hidden_path_component(file_path):
+    '''
+    Purpose
+    -------
+    Detect any hidden filesystem component in an input path.
+
+    Inputs
+    ------
+    file_path: str or pathlib.Path
+        Input-file path used to resolve dataset metadata.
+
+    Outputs
+    -------
+    hidden: bool
+        True when at least one component begins with a period.
+    '''
+
+    # Detect any hidden filesystem component in an input path
     return any(part.startswith('.') for part in Path(file_path).parts)
 
 
 def _is_temporary_or_cache_file(file_path):
+    '''
+    Purpose
+    -------
+    Identify temporary, backup, partial-download, and cache filenames.
+
+    Inputs
+    ------
+    file_path: str or pathlib.Path
+        Input-file path used to resolve dataset metadata.
+
+    Outputs
+    -------
+    excluded: bool
+        True for a recognized temporary/backup/cache prefix or suffix.
+    '''
+
+    # Identify temporary, backup, partial-download, and cache filenames
     name = Path(file_path).name.lower()
 
     if name.startswith(('._', '~')) or name.endswith(('~', '.bak', '.cache', '.crdownload', '.download', '.part', '.tmp')):
@@ -229,15 +416,36 @@ def _is_temporary_or_cache_file(file_path):
 
 def is_valid_paired_cube_batch_input_file(file_path):
     '''
+    Purpose
+    -------
+    Identify supported observational velocity cubes while excluding derived and
+    auxiliary products.
+
+    Inputs
+    ------
+    file_path: str or pathlib.Path
+        Input-file path used to resolve dataset metadata.
+
+    Outputs
+    -------
+    accepted: bool
+        True only for existing supported nonhidden files matching the recognized
+        Doppler/velocity naming conventions.
+
+    Notes
+    -----
     Return whether a file is a supported non-AIA observational batch input.
     '''
 
+    # Identify supported observational velocity cubes while excluding derived and
+    # auxiliary products
     path = Path(file_path)
     name = path.name.lower()
 
     if not path.is_file():
         return False
 
+    # Exclude hidden, partial, unsupported, and auxiliary data products
     if _has_hidden_path_component(path) or _is_temporary_or_cache_file(path):
         return False
 
@@ -253,6 +461,7 @@ def is_valid_paired_cube_batch_input_file(file_path):
     if '.int.' in name or '.to.hmi.int.' in name:
         return False
 
+    # Accept only the recognized Doppler/velocity input naming conventions
     if re.search(r'hmi[\s_.-]*dop', name, flags = re.IGNORECASE):
         return True
 
@@ -264,9 +473,27 @@ def is_valid_paired_cube_batch_input_file(file_path):
 
 def discover_paired_cube_batch_input_paths(data_root):
     '''
+    Purpose
+    -------
+    Discover supported observational inputs below each visible dataset directory.
+
+    Inputs
+    ------
+    data_root: str or pathlib.Path
+        Root whose visible direct subdirectories are searched recursively.
+
+    Outputs
+    -------
+    paths: list of str
+        Sorted resolved input-file paths; nonexistent roots return an empty list and
+        non-directory roots raise NotADirectoryError.
+
+    Notes
+    -----
     Recursively discover supported observational paired-cube batch inputs.
     '''
 
+    # Discover supported observational inputs below each visible dataset directory
     root = Path(data_root).expanduser()
     if not root.exists():
         return []
@@ -274,6 +501,7 @@ def discover_paired_cube_batch_input_paths(data_root):
         raise NotADirectoryError(f'Paired-cube batch root is not a directory: {root}')
 
     discovered_paths = []
+    # Search visible dataset folders in stable relative-path order
     dataset_dirs = sorted(
         (
             path for path in root.iterdir()
@@ -288,6 +516,7 @@ def discover_paired_cube_batch_input_paths(data_root):
             key = lambda path: str(path.relative_to(root)).lower(),
         )
 
+        # Apply the same observational eligibility contract to every discovered file
         for candidate_file in candidate_files:
             if is_valid_paired_cube_batch_input_file(candidate_file):
                 discovered_paths.append(str(candidate_file.resolve()))
@@ -458,9 +687,11 @@ def _normalize_magnetogram_mode(magnetogram_mode_value):
     Julio M. Morales, April 28th, 2026.
     '''
 
+    # Validate simulation magnetogram-selection mode settings
     if magnetogram_mode_value in ['', None]:
         magnetogram_mode_value = magnetogram_mode
 
+    # Reject malformed or unsupported mode-specific settings before normalization
     if not isinstance(magnetogram_mode_value, dict):
         raise TypeError('magnetogram_mode must be a dictionary.')
 
@@ -471,6 +702,7 @@ def _normalize_magnetogram_mode(magnetogram_mode_value):
             f"Unsupported keys: {', '.join(unsupported_keys)}."
         )
 
+    # Validate the simulation magnetic sampling mode while observations remain automatic
     single_cube_mode = str(magnetogram_mode_value.get('single_cube', 'bottom')).strip().lower()
     allowed_single_cube_modes = {'bottom', 'per_height_pair'}
     if single_cube_mode not in allowed_single_cube_modes:
@@ -504,9 +736,11 @@ def _normalize_xcorr_geometry(xcorr_geometry_value):
     Julio M. Morales, May 12th, 2026.
     '''
 
+    # Validate the configured cross-correlation geometry
     if xcorr_geometry_value in ['', None]:
         return 'annulus'
 
+    # Normalize and validate the supported annulus or directional averaging label
     normalized_xcorr_geometry = str(xcorr_geometry_value).strip().lower()
     allowed_xcorr_geometries = {'annulus', 'east', 'west', 'north', 'south'}
     if normalized_xcorr_geometry not in allowed_xcorr_geometries:
@@ -521,9 +755,27 @@ def _normalize_xcorr_geometry(xcorr_geometry_value):
 def _normalize_filtering_config(filtering_config):
 
     '''
+    Purpose
+    -------
+    Normalize an independent filter configuration and exclude inactive stages.
+
+    Inputs
+    ------
+    filtering_config: dict
+        Filter-stage settings and their requested execution sequence.
+
+    Outputs
+    -------
+    filtering: dict
+        Deep-copied settings with deduplicated enabled stages and a consistent top-level
+        enabled flag; invalid containers raise TypeError.
+
+    Notes
+    -----
     Normalize filtering settings so disabled filter stages are not active.
     '''
 
+    # Normalize an independent filter configuration and exclude inactive stages
     if not isinstance(filtering_config, dict):
         raise TypeError('filtering must be a dictionary.')
 
@@ -538,6 +790,7 @@ def _normalize_filtering_config(filtering_config):
     normalized_filter_sequence = []
     seen_filter_names = set()
 
+    # Preserve order while removing duplicate, blank, and disabled filter stages
     for filter_name in raw_filter_sequence:
         normalized_filter_name = str(filter_name).strip().lower()
 
@@ -549,6 +802,7 @@ def _normalize_filtering_config(filtering_config):
             normalized_filter_sequence.append(normalized_filter_name)
             seen_filter_names.add(normalized_filter_name)
 
+    # Keep the top-level enabled flag consistent with the effective active sequence
     normalized_filtering['filter_sequence'] = normalized_filter_sequence
     normalized_filtering['enabled'] = bool(normalized_filtering.get('enabled', False)) and len(normalized_filter_sequence) > 0
 
@@ -558,9 +812,27 @@ def _normalize_filtering_config(filtering_config):
 def _normalize_dispersion_curve_toggle(curves_value):
 
     '''
+    Purpose
+    -------
+    Convert current or historical curve toggles to one enabled flag.
+
+    Inputs
+    ------
+    curves_value: dict, scalar, or None
+        Current enabled flag or historical curve-selection settings.
+
+    Outputs
+    -------
+    toggle: dict
+        Single Boolean enabled value derived from the explicit flag, legacy child flags,
+        or scalar truth value.
+
+    Notes
+    -----
     Normalize the legacy dispersion-curve toggle to a single enabled flag.
     '''
 
+    # Convert current or historical curve toggles to one enabled flag
     if curves_value in ['', None]:
         return {'enabled': False}
 
@@ -656,7 +928,11 @@ def get_config(
     time_distance = None,
     plot_generate = None,
     dispersion_curves = None,
+    komega_comparison = None,
+    atmospheric_profiles = None,
     magnetogram_mode = None,
+    optimized_filtering = None,
+    output = None,
 ):
 
     '''
@@ -688,9 +964,26 @@ def get_config(
         Optional overrides for the default dispersion-curve settings used by
         the k-omega and Gaussian-filter overlays.
 
+    komega_comparison: dict, optional
+        Parameters and sampling controls for the eight-row detailed k-omega
+        comparison generated with the authoritative Vesa_2026 solver.
+
     magnetogram_mode: dict, optional
         Optional simulation magnetogram mode settings. Only the `single_cube`
         key is supported. Paired-cube magnetograms are always auto-discovered.
+
+    atmospheric_profiles: dict, optional
+        Matched-profile discovery, verified legacy units, gravity in km/s^2,
+        and native atmospheric diagnostic settings merged into the defaults.
+
+    optimized_filtering: dict, optional
+        Manual/optimized registry selection, optional entry/selection filters,
+        and explicit filter overrides. When omitted, supplying filtering selects
+        manual mode; otherwise the existing optimized registry mode is retained.
+
+    output: dict, optional
+        Output identity options, including explicit model category/field strength
+        and selected absolute height coordinates in km.
 
     Outputs
     -------
@@ -714,6 +1007,7 @@ def get_config(
     time_distance_config = deepcopy(default_time_distance if time_distance is None else time_distance)
     plot_generate_config = deepcopy(default_plot_generate if plot_generate is None else plot_generate)
     dispersion_curve_config = _deep_merge(default_dispersion_curves, dispersion_curves)
+    komega_comparison_config = _deep_merge(default_komega_comparison, komega_comparison)
     magnetogram_mode_config = _normalize_magnetogram_mode(magnetogram_mode)
     time_distance_config.setdefault('xcorr_geometry', xcorr_geometry)
     time_distance_config['xcorr_geometry'] = _normalize_xcorr_geometry(
@@ -736,6 +1030,10 @@ def get_config(
 
     # Build the shared runtime structure used by both source modes.
     config = {
+        'optimized_filtering': deepcopy(optimized_filtering if optimized_filtering is not None else
+            {'mode': 'manual' if filtering is not None else 'optimized',
+             'file': str(Path(__file__).with_name('observation_filter_parameters.json'))}),
+        'output': deepcopy(output or {}),
         'paths': {
             'project_dir': project_dir,
             'data_output_dir': _normalize_path(data_output_dir),
@@ -754,6 +1052,8 @@ def get_config(
         'filtering': filtering_config,
         'time_distance': time_distance_config,
         'dispersion_curves': dispersion_curve_config,
+        'komega_comparison': komega_comparison_config,
+        'atmospheric_profiles': _deep_merge(default_atmospheric_profiles, atmospheric_profiles),
         'magnetogram_mode': magnetogram_mode_config,
         'plots': {
             'generate': plot_generate_config,
@@ -820,7 +1120,9 @@ def get_config(
 # Build the default exported config object for direct imports and notebooks.
 config = get_config(
     source_type = source_type,
+    optimized_filtering = {'mode': 'optimized', 'file': str(Path(__file__).with_name('observation_filter_parameters.json'))},
     **(deepcopy(paired_cubes_inputs) if _normalize_source_type(source_type) == 'paired_cubes' else deepcopy(single_cube_inputs)),
     dispersion_curves = deepcopy(dispersion_curve_inputs),
+    komega_comparison = deepcopy(komega_comparison_inputs),
     magnetogram_mode = deepcopy(magnetogram_mode),
 )

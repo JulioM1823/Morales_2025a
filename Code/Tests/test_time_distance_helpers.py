@@ -1,3 +1,21 @@
+'''
+Purpose
+-------
+Regression checks for time distance helpers.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
+
+# Import the test dependencies and implementation modules used by these checks.
 import sys
 from pathlib import Path
 
@@ -8,10 +26,27 @@ TIME_DISTANCE_DIR = ROOT / "Code" / "Time-Distance"
 if str(TIME_DISTANCE_DIR) not in sys.path:
     sys.path.insert(0, str(TIME_DISTANCE_DIR))
 
-import time_distance as tdp  # noqa: E402
+import pipeline as tdp  # noqa: E402
 
 
 def test_fast_matches_baseline_xcorr_small_cube():
+    '''
+    Purpose
+    -------
+    Verify fast matches baseline xcorr small cube.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(7)
     v1 = rng.standard_normal((24, 24, 24), dtype=np.float32)
     v2 = rng.standard_normal((24, 24, 24), dtype=np.float32)
@@ -42,6 +77,23 @@ def test_fast_matches_baseline_xcorr_small_cube():
 
 
 def test_lag_axis_matches_fftshift_convention():
+    '''
+    Purpose
+    -------
+    Verify lag axis matches fftshift convention.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     nt = 8
     dt = 30.0
     lag = tdp.lag_axis_minutes(nt, dt)
@@ -50,6 +102,23 @@ def test_lag_axis_matches_fftshift_convention():
 
 
 def test_synthetic_known_delay_peak():
+    '''
+    Purpose
+    -------
+    Verify synthetic known delay peak.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     lag_samples = 3
     v1, v2 = tdp.synthetic_delay_cube(
         nt=64,
@@ -76,6 +145,23 @@ def test_synthetic_known_delay_peak():
 
 
 def test_trim_spatial_zero_nan_borders_removes_invalid_edges():
+    '''
+    Purpose
+    -------
+    Verify trim spatial zero nan borders removes invalid edges.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(9)
     v1 = rng.standard_normal((8, 12, 12), dtype=np.float32)
     v2 = rng.standard_normal((8, 12, 12), dtype=np.float32)
@@ -96,6 +182,22 @@ def test_trim_spatial_zero_nan_borders_removes_invalid_edges():
     assert trimmed_v2.shape == (8, 10, 10)
 
     def _is_all_zero_or_nan(edge_cube: np.ndarray) -> bool:
+        '''
+        Purpose
+        -------
+        Check whether a candidate border contains only zero or nonfinite values.
+
+        Inputs
+        ------
+        edge_cube: np.ndarray
+            Candidate spatial-border slice to classify as empty.
+
+        Outputs
+        -------
+        empty: bool
+            True when every sampled value is zero or nonfinite.
+        '''
+
         return bool(np.all(~np.isfinite(edge_cube) | (edge_cube == 0.0)))
 
     assert not _is_all_zero_or_nan(trimmed_v1[:, 0, :])
@@ -109,6 +211,23 @@ def test_trim_spatial_zero_nan_borders_removes_invalid_edges():
 
 
 def test_fast_auto_trim_matches_manual_trim():
+    '''
+    Purpose
+    -------
+    Verify fast auto trim matches manual trim.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(13)
     v1 = rng.standard_normal((24, 24, 24), dtype=np.float32)
     v2 = rng.standard_normal((24, 24, 24), dtype=np.float32)
@@ -152,6 +271,23 @@ def test_fast_auto_trim_matches_manual_trim():
 
 
 def test_baseline_auto_trim_matches_manual_trim():
+    '''
+    Purpose
+    -------
+    Verify baseline auto trim matches manual trim.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(17)
     v1 = rng.standard_normal((16, 20, 20), dtype=np.float32)
     v2 = rng.standard_normal((16, 20, 20), dtype=np.float32)

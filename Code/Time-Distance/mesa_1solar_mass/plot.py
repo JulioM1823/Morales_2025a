@@ -1,3 +1,19 @@
+'''
+Purpose
+-------
+Plot a MESA history HR diagram and the final-model density profile.
+
+Inputs
+------
+None
+
+Outputs
+-------
+Matplotlib figures
+    Read LOGS in the current directory and display luminosity/temperature
+    history plus density (g/cm^3) versus enclosed mass (solar masses).
+'''
+
 import mesa_reader as mr
 import matplotlib.pyplot as plt
 

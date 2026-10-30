@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# Purpose
+# -------
+# Clean the MESA work-directory build products.
+#
+# Inputs
+# ------
+# No arguments; the current directory is expected to contain make/.
+#
+# Outputs
+# -------
+# Change into make/ and invoke make clean; this script does not enable errexit.
 
+
+# Invoke the configured make clean target from its build directory
 cd make
 make clean

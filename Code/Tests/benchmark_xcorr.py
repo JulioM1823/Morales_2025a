@@ -1,8 +1,24 @@
 #!/usr/bin/env python3
-"""Alias entry point for the xcorrj benchmark harness."""
+'''
+Purpose
+-------
+Alias entry point for the xcorrj benchmark harness.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
 
 from __future__ import annotations
 
+# Import the test dependencies and implementation modules used by these checks.
 import importlib.util
 import sys
 from pathlib import Path

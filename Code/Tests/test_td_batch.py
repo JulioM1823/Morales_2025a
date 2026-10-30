@@ -1,5 +1,25 @@
+'''
+Purpose
+-------
+Regression checks for td batch.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
+
+# Import the test dependencies and implementation modules used by these checks.
 from pathlib import Path
 from types import ModuleType
+import json
+import re
 import importlib.util
 import sys
 
@@ -28,7 +48,60 @@ TINY_PNG = (
 )
 
 
+
+
+def assert_individual_figures(page, directory, source):
+    '''
+    Purpose
+    -------
+    Each hotspot follows a durable individual HTML file with the exact image.
+
+    Inputs
+    ------
+    page: str
+        Generated HTML text containing serialized subplot targets.
+
+    directory: pathlib.Path
+        Directory against which individual-figure links are resolved.
+
+    source: str or dict
+        Image source name or source metadata record used by the local helper.
+
+    Outputs
+    -------
+    None
+        Parse serialized targets and assert page, link, and image preservation.
+    '''
+    from urllib.parse import unquote
+    targets = json.loads(re.search(r'const targets = (.*);', page).group(1))
+    matches = [t for t in targets if t['src'].endswith(source)]
+    assert matches
+    for target in matches:
+        individual = directory / unquote(target['figureHref'])
+        assert individual.is_file()
+        assert target['figureHref'] in page
+        assert source in individual.read_text()
+
 def _load_td_batch_notebook_helpers(notebook_path: Path):
+    '''
+    Purpose
+    -------
+    Execute only the selected notebook helper-definition cells in an isolated module
+    namespace.
+
+    Inputs
+    ------
+    notebook_path: Path
+        Notebook from which executable helper cells are loaded.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Loaded helper namespace; raise RuntimeError if the expected notebook
+        helper cells cannot be located.
+    '''
+
+    # Extract the batch helper cell without executing the notebook workflow.
     notebook = nbformat.read(notebook_path, as_version = 4)
     module = ModuleType("td_batch_notebook_under_test")
     namespace = module.__dict__
@@ -54,6 +127,25 @@ def _load_td_batch_notebook_helpers(notebook_path: Path):
 
 
 def _load_td_analysis_notebook_helpers(notebook_path: Path):
+    '''
+    Purpose
+    -------
+    Execute only the selected notebook helper-definition cells in an isolated module
+    namespace.
+
+    Inputs
+    ------
+    notebook_path: Path
+        Notebook from which executable helper cells are loaded.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Loaded helper namespace; raise RuntimeError if the expected notebook
+        helper cells cannot be located.
+    '''
+
+    # Load plotting helper cells without running the notebook execution cells.
     notebook = nbformat.read(notebook_path, as_version = 4)
     module = ModuleType("td_analysis_notebook_under_test")
     namespace = module.__dict__
@@ -85,6 +177,24 @@ def _load_td_analysis_notebook_helpers(notebook_path: Path):
 
 
 def _load_performance_audit_module(module_path: Path):
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    module_path: Path
+        Filesystem path of the module to load for this test.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     spec = importlib.util.spec_from_file_location("performance_audit_under_test", module_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -92,6 +202,24 @@ def _load_performance_audit_module(module_path: Path):
 
 
 def _load_comparison_view_module(module_path: Path):
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    module_path: Path
+        Filesystem path of the module to load for this test.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     spec = importlib.util.spec_from_file_location("comparison_view_under_test", module_path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -100,6 +228,24 @@ def _load_comparison_view_module(module_path: Path):
 
 
 def _load_config_module(module_path: Path = CONFIG_PATH):
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    module_path: Path
+        Filesystem path of the module to load for this test.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     spec = importlib.util.spec_from_file_location("config_under_test", module_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -113,18 +259,67 @@ comparison_view = helpers.comparison_view
 
 
 def _touch(path: Path) -> Path:
+    '''
+    Purpose
+    -------
+    Create the fixture file and its parent directories.
+
+    Inputs
+    ------
+    path: Path
+        Input or output path used by this fixture or its local substitute.
+
+    Outputs
+    -------
+    path: pathlib.Path
+        Path of the touched file.
+    '''
+
     path.parent.mkdir(parents = True, exist_ok = True)
     path.touch()
     return path
 
 
 def _write_tiny_png(path: Path) -> Path:
+    '''
+    Purpose
+    -------
+    Write the fixed tiny PNG fixture, creating its parent directories.
+
+    Inputs
+    ------
+    path: Path
+        Input or output path used by this fixture or its local substitute.
+
+    Outputs
+    -------
+    path: pathlib.Path
+        Destination of the written image.
+    '''
+
     path.parent.mkdir(parents = True, exist_ok = True)
     path.write_bytes(TINY_PNG)
     return path
 
 
 def test_generate_unique_unordered_pairs_deduplicates_repeated_paths(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify generate unique unordered pairs deduplicates repeated paths.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_a = tmp_path / "cube_a.fits"
     cube_b = tmp_path / "cube_b.fits"
     cube_c = tmp_path / "cube_c.fits"
@@ -139,6 +334,23 @@ def test_generate_unique_unordered_pairs_deduplicates_repeated_paths(tmp_path: P
 
 
 def test_parse_single_cube_field_strength_case_extracts_geometry_and_strength(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify parse single cube field strength case extracts geometry and strength.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_path = tmp_path / "co5bold" / "hx" / "10G" / "simulation_hx_10G.nc"
 
     case = helpers.parse_single_cube_field_strength_case(cube_path)
@@ -152,6 +364,23 @@ def test_parse_single_cube_field_strength_case_extracts_geometry_and_strength(tm
 
 
 def test_parse_single_cube_field_strength_case_supports_zero_field(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify parse single cube field strength case supports zero field.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_path = tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc"
 
     batch_case = helpers.parse_single_cube_field_strength_case(cube_path)
@@ -167,6 +396,23 @@ def test_parse_single_cube_field_strength_case_supports_zero_field(tmp_path: Pat
 
 
 def test_organize_single_cube_field_strength_cases_groups_and_sorts(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify organize single cube field strength cases groups and sorts.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_paths = [
         tmp_path / "co5bold" / "vx" / "50G" / "simulation_vx_50G.nc",
         tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc",
@@ -198,6 +444,23 @@ def test_organize_single_cube_field_strength_cases_groups_and_sorts(tmp_path: Pa
 
 
 def test_td_analysis_field_strength_columns_include_zero_group(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis field strength columns include zero group.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_paths = [
         tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc",
         tmp_path / "co5bold" / "hx" / "10G" / "simulation_hx_10G.nc",
@@ -215,6 +478,23 @@ def test_td_analysis_field_strength_columns_include_zero_group(tmp_path: Path):
 
 
 def test_td_analysis_comparison_height_validation_accepts_tiny_mismatch():
+    '''
+    Purpose
+    -------
+    Verify td analysis comparison height validation accepts tiny mismatch.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     case_config = {
         "data": {
             "resolved_h1_km": 0.000116,
@@ -231,6 +511,23 @@ def test_td_analysis_comparison_height_validation_accepts_tiny_mismatch():
 
 
 def test_td_analysis_comparison_height_validation_rejects_large_mismatch():
+    '''
+    Purpose
+    -------
+    Verify td analysis comparison height validation rejects large mismatch.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     case_config = {
         "data": {
             "resolved_h1_km": 0.0,
@@ -238,6 +535,7 @@ def test_td_analysis_comparison_height_validation_rejects_large_mismatch():
         }
     }
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "upper height"):
         analysis_helpers.validate_single_cube_comparison_resolved_heights(
             case_config,
@@ -248,12 +546,46 @@ def test_td_analysis_comparison_height_validation_rejects_large_mismatch():
 
 
 def test_td_analysis_field_strength_defaults_do_not_emit_none_figsize():
+    '''
+    Purpose
+    -------
+    Verify td analysis field strength defaults do not emit none figsize.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     request = analysis_helpers.build_plot_request_defaults("field_strength_comparison", {})
 
     assert "figsize" not in request
 
 
 def test_td_analysis_gaussian_comparison_filter_overlay_uses_defined_runtime_config():
+    '''
+    Purpose
+    -------
+    Verify td analysis gaussian comparison filter overlay uses defined runtime config.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     notebook = nbformat.read(PLOTS_NOTEBOOK_PATH, as_version = 4)
     source = next(
         cell.get("source", "")
@@ -266,6 +598,24 @@ def test_td_analysis_gaussian_comparison_filter_overlay_uses_defined_runtime_con
 
 
 def test_td_analysis_gaussian_comparison_uses_filtered_komega_only_for_gaussian_classes():
+    '''
+    Purpose
+    -------
+    Verify td analysis gaussian comparison uses filtered k-omega only for gaussian
+    classes.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     notebook = nbformat.read(PLOTS_NOTEBOOK_PATH, as_version = 4)
     source = next(
         cell.get("source", "")
@@ -274,6 +624,24 @@ def test_td_analysis_gaussian_comparison_uses_filtered_komega_only_for_gaussian_
     )
 
     def function_body(name: str) -> str:
+        '''
+        Purpose
+        -------
+        Extract the named notebook function source through the next top-level
+        definition.
+
+        Inputs
+        ------
+        name: str
+            Module, callback, variable, or context label selected by the caller.
+
+        Outputs
+        -------
+        source: str
+            Text beginning at the requested definition; retain the remainder when
+            it is the final function.
+        '''
+
         start = source.index(f"def {name}(")
         end = source.find("\ndef ", start + 1)
         return source[start:] if end == -1 else source[start:end]
@@ -290,6 +658,23 @@ def test_td_analysis_gaussian_comparison_uses_filtered_komega_only_for_gaussian_
 
 
 def test_td_analysis_filtered_komega_loader_uses_active_runtime_product(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis filtered k-omega loader uses active runtime product.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     active_komega = tmp_path / "active_filtered_komega.fits"
     values = np.array([[1.0, 2.0], [3.0, 4.0]], dtype = np.float32)
     fits.PrimaryHDU(values).writeto(active_komega)
@@ -309,6 +694,23 @@ def test_td_analysis_filtered_komega_loader_uses_active_runtime_product(tmp_path
 
 
 def test_td_analysis_gaussian_comparison_requires_active_komega_product(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis gaussian comparison requires active k-omega product.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "data": {
             "source_type": "single_cube",
@@ -322,6 +724,7 @@ def test_td_analysis_gaussian_comparison_requires_active_komega_product(tmp_path
     output_paths = analysis_helpers.comparison_runtime_output_paths(runtime_config, komega_mode = "active")
 
     assert output_paths["komega_outfile"] == (tmp_path / "missing_filtered_komega.fits").resolve()
+    # Require the expected FileNotFoundError from this failure case.
     with pytest.raises(FileNotFoundError, match = "missing_filtered_komega"):
         analysis_helpers.ensure_comparison_runtime_products(
             [runtime_config],
@@ -333,6 +736,23 @@ def test_td_analysis_gaussian_comparison_requires_active_komega_product(tmp_path
 
 
 def test_td_analysis_gaussian_comparison_legend_supports_current_matplotlib_api():
+    '''
+    Purpose
+    -------
+    Verify td analysis gaussian comparison legend supports current matplotlib API.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     notebook = nbformat.read(PLOTS_NOTEBOOK_PATH, as_version = 4)
     source = next(
         cell.get("source", "")
@@ -346,6 +766,23 @@ def test_td_analysis_gaussian_comparison_legend_supports_current_matplotlib_api(
 
 
 def test_td_analysis_gaussian_comparison_output_stems_are_filename_safe(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis gaussian comparison output stems are filename safe.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     config = {
         "data": {
             "source_type": "paired_cubes",
@@ -393,6 +830,23 @@ def test_td_analysis_gaussian_comparison_output_stems_are_filename_safe(tmp_path
 
 
 def test_comparison_view_discovers_and_writes_minimal_stable_sheets(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify comparison view discovers and writes minimal stable sheets.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     figure_dir = tmp_path / "figures"
     _write_tiny_png(
         figure_dir
@@ -441,7 +895,7 @@ def test_comparison_view_discovers_and_writes_minimal_stable_sheets(tmp_path: Pa
     assert outputs["field_strength_comparison"]["plot_count"] == 2
     assert outputs["field_strength_comparison"]["subplot_link_warning_count"] > 0
     field_strength_warnings = Path(outputs["field_strength_comparison"]["subplot_link_warning_log"]).read_text(encoding = "utf-8")
-    assert "missing target" in field_strength_warnings
+    assert "missing target" not in field_strength_warnings
     assert "paired_cubes_gaussian_filter_comparison" not in field_strength_html
     assert field_strength_html.index("0-220 km") < field_strength_html.index("220-440 km")
     assert 'width="1" height="1"' in field_strength_html
@@ -469,7 +923,70 @@ def test_comparison_view_discovers_and_writes_minimal_stable_sheets(tmp_path: Pa
     assert first_render == second_render
 
 
+def test_comparison_view_writes_html_separately_from_subplot_images(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify comparison view writes HTML separately from subplot images.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    figure_dir = tmp_path / "Figures"
+    simulation_dir = figure_dir / "Simulations"
+    html_dir = figure_dir / "HTML Figures"
+    comparison_name = "field_strength_comparison_v3_0km_220km_hx_10g.png"
+    _write_tiny_png(simulation_dir / comparison_name)
+    _write_tiny_png(simulation_dir / "hx_10g_v3_0km_220km_unfiltered_komega.png")
+    _write_tiny_png(simulation_dir / "hx_10g_v3_0km_220km_xc.png")
+    _write_tiny_png(simulation_dir / "hx_10g_v3_0km_220km_phase_diff.png")
+
+    outputs = helpers.comparison_view.write_default_comparison_viewers(
+        figure_dir,
+        html_dir=html_dir,
+    )
+    gallery_file = html_dir / "field_strength_comparison.html"
+    detail_file = html_dir / "comparison_view" / comparison_name.replace(".png", ".html")
+    gallery_html = gallery_file.read_text(encoding="utf-8")
+    detail_html = detail_file.read_text(encoding="utf-8")
+
+    assert outputs["field_strength_comparison"]["output_file"] == gallery_file
+    assert detail_file in outputs["field_strength_comparison"]["full_resolution_output_files"]
+    assert gallery_file.is_file()
+    assert detail_file.is_file()
+    assert not (figure_dir / "field_strength_comparison.html").exists()
+    assert f'src="../Simulations/{comparison_name}"' in gallery_html
+    assert f'data-full-resolution-image src="../../Simulations/{comparison_name}"' in detail_html
+    assert_individual_figures(detail_html, detail_file.parent, "hx_10g_v3_0km_220km_unfiltered_komega.png")
+
+
 def test_comparison_view_labels_directional_geometry(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify comparison view labels directional geometry.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     figure_dir = tmp_path / "figures"
     _write_tiny_png(
         figure_dir
@@ -490,6 +1007,23 @@ def test_comparison_view_labels_directional_geometry(tmp_path: Path):
 
 
 def test_comparison_view_komega_hotspots_do_not_link_orientation_validation(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify comparison view k-omega hotspots do not link orientation validation.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     figure_dir = tmp_path / "figures"
     processing_slug = "gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5"
     comparison_name = f"field_strength_comparison_v3_0km_220km_z0_0g_hx_10g_{processing_slug}.png"
@@ -505,13 +1039,30 @@ def test_comparison_view_komega_hotspots_do_not_link_orientation_validation(tmp_
     helpers.write_default_comparison_viewers(figure_dir)
     full_view_html = (figure_dir / "comparison_view" / comparison_name.replace(".png", ".html")).read_text(encoding = "utf-8")
 
-    assert f'href="../{case_stem}_unfiltered_komega.png"' in full_view_html
-    assert f'href="../{filtered_case_stem}_xc.png"' in full_view_html
-    assert f'href="../{filtered_case_stem}_phase_diff.png"' in full_view_html
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{case_stem}_unfiltered_komega.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{filtered_case_stem}_xc.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{filtered_case_stem}_phase_diff.png")
     assert f'href="../{filtered_case_stem}_komega_magnetic_orientation_validation.png"' not in full_view_html
 
 
 def test_gaussian_comparison_komega_hotspots_do_not_link_orientation_validation(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify gaussian comparison k-omega hotspots do not link orientation validation.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     figure_dir = tmp_path / "figures"
     processing_slug = "gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5"
     comparison_name = "gaussian_filter_comparison_v3_0km_220km_filters_1_f1_gauss_ck_2_wk_2_cf_1_5_wf_1_5.png"
@@ -526,13 +1077,58 @@ def test_gaussian_comparison_komega_hotspots_do_not_link_orientation_validation(
     helpers.write_default_comparison_viewers(figure_dir)
     full_view_html = (figure_dir / "comparison_view" / comparison_name.replace(".png", ".html")).read_text(encoding = "utf-8")
 
-    assert f'href="../{filtered_case_stem}_komega.png"' in full_view_html
-    assert f'href="../{filtered_case_stem}_xc.png"' in full_view_html
-    assert f'href="../{filtered_case_stem}_phase_diff.png"' in full_view_html
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{filtered_case_stem}_komega.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{filtered_case_stem}_xc.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", f"{filtered_case_stem}_phase_diff.png")
     assert f'href="../{filtered_case_stem}_komega_magnetic_orientation_validation.png"' not in full_view_html
 
 
+def test_gaussian_filter_discovery_uses_diagrams_without_validation_images(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify gaussian filter discovery uses diagrams without validation images.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    import comparison_gallery as gallery
+    figure_dir=tmp_path/'figures'
+    slugs=['gaussian_filtered_gauss_ck_1_wk_2_cf_3_wf_4',
+           'gaussian_filtered_gauss_ck_2_wk_3_cf_4_wf_5']
+    for slug in slugs:
+        _write_tiny_png(figure_dir/f'z0_0g_v3_0km_220km_{slug}_komega.png')
+    parts=gallery.ComparisonPlotNameParts('gaussian_filter_comparison','v3','0','220','filters_2')
+    assert gallery._discover_gaussian_processing_slugs(figure_dir,'z0_0g',parts,2)==slugs
+
+
 def test_comparison_view_hotspots_resolve_cleaned_nested_hierarchy_paths(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify comparison view hotspots resolve cleaned nested hierarchy paths.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     figure_dir = tmp_path / "figures"
     comparison_path = (
         figure_dir
@@ -585,36 +1181,92 @@ def test_comparison_view_hotspots_resolve_cleaned_nested_hierarchy_paths(tmp_pat
     ).read_text(encoding = "utf-8")
 
     assert 'data-full-resolution-image src="../filter_9/field_strength_comparison' in full_view_html
-    assert 'href="../filter_0/simulations/nonmagneto/horizontal/10G/komega/annulus/v3/hx_10g_v3_0km_220km_komega.png"' in full_view_html
-    assert 'href="../filter_9/simulations/nonmagneto/horizontal/10G/xcorr/annulus/v3/hx_10g_v3_0km_220km_xc.png"' in full_view_html
-    assert 'href="../filter_9/simulations/nonmagneto/horizontal/10G/phase/annulus/v3/hx_10g_v3_0km_220km_phase_diff.png"' in full_view_html
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", "filter_0/simulations/nonmagneto/horizontal/10G/komega/annulus/v3/hx_10g_v3_0km_220km_komega.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", "filter_9/simulations/nonmagneto/horizontal/10G/xcorr/annulus/v3/hx_10g_v3_0km_220km_xc.png")
+    assert_individual_figures(full_view_html, figure_dir / "comparison_view", "filter_9/simulations/nonmagneto/horizontal/10G/phase/annulus/v3/hx_10g_v3_0km_220km_phase_diff.png")
 
 
-def test_plots_notebook_omits_gallery_export_block():
+def test_notebooks_use_managed_gallery_locations():
+    '''
+    Purpose
+    -------
+    Verify notebooks use managed gallery locations.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     notebook = nbformat.read(PLOTS_NOTEBOOK_PATH, as_version = 4)
-    loader_source = next(
-        cell.get("source", "")
-        for cell in notebook.cells
-        if cell.get("cell_type") == "code" and "def load_project_modules(" in cell.get("source", "")
-    )
     execution_source = notebook.cells[3].get("source", "")
 
-    assert "comparison_view" not in loader_source
     assert "write_default_comparison_viewers" in execution_source
     assert "comparison_view_error" in execution_source
+    assert 'html_dir=' not in execution_source
+
+    batch_notebook = nbformat.read(BATCH_NOTEBOOK_PATH, as_version = 4)
+    batch_gallery_source = next(
+        cell.get("source", "")
+        for cell in batch_notebook.cells
+        if cell.get("cell_type") == "code"
+        and "gallery_outputs = comparison_view.write_default_comparison_viewers(" in cell.get("source", "")
+    )
+    assert 'html_dir=' not in batch_gallery_source
 
 
 def test_organize_single_cube_field_strength_cases_rejects_duplicate_case(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify organize single cube field strength cases rejects duplicate case.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_paths = [
         tmp_path / "co5bold" / "hx" / "10G" / "simulation_hx_10G_a.nc",
         tmp_path / "co5bold" / "hx" / "10G" / "simulation_hx_10G_b.nc",
     ]
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "Duplicate field-strength comparison case"):
         helpers.organize_single_cube_field_strength_cases(cube_paths)
 
 
 def test_parse_single_cube_gaussian_filter_comparison_case_supports_zero_field(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify parse single cube gaussian filter comparison case supports zero field.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_path = tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc"
 
     case = helpers.parse_single_cube_gaussian_filter_comparison_case(cube_path)
@@ -627,6 +1279,23 @@ def test_parse_single_cube_gaussian_filter_comparison_case_supports_zero_field(t
 
 
 def test_organize_single_cube_gaussian_filter_comparison_cases_orders_required_cases(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify organize single cube gaussian filter comparison cases orders required cases.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_paths = [
         tmp_path / "co5bold" / "vx" / "50G" / "simulation_vx_50G.nc",
         tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc",
@@ -651,12 +1320,62 @@ def test_organize_single_cube_gaussian_filter_comparison_cases_orders_required_c
 
 
 def test_generate_shared_single_cube_height_index_pairs_validates_shared_grid(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify generate shared single cube height index pairs validates shared grid.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_1 = tmp_path / "cube_1.nc"
     cube_2 = tmp_path / "cube_2.nc"
 
     class _FakeTimeDistanceModule:
+        '''
+        Purpose
+        -------
+        Provide only the time-distance module entrypoints required by the enclosing
+        regression case.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakeTimeDistanceModule
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         @staticmethod
         def infer_netcdf_height_coordinates_km(file_path):
+            '''
+            Purpose
+            -------
+            Return the fixture height coordinate used to test shared-grid validation.
+
+            Inputs
+            ------
+            file_path: str or pathlib.Path
+                Path of the source, module, or numerical product being inspected.
+
+            Outputs
+            -------
+            heights: list of float
+                Cube-specific heights in km; reject paths outside the synthetic case.
+            '''
+
             file_path = str(Path(file_path).resolve())
             if file_path == str(cube_1.resolve()):
                 return [0.0, 200.0, 500.0]
@@ -674,12 +1393,62 @@ def test_generate_shared_single_cube_height_index_pairs_validates_shared_grid(tm
 
 
 def test_generate_shared_single_cube_height_index_pairs_accepts_tiny_grid_mismatch(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify generate shared single cube height index pairs accepts tiny grid mismatch.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_1 = tmp_path / "cube_1.nc"
     cube_2 = tmp_path / "cube_2.nc"
 
     class _FakeTimeDistanceModule:
+        '''
+        Purpose
+        -------
+        Provide only the time-distance module entrypoints required by the enclosing
+        regression case.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakeTimeDistanceModule
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         @staticmethod
         def infer_netcdf_height_coordinates_km(file_path):
+            '''
+            Purpose
+            -------
+            Return the fixture height coordinate used to test shared-grid validation.
+
+            Inputs
+            ------
+            file_path: str or pathlib.Path
+                Path of the source, module, or numerical product being inspected.
+
+            Outputs
+            -------
+            heights: list of float
+                Cube-specific heights in km; reject paths outside the synthetic case.
+            '''
+
             file_path = str(Path(file_path).resolve())
             if file_path == str(cube_1.resolve()):
                 return [0.0, 220.0, 440.0]
@@ -698,12 +1467,62 @@ def test_generate_shared_single_cube_height_index_pairs_accepts_tiny_grid_mismat
 
 
 def test_generate_shared_single_cube_height_index_pairs_rejects_mismatched_grids(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify generate shared single cube height index pairs rejects mismatched grids.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_1 = tmp_path / "cube_1.nc"
     cube_2 = tmp_path / "cube_2.nc"
 
     class _FakeTimeDistanceModule:
+        '''
+        Purpose
+        -------
+        Provide only the time-distance module entrypoints required by the enclosing
+        regression case.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakeTimeDistanceModule
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         @staticmethod
         def infer_netcdf_height_coordinates_km(file_path):
+            '''
+            Purpose
+            -------
+            Return the fixture height coordinate used to test shared-grid validation.
+
+            Inputs
+            ------
+            file_path: str or pathlib.Path
+                Path of the source, module, or numerical product being inspected.
+
+            Outputs
+            -------
+            heights: list of float
+                Cube-specific heights in km; reject paths outside the synthetic case.
+            '''
+
             file_path = str(Path(file_path).resolve())
             if file_path == str(cube_1.resolve()):
                 return [0.0, 200.0, 500.0]
@@ -711,6 +1530,7 @@ def test_generate_shared_single_cube_height_index_pairs_rejects_mismatched_grids
                 return [0.0, 300.0, 500.0]
             raise AssertionError(f"Unexpected file path: {file_path}")
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "must share the same height coordinate grid"):
         helpers.generate_shared_single_cube_height_index_pairs(
             _FakeTimeDistanceModule(),
@@ -719,6 +1539,23 @@ def test_generate_shared_single_cube_height_index_pairs_rejects_mismatched_grids
 
 
 def test_build_paired_cubes_batch_plan_returns_v_lists_and_configs(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify build paired cubes batch plan returns v lists and configs.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     config_file, td, base_config = helpers.load_mode_base_config(
         "paired_cubes",
         config_file = CONFIG_PATH,
@@ -761,6 +1598,23 @@ def test_build_paired_cubes_batch_plan_returns_v_lists_and_configs(tmp_path: Pat
 
 
 def test_td_analysis_helpers_support_aia_bandpass_runtime_config(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis helpers support aia bandpass runtime config.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "paths": {
             "data_output_dir": str(tmp_path),
@@ -798,6 +1652,23 @@ def test_td_analysis_helpers_support_aia_bandpass_runtime_config(tmp_path: Path)
 
 
 def test_discover_paired_cube_groups_selects_canonical_diagnostics(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify discover paired cube groups selects canonical diagnostics.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, _ = helpers.load_mode_base_config(
         "paired_cubes",
         config_file = CONFIG_PATH,
@@ -828,6 +1699,23 @@ def test_discover_paired_cube_groups_selects_canonical_diagnostics(tmp_path: Pat
 
 
 def test_discover_paired_cube_groups_fails_ambiguous_top_priority(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify discover paired cube groups fails ambiguous top priority.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, _ = helpers.load_mode_base_config(
         "paired_cubes",
         config_file = CONFIG_PATH,
@@ -837,11 +1725,29 @@ def test_discover_paired_cube_groups_fails_ambiguous_top_priority(tmp_path: Path
     _touch(directory / "06May2019.ibis.to.hmi.vel.fe7090.copy2.fits")
     _touch(directory / "06May2019.ibis.to.hmi.vel.fe5434.fits")
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "Ambiguous paired_cubes candidates"):
         helpers.discover_paired_cube_groups(tmp_path, time_distance_module = td)
 
 
 def test_discover_paired_cube_groups_warns_and_skips_single_diagnostic(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify discover paired cube groups warns and skips single diagnostic.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, _ = helpers.load_mode_base_config(
         "paired_cubes",
         config_file = CONFIG_PATH,
@@ -856,6 +1762,23 @@ def test_discover_paired_cube_groups_warns_and_skips_single_diagnostic(tmp_path:
 
 
 def test_config_discovers_only_non_aia_observational_batch_inputs(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify config discovers only non aia observational batch inputs.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     config_module = _load_config_module()
     root = tmp_path / "Vesa_2025" / "Data"
     root_level = _touch(root / "06May2019.ibis.to.hmi.vel.rootonly.fits")
@@ -881,6 +1804,23 @@ def test_config_discovers_only_non_aia_observational_batch_inputs(tmp_path: Path
 
 
 def test_collect_paired_cube_batch_pair_records_groups_config_file_list_by_directory(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify collect paired cube batch pair records groups config file list by directory.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     config_module = _load_config_module()
     _, td, _ = helpers.load_mode_base_config(
         "paired_cubes",
@@ -913,6 +1853,23 @@ def test_collect_paired_cube_batch_pair_records_groups_config_file_list_by_direc
 
 
 def test_build_recursive_paired_cubes_batch_plan_does_not_configure_magnetogram_paths(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify build recursive paired cubes batch plan does not configure magnetogram paths.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, base_config = helpers.load_mode_base_config(
         "paired_cubes",
         config_file = CONFIG_PATH,
@@ -950,6 +1907,26 @@ def test_build_recursive_paired_cubes_batch_plan_does_not_configure_magnetogram_
 
 
 def test_build_single_cube_batch_plan_generates_per_cube_height_pairs(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify build single cube batch plan generates per cube height pairs.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, base_config = helpers.load_mode_base_config(
         "single_cube",
         config_file = CONFIG_PATH,
@@ -958,6 +1935,22 @@ def test_build_single_cube_batch_plan_generates_per_cube_height_pairs(tmp_path: 
     cube_2 = tmp_path / "cube_2.nc"
 
     def _fake_heights(file_path):
+        '''
+        Purpose
+        -------
+        Return the fixed height coordinate assigned to the selected synthetic cube.
+
+        Inputs
+        ------
+        file_path: str or pathlib.Path
+            Path of the source, module, or numerical product being inspected.
+
+        Outputs
+        -------
+        heights: list of float
+            Fixture heights in km; path-aware variants reject unknown cube paths.
+        '''
+
         file_path = str(Path(file_path).resolve())
         if file_path == str(cube_1.resolve()):
             return [0.0, 200.0, 500.0]
@@ -992,6 +1985,27 @@ def test_build_single_cube_batch_plan_generates_per_cube_height_pairs(tmp_path: 
 
 
 def test_build_single_cube_field_strength_comparison_plan_creates_one_request_per_height_pair(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify build single cube field strength comparison plan creates one request per
+    height pair.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, base_config = helpers.load_mode_base_config(
         "single_cube",
         config_file = CONFIG_PATH,
@@ -1003,9 +2017,42 @@ def test_build_single_cube_field_strength_comparison_plan_creates_one_request_pe
     ]
 
     def _fake_heights(_file_path):
+        '''
+        Purpose
+        -------
+        Return the fixed height coordinate assigned to the selected synthetic cube.
+
+        Inputs
+        ------
+        _file_path: str or pathlib.Path
+            Compatibility argument accepted by the fixed-height test substitute.
+
+        Outputs
+        -------
+        heights: list of float
+            Fixture heights in km; path-aware variants reject unknown cube paths.
+        '''
+
         return [0.0, 200.0, 500.0]
 
     def _fake_prepare_runtime_config(runtime_config):
+        '''
+        Purpose
+        -------
+        Prepare a minimal runtime record with resolved synthetic height values.
+
+        Inputs
+        ------
+        runtime_config: dict
+            Runtime configuration being prepared, executed, or summarized.
+
+        Outputs
+        -------
+        config: dict
+            Runtime data settings, output names, and height values in km; retain
+            filtering settings in the filter-comparison substitute.
+        '''
+
         prepared = {
             "data": {
                 "single_cube": dict(runtime_config["data"]["single_cube"]),
@@ -1040,6 +2087,26 @@ def test_build_single_cube_field_strength_comparison_plan_creates_one_request_pe
 
 
 def test_build_single_cube_field_orientation_comparison_plan_switches_plot_type(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify build single cube field orientation comparison plan switches plot type.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, base_config = helpers.load_mode_base_config(
         "single_cube",
         config_file = CONFIG_PATH,
@@ -1050,9 +2117,42 @@ def test_build_single_cube_field_orientation_comparison_plan_switches_plot_type(
     ]
 
     def _fake_heights(_file_path):
+        '''
+        Purpose
+        -------
+        Return the fixed height coordinate assigned to the selected synthetic cube.
+
+        Inputs
+        ------
+        _file_path: str or pathlib.Path
+            Compatibility argument accepted by the fixed-height test substitute.
+
+        Outputs
+        -------
+        heights: list of float
+            Fixture heights in km; path-aware variants reject unknown cube paths.
+        '''
+
         return [0.0, 200.0, 500.0]
 
     def _fake_prepare_runtime_config(runtime_config):
+        '''
+        Purpose
+        -------
+        Prepare a minimal runtime record with resolved synthetic height values.
+
+        Inputs
+        ------
+        runtime_config: dict
+            Runtime configuration being prepared, executed, or summarized.
+
+        Outputs
+        -------
+        config: dict
+            Runtime data settings, output names, and height values in km; retain
+            filtering settings in the filter-comparison substitute.
+        '''
+
         prepared = {
             "data": {
                 "single_cube": dict(runtime_config["data"]["single_cube"]),
@@ -1087,6 +2187,27 @@ def test_build_single_cube_field_orientation_comparison_plan_switches_plot_type(
 
 
 def test_build_single_cube_gaussian_filter_comparison_plan_expands_filters_cases_and_heights(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify build single cube gaussian filter comparison plan expands filters cases and
+    heights.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     _, td, base_config = helpers.load_mode_base_config(
         "single_cube",
         config_file = CONFIG_PATH,
@@ -1106,9 +2227,42 @@ def test_build_single_cube_gaussian_filter_comparison_plan_expands_filters_cases
     ]
 
     def _fake_heights(_file_path):
+        '''
+        Purpose
+        -------
+        Return the fixed height coordinate assigned to the selected synthetic cube.
+
+        Inputs
+        ------
+        _file_path: str or pathlib.Path
+            Compatibility argument accepted by the fixed-height test substitute.
+
+        Outputs
+        -------
+        heights: list of float
+            Fixture heights in km; path-aware variants reject unknown cube paths.
+        '''
+
         return [0.0, 200.0, 500.0]
 
     def _fake_prepare_runtime_config(runtime_config):
+        '''
+        Purpose
+        -------
+        Prepare a minimal runtime record with resolved synthetic height values.
+
+        Inputs
+        ------
+        runtime_config: dict
+            Runtime configuration being prepared, executed, or summarized.
+
+        Outputs
+        -------
+        config: dict
+            Runtime data settings, output names, and height values in km; retain
+            filtering settings in the filter-comparison substitute.
+        '''
+
         prepared = {
             "data": {
                 "single_cube": dict(runtime_config["data"]["single_cube"]),
@@ -1159,6 +2313,23 @@ def test_build_single_cube_gaussian_filter_comparison_plan_expands_filters_cases
 
 
 def test_build_td_analysis_input_cell_source_defines_comparison_execution_defaults():
+    '''
+    Purpose
+    -------
+    Verify build td analysis input cell source defines comparison execution defaults.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "paths": {"data_output_dir": "/tmp"},
         "data": {
@@ -1185,6 +2356,23 @@ def test_build_td_analysis_input_cell_source_defines_comparison_execution_defaul
 
 
 def test_execute_batch_runs_skips_existing_outputs(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify execute batch runs skips existing outputs.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     data_dir = tmp_path / "outputs"
     data_dir.mkdir()
     output_paths = {
@@ -1196,23 +2384,100 @@ def test_execute_batch_runs_skips_existing_outputs(tmp_path: Path):
     for path in output_paths.values():
         path.write_text("ready", encoding = "utf-8")
 
+    import output_paths as manager
+    source1,source2=tmp_path/'cube_1.fits',tmp_path/'cube_2.fits'
+    source1.write_bytes(b'original 1');source2.write_bytes(b'original 2')
+    cached_runtime = {
+        'paths': {'data_output_dir':str(data_dir)},
+        'data': {'source_type':'paired_cubes','v1':str(source1),'v2':str(source2),
+                 'height_labels':['first','second'],
+                 **{key:str(value) for key,value in output_paths.items()},
+                 'orientation_validation_outfile':''},
+        'filtering':{},'time_distance':{},
+    }
+    manager.build_runtime_output_paths(cached_runtime,data_dir)
+    for key,path in output_paths.items():
+        product={'outfile':'time_distance','phase_outfile':'phase_difference',
+                 'komega_outfile':'komega_diagram','coherence_outfile':'coherence_diagram'}[key]
+        manager.register_output(path,cached_runtime,product)
+
     class _FakeTimeDistanceModule:
+        '''
+        Purpose
+        -------
+        Provide only the time-distance module entrypoints required by the enclosing
+        regression case.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakeTimeDistanceModule
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         def __init__(self):
+            '''
+            Purpose
+            -------
+            Initialize the synthetic object state required by the enclosing test.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Store fixture values, metadata, or mutable call-recording containers on
+                self.
+            '''
+
             self.run_calls = 0
 
         def prepare_runtime_config(self, run_config):
-            return {
-                "paths": {"data_output_dir": str(data_dir)},
-                "data": {
-                    "source_type": "paired_cubes",
-                    "v1": "cube_1.fits",
-                    "v2": "cube_2.fits",
-                    **{key: str(value) for key, value in output_paths.items()},
-                    "orientation_validation_outfile": "",
-                },
-            }
+            '''
+            Purpose
+            -------
+            Return the enclosing cached runtime record without scientific preparation.
+
+            Inputs
+            ------
+            run_config: dict
+                Per-run pipeline configuration.
+
+            Outputs
+            -------
+            config: dict
+                Cached runtime fixture supplied by the enclosing skip-existing test.
+            '''
+
+            return cached_runtime
 
         def run_time_distance(self, config_file = None, config_override = None):
+            '''
+            Purpose
+            -------
+            Record and fail any pipeline execution in the existing-output skip test.
+
+            Inputs
+            ------
+            config_file: str or pathlib.Path
+                Python configuration file used to build the runtime settings.
+
+            config_override: dict or None
+                Configuration overrides accepted by the pipeline substitute.
+
+            Outputs
+            -------
+            None
+                Increment the run counter and raise AssertionError.
+            '''
+
             self.run_calls += 1
             raise AssertionError("run_time_distance should not be called when outputs already exist")
 
@@ -1232,6 +2497,23 @@ def test_execute_batch_runs_skips_existing_outputs(tmp_path: Path):
 
 
 def test_execute_td_analysis_for_batch_skips_when_notebook_dependencies_are_missing(monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify execute td analysis for batch skips when notebook dependencies are missing.
+
+    Inputs
+    ------
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     run_records = [
         {
             "label": "pair-a",
@@ -1248,6 +2530,22 @@ def test_execute_td_analysis_for_batch_skips_when_notebook_dependencies_are_miss
     ]
 
     def _missing_dependencies():
+        '''
+        Purpose
+        -------
+        Simulate unavailable notebook execution dependencies.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        None
+            Always raise ModuleNotFoundError for the notebook executor.
+        '''
+
         raise ModuleNotFoundError(
             "Executing plots.ipynb requires the 'nbformat' and 'nbclient' packages."
         )
@@ -1264,6 +2562,23 @@ def test_execute_td_analysis_for_batch_skips_when_notebook_dependencies_are_miss
 
 
 def test_summarize_batch_records_counts_skipped_missing_dependency():
+    '''
+    Purpose
+    -------
+    Verify summarize batch records counts skipped missing dependency.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     summary = helpers.summarize_batch_records(
         [{"status": "completed"}],
         [{"status": "skipped_missing_dependency"}],
@@ -1274,10 +2589,46 @@ def test_summarize_batch_records_counts_skipped_missing_dependency():
 
 
 def test_td_analysis_load_time_distance_data_uses_plot_cache(monkeypatch, tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify td analysis load time distance data uses plot cache.
+
+    Inputs
+    ------
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     data_file = tmp_path / "example_xc.fits"
     call_count = {"count": 0}
 
     def _fake_getdata(path):
+        '''
+        Purpose
+        -------
+        Record the FITS read and return the fixed array used by the plot-cache test.
+
+        Inputs
+        ------
+        path: pathlib.Path
+            Input or output path used by this fixture or its local substitute.
+
+        Outputs
+        -------
+        values: np.array
+            Float64 array with shape (3, 4); assert the expected resolved path.
+        '''
+
         call_count["count"] += 1
         assert Path(path) == data_file.resolve()
         return np.arange(12, dtype = np.float64).reshape(3, 4)
@@ -1314,6 +2665,23 @@ def test_td_analysis_load_time_distance_data_uses_plot_cache(monkeypatch, tmp_pa
 
 
 def test_td_analysis_normalize_cross_correlation_display_vectorizes_rows():
+    '''
+    Purpose
+    -------
+    Verify td analysis normalize cross correlation display vectorizes rows.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     values = np.array(
         [
             [1.0, -2.0, np.nan],
@@ -1340,6 +2708,24 @@ def test_td_analysis_normalize_cross_correlation_display_vectorizes_rows():
 
 
 def test_td_analysis_regular_grid_plotter_prefers_imshow_and_falls_back_for_irregular_axes():
+    '''
+    Purpose
+    -------
+    Verify td analysis regular grid plotter prefers imshow and falls back for irregular
+    axes.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     pytest.importorskip("matplotlib")
     analysis_helpers.plt.switch_backend("Agg")
 
@@ -1370,6 +2756,23 @@ def test_td_analysis_regular_grid_plotter_prefers_imshow_and_falls_back_for_irre
 
 
 def test_td_batch_injected_notebook_defaults_to_noninteractive_batch_plotting():
+    '''
+    Purpose
+    -------
+    Verify td batch injected notebook defaults to noninteractive batch plotting.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     source = helpers.build_td_analysis_input_cell_source(
         {"data": {"source_type": "paired_cubes"}},
         use_config = True,
@@ -1381,6 +2784,26 @@ def test_td_batch_injected_notebook_defaults_to_noninteractive_batch_plotting():
 
 
 def test_execute_td_analysis_for_batch_in_process_records_profile_fields(monkeypatch, tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify execute td analysis for batch in process records profile fields.
+
+    Inputs
+    ------
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "data": {
             "source_type": "paired_cubes",
@@ -1401,6 +2824,29 @@ def test_execute_td_analysis_for_batch_in_process_records_profile_fields(monkeyp
     monkeypatch.setattr(helpers, "load_td_analysis_in_process_runtime", lambda analysis_notebook = None: object())
 
     def _fake_in_process(analysis_runtime, runtime_config, **kwargs):
+        '''
+        Purpose
+        -------
+        Validate noninteractive analysis settings and return fixed profiling/product
+        metadata.
+
+        Inputs
+        ------
+        analysis_runtime: object
+            Analysis helper runtime accepted by the profiling substitute.
+
+        runtime_config: dict
+            Runtime configuration being prepared, executed, or summarized.
+
+        **kwargs: dict
+            Keyword arguments accepted by the substituted or wrapped callable.
+
+        Outputs
+        -------
+        summary: dict
+            Generated-product record, stage durations in seconds, and call counts.
+        '''
+
         assert runtime_config["show_plots"] is False
         assert runtime_config["close_figures_after_save"] is True
         return {
@@ -1432,6 +2878,23 @@ def test_execute_td_analysis_for_batch_in_process_records_profile_fields(monkeyp
 
 
 def test_performance_audit_pipeline_profile_writes_summary_schema(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify performance audit pipeline profile writes summary schema.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     output_paths = {
         "outfile": tmp_path / "data" / "example_xc.fits",
         "phase_outfile": tmp_path / "data" / "example_phase.fits",
@@ -1440,25 +2903,156 @@ def test_performance_audit_pipeline_profile_writes_summary_schema(tmp_path: Path
     }
 
     class _FakePipeline:
+        '''
+        Purpose
+        -------
+        Provide profiling stages and fixed output products without running scientific
+        calculations.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakePipeline
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         def __init__(self):
+            '''
+            Purpose
+            -------
+            Initialize the synthetic object state required by the enclosing test.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Store fixture values, metadata, or mutable call-recording containers on
+                self.
+            '''
+
             self.xcorrj_diagnostics = {"engine": "fake"}
 
         def load_dopplergrams(self):
+            '''
+            Purpose
+            -------
+            Provide a no-op load stage for the pipeline profiling fixture.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Perform no data loading.
+            '''
+
             return None
 
         def compute_komega_diagram(self):
+            '''
+            Purpose
+            -------
+            Provide a no-op Fourier stage for the profiling fixture.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Perform no numerical calculation.
+            '''
+
             return None
 
         def compute_coherence_diagram(self):
+            '''
+            Purpose
+            -------
+            Provide a no-op coherence stage for the profiling fixture.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Perform no numerical calculation.
+            '''
+
             return None
 
         def xcorrj(self):
+            '''
+            Purpose
+            -------
+            Provide a no-op correlation stage for the profiling fixture.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Perform no numerical calculation.
+            '''
+
             return None
 
         def save_time_distance(self):
+            '''
+            Purpose
+            -------
+            Provide a no-op save stage for the profiling fixture.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            None
+                Write no files at this stage.
+            '''
+
             return None
 
         def run(self):
+            '''
+            Purpose
+            -------
+            Exercise the stub pipeline stages and write the fixed output products used
+            by the profiler test.
+
+            Inputs
+            ------
+            None
+                Uses the surrounding fixture or object state where needed.
+
+            Outputs
+            -------
+            outputs: dict
+                Product names mapped to written FITS paths.
+            '''
+
             self.load_dopplergrams()
             self.compute_komega_diagram()
             self.compute_coherence_diagram()
@@ -1470,8 +3064,45 @@ def test_performance_audit_pipeline_profile_writes_summary_schema(tmp_path: Path
             return {key: str(value) for key, value in output_paths.items()}
 
     class _FakeTimeDistanceModule:
+        '''
+        Purpose
+        -------
+        Provide only the time-distance module entrypoints required by the enclosing
+        regression case.
+
+        Inputs
+        ------
+        None
+            Constructed by the test framework or its enclosing fixture.
+
+        Outputs
+        -------
+        instance: _FakeTimeDistanceModule
+            Fixture or test-suite object providing the documented methods.
+        '''
+
         @staticmethod
         def build_pipeline(config_file, config_override):
+            '''
+            Purpose
+            -------
+            Construct the fixed runtime configuration and stub pipeline used by the
+            profile test.
+
+            Inputs
+            ------
+            config_file: str or pathlib.Path
+                Python configuration file used to build the runtime settings.
+
+            config_override: dict or None
+                Configuration overrides accepted by the pipeline substitute.
+
+            Outputs
+            -------
+            pipeline: tuple
+                None, synthetic runtime configuration, and the fake pipeline instance.
+            '''
+
             return None, {"runtime": "config"}, _FakePipeline()
 
     summary = performance_audit.run_pipeline_profile(

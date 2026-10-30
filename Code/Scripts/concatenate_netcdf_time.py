@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+'''
+Purpose
+-------
+Concatenate compatible NetCDF files in filename time order with progress reporting.
+
+Inputs
+------
+None
+
+Outputs
+-------
+Command-line program
+    Validate the input schemas, construct the time dimension if needed,
+    concatenate sorted snapshots, and write a history-tagged output.
+    Optional Dask support enables lazy chunked processing when available.
+'''
+
 from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
@@ -23,124 +40,30 @@ except ImportError:
 TS_PATTERN = re.compile(r't(-?\d+)s')
 
 
-def format_duration(seconds: float) -> str:
-    
-    '''
-    Purpose
-    --------
-    Format an elapsed duration for progress messages.
-    '''
-    
-    seconds_i = int(seconds)
-    minutes, seconds_i = divmod(seconds_i, 60)
-    hours, minutes = divmod(minutes, 60)
-    
-    if hours:
-        return f'{hours:d}h{minutes:02d}m{seconds_i:02d}s'
-    if minutes:
-        return f'{minutes:d}m{seconds_i:02d}s'
-    return f'{seconds_i:d}s'
-
-
-def format_bytes(num_bytes: int) -> str:
-    
-    '''
-    Purpose
-    --------
-    Format a byte count for progress messages.
-    '''
-    
-    value = float(num_bytes)
-    for unit in ('B', 'KiB', 'MiB', 'GiB', 'TiB'):
-        if value < 1024.0 or unit == 'TiB':
-            return f'{value:.1f} {unit}'
-        value /= 1024.0
-    
-    return f'{value:.1f} TiB'
-
-
-class ProgressLog:
-    
-    '''
-    Purpose
-    --------
-    Emit timestamped progress messages to stderr without changing stdout.
-    '''
-    
-    def __init__(self, enabled: bool = True) -> None:
-        self.enabled = enabled
-        self.start_time = time.monotonic()
-    
-    def emit(self, message: str) -> None:
-        if not self.enabled:
-            return
-        
-        elapsed = format_duration(time.monotonic() - self.start_time)
-        print(f'[progress +{elapsed}] {message}', file=sys.stderr, flush=True)
-
-
-def start_file_size_monitor(
-    path: Path,
-    label: str,
-    progress: ProgressLog,
-    interval: float,
-) -> tuple[threading.Event | None, threading.Thread | None]:
-    
-    '''
-    Purpose
-    --------
-    Start a lightweight background monitor that reports file size during long
-    NetCDF writes.
-    '''
-    
-    if not progress.enabled:
-        return None, None
-    
-    stop_event = threading.Event()
-    
-    def monitor() -> None:
-        last_size: int | None = None
-        while not stop_event.wait(interval):
-            try:
-                size = path.stat().st_size
-            except FileNotFoundError:
-                size = 0
-            
-            suffix = '' if size != last_size else ' (unchanged)'
-            progress.emit(
-                f'{label}: {format_bytes(size)} written to {path.name}{suffix}'
-            )
-            last_size = size
-    
-    thread = threading.Thread(target=monitor, daemon=True)
-    thread.start()
-    
-    return stop_event, thread
-
-
-def stop_file_size_monitor(
-    stop_event: threading.Event | None,
-    thread: threading.Thread | None,
-) -> None:
-    
-    '''
-    Purpose
-    --------
-    Stop a background file-size monitor.
-    '''
-    
-    if stop_event is None or thread is None:
-        return
-    
-    stop_event.set()
-    thread.join(timeout=2.0)
+# Both NetCDF workflows use the same progress formatting and write monitor.
+try:
+    from .apply_vertical_binning import (
+        ProgressLog,
+        format_bytes,
+        format_duration,
+        start_file_size_monitor,
+        stop_file_size_monitor,
+    )
+except ImportError:  # Direct script invocation has no package context.
+    from apply_vertical_binning import (
+        ProgressLog,
+        format_bytes,
+        format_duration,
+        start_file_size_monitor,
+        stop_file_size_monitor,
+    )
 
 
 def read_args() -> argparse.Namespace:
     
     '''
     Purpose
-    --------
+    -------
     Parse the command-line arguments for the NetCDF concatenation workflow.
 
     Inputs
@@ -148,7 +71,7 @@ def read_args() -> argparse.Namespace:
     None.
 
     Outputs
-    --------
+    -------
     args : argparse.Namespace | Parsed command-line arguments.
 
     Author(s)
@@ -213,7 +136,7 @@ def get_t_value(nc_path: Path) -> int:
     
     '''
     Purpose
-    --------
+    -------
     Extract the integer between the characters 't' and 's' from a NetCDF filename.
 
     Inputs
@@ -221,7 +144,7 @@ def get_t_value(nc_path: Path) -> int:
     nc_path : Path | Path to a NetCDF file.
 
     Outputs
-    --------
+    -------
     t_val : int | Integer time token extracted from the filename.
 
     Author(s)
@@ -246,7 +169,7 @@ def find_nc_files(
     
     '''
     Purpose
-    --------
+    -------
     Find all NetCDF files in a directory, exclude the requested output file,
     and sort the files using the integer embedded between 't' and 's'.
 
@@ -258,7 +181,7 @@ def find_nc_files(
         expected t...s filename pattern.
 
     Outputs
-    --------
+    -------
     nc_files : list[Path] | Sorted list of NetCDF file paths.
     t_vals : list[int] | Sorted list of integer time tokens associated with nc_files.
 
@@ -309,7 +232,7 @@ def get_output_name(nc_dir: Path, t_vals: list[int]) -> str:
     
     '''
     Purpose
-    --------
+    -------
     Build the default output filename from the input directory structure and
     the sorted time range.
 
@@ -319,7 +242,7 @@ def get_output_name(nc_dir: Path, t_vals: list[int]) -> str:
     t_vals : list[int] | Sorted list of integer time tokens.
 
     Outputs
-    --------
+    -------
     out_name : str | Default output filename.
 
     Author(s)
@@ -344,7 +267,7 @@ def open_nc_file(nc_path: Path, chunks: str | None = None) -> xr.Dataset:
     
     '''
     Purpose
-    --------
+    -------
     Open a NetCDF file with xarray using the netCDF4 backend.
 
     Inputs
@@ -353,7 +276,7 @@ def open_nc_file(nc_path: Path, chunks: str | None = None) -> xr.Dataset:
     chunks : str | None | Chunking directive passed to xarray.
 
     Outputs
-    --------
+    -------
     ds : xarray.Dataset | Opened NetCDF dataset.
 
     Author(s)
@@ -368,7 +291,7 @@ def get_time_dim_name(ds: xr.Dataset, time_dim: str) -> tuple[str, bool]:
     
     '''
     Purpose
-    --------
+    -------
     Determine whether the requested time dimension already exists in the dataset.
 
     Inputs
@@ -377,7 +300,7 @@ def get_time_dim_name(ds: xr.Dataset, time_dim: str) -> tuple[str, bool]:
     time_dim : str | Requested time dimension name.
 
     Outputs
-    --------
+    -------
     dim_name : str | Time dimension name that should be used for concatenation.
     has_time_dim : bool | True if the input dataset already contains dim_name.
 
@@ -401,7 +324,7 @@ def get_dataset_schema(ds: xr.Dataset) -> dict[str, object]:
     
     '''
     Purpose
-    --------
+    -------
     Build a lightweight schema summary of a dataset for compatibility checks.
 
     Inputs
@@ -409,7 +332,7 @@ def get_dataset_schema(ds: xr.Dataset) -> dict[str, object]:
     ds : xarray.Dataset | Dataset whose structure will be summarized.
 
     Outputs
-    --------
+    -------
     schema : dict | Dictionary containing dimensions, coordinates, variables,
         and dtypes needed to compare datasets before concatenation.
 
@@ -446,7 +369,7 @@ def check_dataset_match(
     
     '''
     Purpose
-    --------
+    -------
     Verify that a dataset matches the reference schema before concatenation.
 
     Inputs
@@ -459,7 +382,7 @@ def check_dataset_match(
     has_time_dim : bool | True if the input files already contain time_dim.
 
     Outputs
-    --------
+    -------
     None.
 
     Author(s)
@@ -532,7 +455,7 @@ def check_input_files(
     
     '''
     Purpose
-    --------
+    -------
     Validate that all input NetCDF files are structurally compatible for
     concatenation.
 
@@ -541,8 +464,15 @@ def check_input_files(
     nc_files : list[Path] | Sorted list of NetCDF file paths.
     time_dim : str | Requested time dimension name.
 
+    progress: ProgressLog or None, optional
+        Progress logger for this workflow stage; None disables its reporting.
+
+    progress_interval: float, optional
+        Seconds between elapsed-time-triggered progress reports; file-count
+        milestones may emit sooner.
+
     Outputs
-    --------
+    -------
     dim_name : str | Concatenation dimension name that will be used.
     has_time_dim : bool | True if the input files already contain dim_name.
 
@@ -613,7 +543,7 @@ def update_history(ds: xr.Dataset, nc_files: list[Path]) -> xr.Dataset:
     
     '''
     Purpose
-    --------
+    -------
     Append a history entry describing the concatenation that produced the
     output dataset.
 
@@ -623,7 +553,7 @@ def update_history(ds: xr.Dataset, nc_files: list[Path]) -> xr.Dataset:
     nc_files : list[Path] | Input NetCDF files used to build ds.
 
     Outputs
-    --------
+    -------
     ds : xarray.Dataset | Dataset with an updated history attribute.
 
     Author(s)
@@ -659,7 +589,7 @@ def concat_nc_files(
     
     '''
     Purpose
-    --------
+    -------
     Concatenate a sorted list of NetCDF files into one continuous dataset.
 
     Inputs
@@ -669,8 +599,16 @@ def concat_nc_files(
     time_dim : str | Concatenation dimension name.
     has_time_dim : bool | True if the input files already contain time_dim.
 
+    progress: ProgressLog or None, optional
+        Progress logger for this workflow stage; None disables its reporting.
+
+    progress_interval: float, optional
+        Seconds between elapsed-time-triggered progress reports in the explicit
+        file-opening branch; count milestones may emit sooner. The Dask
+        open_mfdataset branch emits only its opening message.
+
     Outputs
-    --------
+    -------
     ds_cat : xarray.Dataset | Concatenated dataset.
     open_list : list[xarray.Dataset] | List of datasets that must be closed by
         the caller when xr.concat is used.
@@ -753,7 +691,7 @@ def write_output_nc(
     
     '''
     Purpose
-    --------
+    -------
     Write the concatenated dataset to disk as a new NetCDF file.
 
     Inputs
@@ -763,8 +701,14 @@ def write_output_nc(
     time_dim : str | Time dimension name.
     overwrite : bool | If True, allow an existing output file to be replaced.
 
+    progress: ProgressLog or None, optional
+        Progress logger for this workflow stage; None disables its reporting.
+
+    progress_interval: float, optional
+        Seconds between output-file size polls when progress logging is enabled.
+
     Outputs
-    --------
+    -------
     None.
 
     Author(s)
@@ -826,7 +770,7 @@ def main() -> int:
     
     '''
     Purpose
-    --------
+    -------
     Execute the full NetCDF discovery, sorting, validation, concatenation, and
     output-writing workflow.
 
@@ -835,7 +779,7 @@ def main() -> int:
     None.
 
     Outputs
-    --------
+    -------
     rc : int | Return code for shell execution. Zero indicates success.
 
     Author(s)

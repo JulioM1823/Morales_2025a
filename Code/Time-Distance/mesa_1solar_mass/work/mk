@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
+# Purpose
+# -------
+# Build the MESA work executable and stop when make fails.
+#
+# Inputs
+# ------
+# No arguments; the current directory is expected to contain make/.
+#
+# Outputs
+# -------
+# Invoke make in make/; print FAILED and exit 1 when the build returns nonzero.
 
+
+# Purpose
+# -------
+# Check the immediately preceding build command status.
+#
+# Inputs
+# ------
+# Read the incoming shell status through $? before any non-comment command.
+#
+# Outputs
+# -------
+# Return silently on success; print a failure banner and exit 1 otherwise.
 function check_okay {
 	if [ $? -ne 0 ]
 	then
@@ -10,4 +33,5 @@ function check_okay {
 	fi
 }
 
+# Build in the make directory and inspect make status immediately afterward
 cd make; make; check_okay

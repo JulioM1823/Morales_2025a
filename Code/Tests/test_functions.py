@@ -1,3 +1,21 @@
+'''
+Purpose
+-------
+Regression checks for functions.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
+
+# Import the test dependencies and implementation modules used by these checks.
 import sys
 from pathlib import Path
 
@@ -127,13 +145,79 @@ GOLDEN = {
 }
 
 
+def _golden_params(model: str) -> dict:
+    '''
+    Purpose
+    -------
+    Keep recorded numerical cases independent of the editable research presets.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model key whose model-specific settings are copied.
+
+    Outputs
+    -------
+    params: dict
+        Copied model settings with the recorded atmosphere, magnetic speed, and
+        orientation restored. Distances use km, speeds km/s, angular frequencies
+        rad/s, and angles radians; recompute buoyancy, cutoff, and Cartesian
+        Alfven components consistently from those fixed values.
+    '''
+    # Copy model-specific keys before restoring the recorded regression atmosphere.
+    params = dict(cfg.params[model])
+    params.update(cs=7.8, dz=150.0, g=0.274, gamma=5.0 / 3.0, H=125.0,
+                  tau=200.0, epsilon=0.0, a=0.33 * 7.8,
+                  theta=80.0 * np.pi / 180.0, phi=40.0 * np.pi / 180.0)
+    # Recompute derived buoyancy, cutoff, and Cartesian field-speed components.
+    params["N"] = np.sqrt(params["g"] / params["H"] - params["g"] ** 2 / params["cs"] ** 2)
+    params["wac"] = params["cs"] / (2.0 * params["H"])
+    params["ax"] = params["a"] * np.sin(params["theta"]) * np.cos(params["phi"])
+    params["ay"] = params["a"] * np.sin(params["theta"]) * np.sin(params["phi"])
+    params["az"] = params["a"] * np.cos(params["theta"])
+    return params
+
+
 def _make_diag(model: str) -> fn.DiagnosticDiagram:
+    '''
+    Purpose
+    -------
+    Construct the legacy theoretical diagnostic on the fixed regression grid.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model identifier selected for the parameterized case.
+
+    Outputs
+    -------
+    diagram: DiagnosticDiagram
+        Selected model initialized from fixed recorded parameters and the golden axes.
+    '''
+
     kh_grid, omega_grid = np.meshgrid(KH_VALUES, OMEGA_VALUES)
-    return fn.DiagnosticDiagram(kh_grid, omega_grid, cfg.params[model])
+    return fn.DiagnosticDiagram(kh_grid, omega_grid, _golden_params(model))
 
 
 @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
 def test_omega_poly_matches_golden(model: str):
+    '''
+    Purpose
+    -------
+    Verify omega poly matches golden.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model identifier selected for the parameterized case.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag(model)
     result = diag.omega_poly(OMEGA_SAMPLE, KH_SAMPLE)
     np.testing.assert_allclose(result, GOLDEN[model]["omega_poly"], rtol=RTOL, atol=ATOL)
@@ -141,18 +225,69 @@ def test_omega_poly_matches_golden(model: str):
 
 @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
 def test_kz_poly_matches_golden(model: str):
+    '''
+    Purpose
+    -------
+    Verify k_z poly matches golden.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model identifier selected for the parameterized case.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag(model)
     result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
     np.testing.assert_allclose(result, GOLDEN[model]["kz_poly"], rtol=RTOL, atol=ATOL)
 
 
 def test_fmode_dispersion_matches_golden():
+    '''
+    Purpose
+    -------
+    Verify fmode dispersion matches golden.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag("sf1966")
     np.testing.assert_allclose(diag.fmode_dispersion(), GOLDEN["sf1966"]["fmode"], rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
 def test_omega_solve_matches_golden(model: str):
+    '''
+    Purpose
+    -------
+    Verify omega solve matches golden.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model identifier selected for the parameterized case.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag(model)
     result = diag.omega_solve(KH_SAMPLE)
     np.testing.assert_allclose(result, GOLDEN[model]["omega_solve"], rtol=RTOL, atol=ATOL)
@@ -160,12 +295,46 @@ def test_omega_solve_matches_golden(model: str):
 
 @pytest.mark.parametrize("model", ["sf1966", "mt1981", "mt1982", "bunte1993", "nc2009"])
 def test_kz_solve_matches_golden(model: str):
+    '''
+    Purpose
+    -------
+    Verify k_z solve matches golden.
+
+    Inputs
+    ------
+    model: str
+        Dispersion model identifier selected for the parameterized case.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag(model)
     result = diag.kz_solve(KH_SAMPLE)
     np.testing.assert_allclose(result, GOLDEN[model]["kz_solve"], rtol=RTOL, atol=ATOL)
 
 
 def test_phase_speed_and_difference():
+    '''
+    Purpose
+    -------
+    Verify phase speed and difference.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     omega = np.array([0.01, 0.02], dtype=float)
     kz = np.array([0.1, -0.2], dtype=float)
     diag = _make_diag("sf1966")
@@ -177,8 +346,25 @@ def test_phase_speed_and_difference():
 
 
 def test_kz_poly_complex_branch_a0():
+    '''
+    Purpose
+    -------
+    Verify k_z poly complex branch a0.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     kh_grid, omega_grid = np.meshgrid(KH_VALUES, OMEGA_VALUES)
-    params = dict(cfg.params["bunte1993"])
+    params = _golden_params("bunte1993")
     params["a"] = 0.0
     diag = fn.DiagnosticDiagram(kh_grid, omega_grid, params)
     result = diag.kz_poly(KZ_SAMPLE, OMEGA_SAMPLE, KH_SAMPLE)
@@ -187,34 +373,124 @@ def test_kz_poly_complex_branch_a0():
 
 
 def test_init_rejects_non_meshgrid():
+    '''
+    Purpose
+    -------
+    Verify init rejects non meshgrid.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     kh_grid = np.array([[0.05, 0.1], [0.2, 0.3]], dtype=float)
     omega_grid = np.array([[0.01, 0.01], [0.02, 0.02]], dtype=float)
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match="kh_grid"):
         fn.DiagnosticDiagram(kh_grid, omega_grid, cfg.params["sf1966"])
 
 
 def test_kz_poly_rejects_zero_omega():
+    '''
+    Purpose
+    -------
+    Verify k_z poly rejects zero omega.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag("sf1966")
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match="omega must be non-zero"):
         diag.kz_poly(0.1, 0.0, 0.1)
 
 
 def test_omega_solve_requires_scalar_kh():
+    '''
+    Purpose
+    -------
+    Verify omega solve requires scalar kh.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag("sf1966")
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match="kh must be a scalar"):
         diag.omega_solve(np.array([0.1, 0.2]))
 
 
 def test_phase_difference_rejects_non_scalar_dz():
+    '''
+    Purpose
+    -------
+    Verify phase difference rejects non scalar dz.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     diag = _make_diag("sf1966")
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match="dz must be a scalar"):
         diag.phase_difference(0.01, 0.1, dz=np.array([150.0]))
 
 
 def test_kz_solve_rejects_complex_polynomial():
+    '''
+    Purpose
+    -------
+    Verify k_z solve rejects complex polynomial.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     kh_grid, omega_grid = np.meshgrid(KH_VALUES, OMEGA_VALUES)
-    params = dict(cfg.params["bunte1993"])
+    params = _golden_params("bunte1993")
     params["a"] = 0.0
     diag = fn.DiagnosticDiagram(kh_grid, omega_grid, params)
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match="complex values"):
         diag.kz_solve(KH_SAMPLE)

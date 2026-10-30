@@ -1,3 +1,21 @@
+/**
+ * Purpose
+ * -------
+ * Record GitHub push or manually selected commits in a Notion Research Diary with
+ * canonical-link idempotency.
+ *
+ * Inputs
+ * ------
+ * Actions event JSON and environment settings
+ *     Runtime configuration and injectable HTTP/timer/log dependencies are handled by
+ *     run().
+ *
+ * Outputs
+ * -------
+ * Exported testable helpers and an optional command-line execution path
+ *     Direct execution may query GitHub/Notion and create diary pages; importing the
+ *     module alone performs no publication.
+ */
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -9,6 +27,23 @@ const GITHUB_API_VERSION = "2026-03-10";
 const COMMIT_LINK = "Commit Link";
 const FULL_SHA = /^[0-9a-f]{40}$/i;
 
+/**
+ * Purpose
+ * -------
+ * Require a nonblank configuration value before a request or event operation.
+ *
+ * Inputs
+ * ------
+ * env: object
+ *     Environment mapping supplying the named value.
+ * name: string
+ *     Required environment-key name.
+ *
+ * Outputs
+ * -------
+ * value: string
+ *     Trimmed configuration value; missing/blank values throw Error.
+ */
 function required(env, name) {
   if (!env[name]?.trim()) {
     throw new Error(`Missing ${name}. Configure the repository secret or Actions environment.`);
@@ -16,8 +51,29 @@ function required(env, name) {
   return env[name].trim();
 }
 
+/**
+ * Purpose
+ * -------
+ * Redact configured sensitive values and emit one prefixed log line.
+ *
+ * Inputs
+ * ------
+ * message: unknown
+ *     Message converted to text before redaction.
+ * env: object
+ *     Environment containing token/data-source/owner values to redact when set.
+ * output: function, optional
+ *     Log sink receiving the sanitized line; defaults to console.log.
+ *
+ * Outputs
+ * -------
+ * undefined
+ *     Writes one line with CR/LF escaped so API text cannot introduce new Actions
+ *     command lines.
+ */
 export function safeLog(message, env, output = console.log) {
   let text = String(message);
+  // Remove configured credentials and identifiers before formatting log text
   for (const name of ["NOTION_TOKEN", "GITHUB_TOKEN", "NOTION_DATA_SOURCE_ID", "NOTION_OWNER_USER_ID"]) {
     const value = env[name]?.trim();
     if (value) text = text.replaceAll(value, "[REDACTED]");
@@ -26,6 +82,30 @@ export function safeLog(message, env, output = console.log) {
   output(`[research-diary] ${text.replaceAll("\r", "\\r").replaceAll("\n", "\\n")}`);
 }
 
+/**
+ * Purpose
+ * -------
+ * Issue a bounded HTTP JSON request with explicit rate-limit retry handling.
+ *
+ * Inputs
+ * ------
+ * url: string
+ *     Exact endpoint URL.
+ * options: object
+ *     Fetch method, headers, and optional serialized body.
+ * fetchImpl: function
+ *     Injected fetch-compatible implementation.
+ * wait: function
+ *     Injected async delay accepting milliseconds.
+ * log: function
+ *     Sanitized logging callback used for rate-limit messages.
+ *
+ * Outputs
+ * -------
+ * result: Promise<unknown>
+ *     Parsed successful JSON. HTTP/transport/JSON failures reject; only supported 429
+ *     responses are retried, at most three times.
+ */
 async function requestJson(url, options, { fetchImpl, wait, log }) {
   for (let attempt = 0; ; attempt += 1) {
     let response;
@@ -43,6 +123,7 @@ async function requestJson(url, options, { fetchImpl, wait, log }) {
       throw new Error(`${options.method} ${url} failed: ${error.message}`);
     }
 
+    // Retry only an explicit bounded rate-limit response with a usable delay
     if (response.status === 429 && attempt < 3) {
       const seconds = Number(response.headers.get("retry-after") ?? 1);
       if (Number.isFinite(seconds) && seconds >= 0 && seconds <= 60) {
@@ -51,6 +132,7 @@ async function requestJson(url, options, { fetchImpl, wait, log }) {
         continue;
       }
     }
+    // Surface HTTP details before accepting and parsing a successful JSON body
     if (!response.ok) {
       throw new Error(`${options.method} ${url}: HTTP ${response.status}; ${text}`);
     }
@@ -62,6 +144,27 @@ async function requestJson(url, options, { fetchImpl, wait, log }) {
   }
 }
 
+/**
+ * Purpose
+ * -------
+ * Validate complete commit metadata and construct its canonical permanent repository
+ * URL.
+ *
+ * Inputs
+ * ------
+ * sha: string
+ *     Full forty-character hexadecimal commit SHA.
+ * message: string
+ *     Complete original commit message.
+ * repositoryUrl: string
+ *     Canonical repository web URL without a trailing commit path.
+ *
+ * Outputs
+ * -------
+ * commit: object
+ *     Lowercase sha, unchanged message, and canonical commit url; malformed metadata
+ *     throws Error.
+ */
 function normalizeCommit(sha, message, repositoryUrl) {
   if (typeof sha !== "string" || !FULL_SHA.test(sha)) {
     throw new Error("Commit metadata must contain a full 40-character commit SHA.");
@@ -76,6 +179,26 @@ function normalizeCommit(sha, message, repositoryUrl) {
   };
 }
 
+/**
+ * Purpose
+ * -------
+ * Read repository-scoped GitHub metadata using the configured token and pinned API
+ * version.
+ *
+ * Inputs
+ * ------
+ * path: string
+ *     Repository-relative API path including its leading slash.
+ * env: object
+ *     Repository/API/token environment values.
+ * http: object
+ *     Injected fetchImpl, wait, and sanitized log dependencies.
+ *
+ * Outputs
+ * -------
+ * response: Promise<unknown>
+ *     Parsed GitHub GET response; request/configuration errors reject.
+ */
 async function githubRequest(path, env, http) {
   const apiUrl = (env.GITHUB_API_URL ?? "https://api.github.com").replace(/\/$/, "");
   return requestJson(`${apiUrl}/repos/${env.GITHUB_REPOSITORY}${path}`, {
@@ -88,6 +211,30 @@ async function githubRequest(path, env, http) {
   }, http);
 }
 
+/**
+ * Purpose
+ * -------
+ * Select every push commit or resolve one explicitly selected manual commit.
+ *
+ * Inputs
+ * ------
+ * event: object
+ *     Parsed Actions push or workflow_dispatch event.
+ * env: object
+ *     Event name, repository, selected HEAD SHA/ref, and GitHub request settings.
+ * repositoryUrl: string
+ *     Canonical repository web URL for permanent commit links.
+ * http: object
+ *     Injected HTTP dependencies.
+ * log: function
+ *     Sanitized run-progress logger.
+ *
+ * Outputs
+ * -------
+ * commits: Promise<Array<object>>
+ *     Normalized complete push collection or one GitHub-resolved manual commit. Invalid
+ *     payloads, ambiguous/mismatched metadata, or request failures reject.
+ */
 async function selectCommits(event, env, repositoryUrl, http, log) {
   if (env.GITHUB_EVENT_NAME === "push") {
     const commits = event.commits ?? [];
@@ -96,6 +243,7 @@ async function selectCommits(event, env, repositoryUrl, http, log) {
     return commits.map(({ id, message }) => normalizeCommit(id, message, repositoryUrl));
   }
 
+  // Resolve manual abbreviations against GitHub instead of trusting event commit metadata
   const input = event.inputs?.commit_sha ?? "";
   if (typeof input !== "string") throw new Error("commit_sha must be a string.");
   const selectedSha = input.trim() || required(env, "GITHUB_SHA");
@@ -115,12 +263,51 @@ async function selectCommits(event, env, repositoryUrl, http, log) {
   return [normalizeCommit(commit.sha, commit.commit?.message, repositoryUrl)];
 }
 
+/**
+ * Purpose
+ * -------
+ * Locate the sole native title property in a Notion data-source schema.
+ *
+ * Inputs
+ * ------
+ * schema: object
+ *     Data-source schema with named properties.
+ * label: string
+ *     Human-readable data-source label used in validation errors.
+ *
+ * Outputs
+ * -------
+ * name: string
+ *     Unique title-property name; zero or multiple title properties throw Error.
+ */
 function titleProperty(schema, label) {
   const titles = Object.entries(schema.properties ?? {}).filter(([, property]) => property.type === "title");
   if (titles.length !== 1) throw new Error(`${label} must have exactly one title property.`);
   return titles[0][0];
 }
 
+/**
+ * Purpose
+ * -------
+ * Resolve one exact repository project using its literal or readable Notion title.
+ *
+ * Inputs
+ * ------
+ * notion: function
+ *     Injected authenticated Notion request adapter.
+ * projectDataSourceId: string
+ *     Related Project data-source identifier.
+ * repositoryName: string
+ *     Repository basename used for literal then underscore/hyphen-to-space matching.
+ * log: function
+ *     Sanitized resolution logger.
+ *
+ * Outputs
+ * -------
+ * projectId: Promise<string>
+ *     Unique matching project page ID. Missing/ambiguous or inconsistent query results
+ *     reject before diary creation.
+ */
 async function resolveProject(notion, projectDataSourceId, repositoryName, log) {
   const schema = await notion(`/data_sources/${encodeURIComponent(projectDataSourceId)}`);
   const property = titleProperty(schema, "Project data source");
@@ -149,6 +336,27 @@ async function resolveProject(notion, projectDataSourceId, repositoryName, log) 
   throw new Error(`No Notion project matches repository ${JSON.stringify(repositoryName)}. Share the Project data source with the integration and check its project titles.`);
 }
 
+/**
+ * Purpose
+ * -------
+ * Resolve one native Notion person using an explicit UUID or verified display-name
+ * lookup.
+ *
+ * Inputs
+ * ------
+ * notion: function
+ *     Injected authenticated Notion request adapter.
+ * env: object
+ *     Optional NOTION_OWNER_USER_ID override.
+ * log: function
+ *     Sanitized owner-resolution logger.
+ *
+ * Outputs
+ * -------
+ * ownerId: Promise<string>
+ *     Verified native person ID; malformed UUIDs, bots, ambiguous/missing matches, or
+ *     invalid pagination reject.
+ */
 async function resolveOwner(notion, env, log) {
   const configuredId = env.NOTION_OWNER_USER_ID?.trim();
   if (configuredId) {
@@ -163,6 +371,7 @@ async function resolveOwner(notion, env, log) {
     return user.id;
   }
 
+  // Search every user page and require one native person with the verified normalized name
   const matches = [];
   const cursors = new Set();
   let cursor;
@@ -188,12 +397,42 @@ async function resolveOwner(notion, env, log) {
 }
 
 // Shared by push and workflow_dispatch. Commit Link is the sole idempotency key.
+/**
+ * Purpose
+ * -------
+ * Create one diary page only when its canonical Commit Link has not already been
+ * recorded.
+ *
+ * Inputs
+ * ------
+ * sha, message, url: strings
+ *     Normalized full SHA, complete message, and canonical commit URL.
+ * notion: function
+ *     Authenticated query/page-create adapter.
+ * dataSourceId: string
+ *     Research Diary data source receiving the page.
+ * titleProperty: string
+ *     Validated native title-property name.
+ * getPageProperties: function
+ *     Lazy async project/owner enrichment provider.
+ * log: function
+ *     Sanitized run-progress logger.
+ * seen: Set<string>
+ *     Canonical commit URLs already confirmed within this run, updated in place.
+ *
+ * Outputs
+ * -------
+ * status: Promise<string>
+ *     created or skipped. Creation uses only the message subject as chunked rich text.
+ *     Query/write validation failures reject, including ambiguous create responses.
+ */
 export async function processCommit({ sha, message, url }, { notion, dataSourceId, titleProperty, getPageProperties, log, seen }) {
   log(`Processing commit ${sha}: ${url}`);
   if (seen.has(url)) {
     log(`Skipped existing commit ${sha} (already processed in this run).`);
     return "skipped";
   }
+  // Query the canonical permanent URL before requesting enrichment or creating a page
   const existing = await notion(`/data_sources/${encodeURIComponent(dataSourceId)}/query`, {
     filter: { property: COMMIT_LINK, url: { equals: url } },
     page_size: 1,
@@ -205,12 +444,14 @@ export async function processCommit({ sha, message, url }, { notion, dataSourceI
     return "skipped";
   }
 
+  // Preserve the complete subject while keeping each Unicode-rich text chunk within API limits
   const subject = message.split(/\r\n|\n|\r/, 1)[0];
   // 1000 code points fit within 2000 UTF-16 units, including emoji, without splitting them.
   const title = (subject.match(/[\s\S]{1,1000}/gu) ?? []).map((content) => ({
     type: "text",
     text: { content },
   }));
+  // Create one page with explicit native title, URL, project, and people properties
   const page = await notion("/pages", {
     parent: { type: "data_source_id", data_source_id: dataSourceId },
     properties: {
@@ -225,7 +466,46 @@ export async function processCommit({ sha, message, url }, { notion, dataSourceI
   return "created";
 }
 
+/**
+ * Purpose
+ * -------
+ * Validate an Actions event and record its selected commits with shared duplicate
+ * protection and lazy enrichment.
+ *
+ * Inputs
+ * ------
+ * env: object, optional
+ *     Actions/Notion configuration; defaults to process.env.
+ * fetchImpl: function, optional
+ *     Fetch implementation; defaults to globalThis.fetch for normal execution.
+ * wait: function, optional
+ *     Millisecond-delay provider; defaults to the native promise timer.
+ * output: function, optional
+ *     Output sink passed through safeLog.
+ *
+ * Outputs
+ * -------
+ * counts: Promise<object>
+ *     Created/skipped counts. Deletion/empty pushes return zero counts without Notion
+ *     access; unsupported events, invalid configuration/schema, or per-commit failures
+ *     reject.
+ */
 export async function run({ env = process.env, fetchImpl = globalThis.fetch, wait = sleep, output = console.log } = {}) {
+  /**
+   * Purpose
+   * -------
+   * Bind the current environment and output sink to the sanitized run logger.
+   *
+   * Inputs
+   * ------
+   * message: unknown
+   *     Progress or API error text to redact and prefix.
+   *
+   * Outputs
+   * -------
+   * undefined
+   *     Emits one safe line through the enclosing output dependency.
+   */
   const log = (message) => safeLog(message, env, output);
   const eventName = required(env, "GITHUB_EVENT_NAME");
   log(`Execution source: ${eventName}${eventName === "workflow_dispatch" ? " (manual-test mode)" : ""}.`);
@@ -251,6 +531,24 @@ export async function run({ env = process.env, fetchImpl = globalThis.fetch, wai
 
   const token = required(env, "NOTION_TOKEN");
   const dataSourceId = required(env, "NOTION_DATA_SOURCE_ID");
+  /**
+   * Purpose
+   * -------
+   * Bind the authenticated Notion endpoint and native request headers to injected HTTP
+   * execution.
+   *
+   * Inputs
+   * ------
+   * path: string
+   *     Notion v1 API path with its leading slash.
+   * body: object or undefined
+   *     JSON request body; undefined selects GET and a supplied body selects POST.
+   *
+   * Outputs
+   * -------
+   * response: Promise<unknown>
+   *     Parsed authenticated Notion JSON response; bounded request errors reject.
+   */
   const notion = async (path, body) => requestJson(
     `https://api.notion.com/v1${path}`,
     {
@@ -264,6 +562,7 @@ export async function run({ env = process.env, fetchImpl = globalThis.fetch, wai
     },
     http,
   );
+  // Require the diary title, canonical URL, project relation, and native people schema
   const schema = await notion(`/data_sources/${encodeURIComponent(dataSourceId)}`);
   const title = titleProperty(schema, "Research Diary");
   if (schema.properties[COMMIT_LINK]?.type !== "url") {
@@ -278,6 +577,21 @@ export async function run({ env = process.env, fetchImpl = globalThis.fetch, wai
     throw new Error('Research Diary needs a native people property named "Owner" or "Person".');
   }
   let pageProperties;
+  /**
+   * Purpose
+   * -------
+   * Lazily resolve and memoize native project-relation and people-property values.
+   *
+   * Inputs
+   * ------
+   * None
+   *
+   * Outputs
+   * -------
+   * properties: Promise<object>
+   *     Shared project and owner property payload. The promise is initialized only for
+   *     a new diary page and reused across commits.
+   */
   const getPageProperties = () => pageProperties ??= (async () => {
     const projectId = await resolveProject(notion, project.relation.data_source_id, repository.split("/")[1], log);
     const ownerId = await resolveOwner(notion, env, log);
@@ -288,6 +602,7 @@ export async function run({ env = process.env, fetchImpl = globalThis.fetch, wai
   })();
   const context = { notion, dataSourceId, titleProperty: title, getPageProperties, log, seen: new Set() };
   const counts = { created: 0, skipped: 0 };
+  // Process commits in order and retain completed work when a later commit fails
   for (const commit of commits) {
     try {
       const result = await processCommit(commit, context);
@@ -300,7 +615,24 @@ export async function run({ env = process.env, fetchImpl = globalThis.fetch, wai
   return counts;
 }
 
+// Execute only when invoked as the script; imports expose testable helpers without publication
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  /**
+   * Purpose
+   * -------
+   * Report a direct-entrypoint failure through redacted stderr and set a nonzero exit
+   * status.
+   *
+   * Inputs
+   * ------
+   * error: Error
+   *     Rejected run/configuration/request failure.
+   *
+   * Outputs
+   * -------
+   * undefined
+   *     Emits a sanitized error and sets process.exitCode to one.
+   */
   run().catch((error) => {
     safeLog(`ERROR: ${error.message}`, process.env, console.error);
     process.exitCode = 1;

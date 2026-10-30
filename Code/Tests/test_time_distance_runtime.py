@@ -1,4 +1,23 @@
+'''
+Purpose
+-------
+Regression checks for time distance runtime.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
+
+# Import the test dependencies and implementation modules used by these checks.
 import copy
+import json
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,6 +33,27 @@ AGW_FILTER_PATH = ROOT / "Code" / "Time-Distance" / "filter.py"
 
 
 def _load_module(module_name: str, file_path: Path):
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    module_name: str
+        Import name assigned to the dynamically loaded module.
+
+    file_path: Path
+        Path of the source, module, or numerical product being inspected.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -26,7 +66,54 @@ agw_filter_module = _load_module("agw_filter_runtime_under_test", AGW_FILTER_PAT
 
 
 class _FakeNetCDFVariable:
+    '''
+    Purpose
+    -------
+    Provide the netCDF variable metadata and indexing used by the loader tests.
+
+    Inputs
+    ------
+    name: str
+        Module, callback, variable, or context label selected by the caller.
+
+    data: object
+        Synthetic variable data, registry record, or external data root for the current
+        helper.
+
+    dimensions: tuple of str
+        Dimension names attached to the synthetic netCDF variable.
+
+    Outputs
+    -------
+    instance: _FakeNetCDFVariable
+        Fixture or test-suite object providing the documented methods.
+    '''
+
     def __init__(self, name, data, dimensions):
+        '''
+        Purpose
+        -------
+        Initialize the synthetic object state required by the enclosing test.
+
+        Inputs
+        ------
+        name: str
+            Module, callback, variable, or context label selected by the caller.
+
+        data: object
+            Synthetic variable data, registry record, or external data root for the
+            current helper.
+
+        dimensions: tuple of str
+            Dimension names attached to the synthetic netCDF variable.
+
+        Outputs
+        -------
+        None
+            Store fixture values, metadata, or mutable call-recording containers on
+            self.
+        '''
+
         self.name = name
         self._data = np.asarray(data, dtype = np.float64)
         self.dimensions = tuple(dimensions)
@@ -34,11 +121,60 @@ class _FakeNetCDFVariable:
         self.ndim = self._data.ndim
 
     def __getitem__(self, item):
+        '''
+        Purpose
+        -------
+        Expose the synthetic variable data through the expected indexing interface.
+
+        Inputs
+        ------
+        item: object
+            Index or slice forwarded to the synthetic variable.
+
+        Outputs
+        -------
+        values: np.array
+            Stored data, or the selected slice in the slice-aware test variable.
+        '''
+
         return self._data[item]
 
 
 class _FakeNetCDFDataset:
+    '''
+    Purpose
+    -------
+    Provide a controlled netCDF dataset and context-manager interface for loader tests.
+
+    Inputs
+    ------
+    file_path: str or pathlib.Path
+        Path of the source, module, or numerical product being inspected.
+
+    Outputs
+    -------
+    instance: _FakeNetCDFDataset
+        Fixture or test-suite object providing the documented methods.
+    '''
+
     def __init__(self, file_path):
+        '''
+        Purpose
+        -------
+        Initialize the synthetic object state required by the enclosing test.
+
+        Inputs
+        ------
+        file_path: str or pathlib.Path
+            Path of the source, module, or numerical product being inspected.
+
+        Outputs
+        -------
+        None
+            Store fixture values, metadata, or mutable call-recording containers on
+            self.
+        '''
+
         cube = np.arange(72, dtype = np.float64).reshape((4, 2, 3, 3))
         self._file_path = str(file_path)
         self.variables = {
@@ -47,17 +183,88 @@ class _FakeNetCDFDataset:
         }
 
     def filepath(self):
+        '''
+        Purpose
+        -------
+        Expose the synthetic netCDF dataset path through the expected dataset API.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        path: str
+            Path stored by this dataset fixture.
+        '''
+
         return self._file_path
 
     def __enter__(self):
+        '''
+        Purpose
+        -------
+        Expose the synthetic dataset through its context-manager interface.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        dataset: object
+            This synthetic dataset instance.
+        '''
+
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        '''
+        Purpose
+        -------
+        Leave the synthetic dataset context without suppressing exceptions.
+
+        Inputs
+        ------
+        exc_type: type or None
+            Exception type passed to the context-manager exit hook.
+
+        exc: BaseException or None
+            Active exception passed to the exit hook.
+
+        tb: traceback or None
+            Traceback passed to the context-manager exit hook.
+
+        Outputs
+        -------
+        suppress: bool
+            False, so the caller's active exception propagates.
+        '''
+
         return False
 
 
 def test_config_does_not_define_magnetogram_paths():
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify config does not define magnetogram paths.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/dataset/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/dataset/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -76,9 +283,26 @@ def test_config_does_not_define_magnetogram_paths():
 
 
 def test_config_keeps_enabled_magnetogram_in_filter_sequence():
+    '''
+    Purpose
+    -------
+    Verify config keeps enabled magnetogram in filter sequence.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     filtering = copy.deepcopy(config_module.default_filtering)
     filtering["magnetogram"]["enabled"] = True
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/dataset/cube_v1.fits",
         v2_path = "/tmp/dataset/cube_v2.fits",
@@ -93,7 +317,24 @@ def test_config_keeps_enabled_magnetogram_in_filter_sequence():
 
 
 def test_config_accepts_single_cube_per_height_pair_magnetogram_mode():
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify config accepts single cube per height pair magnetogram mode.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "single_cube",
         file_path = "/tmp/simulation.nc",
         observable = "v3",
@@ -106,8 +347,26 @@ def test_config_accepts_single_cube_per_height_pair_magnetogram_mode():
 
 
 def test_config_rejects_invalid_magnetogram_mode():
+    '''
+    Purpose
+    -------
+    Verify config rejects invalid magnetogram mode.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = r"magnetogram_mode\['single_cube'\]"):
-        config_module.get_config(
+        config_module.get_config(optimized_filtering={'mode':'manual'},
             source_type = "single_cube",
             file_path = "/tmp/simulation.nc",
             observable = "v3",
@@ -118,8 +377,26 @@ def test_config_rejects_invalid_magnetogram_mode():
 
 
 def test_config_rejects_paired_cubes_magnetogram_mode():
+    '''
+    Purpose
+    -------
+    Verify config rejects paired cubes magnetogram mode.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "only supports the 'single_cube' key"):
-        config_module.get_config(
+        config_module.get_config(optimized_filtering={'mode':'manual'},
             source_type = "paired_cubes",
             v1_path = "/tmp/dataset/cube_v1.fits",
             v2_path = "/tmp/dataset/cube_v2.fits",
@@ -131,7 +408,24 @@ def test_config_rejects_paired_cubes_magnetogram_mode():
 
 
 def test_config_accepts_directional_xcorr_geometry():
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify config accepts directional xcorr geometry.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/dataset/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/dataset/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -145,16 +439,33 @@ def test_config_accepts_directional_xcorr_geometry():
     phase_path = Path(runtime_config["data"]["phase_outfile"])
 
     assert runtime_config["time_distance"]["xcorr_geometry"] == "east"
-    assert outfile_path.parts[-4:-1] == ("xcorr", "east", "v1")
-    assert phase_path.parts[-4:-1] == ("phase", "east", "v1")
-    assert "_east_xc.fits" in outfile_path.name
-    assert "_east_phase_diff.fits" in phase_path.name
-    assert "filter_1" in outfile_path.parts
+    assert outfile_path.parts[-3:-1] == ("fe5434_vs_fe7090", "xcorr")
+    assert phase_path.parts[-3:-1] == ("fe5434_vs_fe7090", "phase_differences")
+    assert "_east_xc__run_" in outfile_path.name
+    assert "_east_phase_diff__run_" in phase_path.name
+    assert not any(part.startswith("filter_") for part in outfile_path.parts)
     assert Path(runtime_config["data"]["filter_parameters_file"]).exists()
 
 
 def test_config_rejects_invalid_xcorr_geometry():
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify config rejects invalid xcorr geometry.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/dataset/cube_v1.fits",
         v2_path = "/tmp/dataset/cube_v2.fits",
@@ -164,11 +475,29 @@ def test_config_rejects_invalid_xcorr_geometry():
     )
     config["time_distance"]["xcorr_geometry"] = "diagonal"
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "xcorr_geometry"):
         td.prepare_runtime_config(config)
 
 
 def test_directional_xcorr_geometry_masks_follow_quadrant_rules():
+    '''
+    Purpose
+    -------
+    Verify directional xcorr geometry masks follow quadrant rules.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     yy_shift = np.array([-1, -1, 0, 1, 1, 1, 0, -1], dtype = np.int64)
     xx_shift = np.array([0, 1, 1, 1, 0, -1, -1, -1], dtype = np.int64)
 
@@ -190,12 +519,56 @@ def test_directional_xcorr_geometry_masks_follow_quadrant_rules():
 
 
 def _legacy_xcorrj_reference(v1, v2, *, width, dx_pixels, dx_Mm, dt, maxdist_Mm, xcorr_geometry = "annulus"):
+    '''
+    Purpose
+    -------
+    Calculate the retained serial correlation reference for annular or directional skip
+    distances.
+
+    Inputs
+    ------
+    v1: np.array
+        First velocity cube with shape (time, y, x), in the fixture velocity units.
+
+    v2: np.array
+        Second velocity cube matching v1.shape and its velocity units.
+
+    width: int
+        Spatial averaging half-width in pixels.
+
+    dx_pixels: float
+        Full radial-bin width in pixels, applied as +/-dx_pixels/2 around each
+        radial offset. The outer skip-distance loop advances by one pixel.
+
+    dx_Mm: float
+        Physical pixel spacing in Mm.
+
+    dt: float
+        Temporal cadence in seconds.
+
+    maxdist_Mm: float
+        Maximum requested skip distance in Mm.
+
+    xcorr_geometry: str
+        Cross-correlation geometry selecting annulus or directional averaging.
+
+    Outputs
+    -------
+    reference: tuple
+        Correlation array and phase differences with shape (n_radius, n_time),
+        pixel radii, time lags (s), and cyclic frequencies (mHz). Correlation
+        units are the product of the input velocity units; phase is in degrees.
+        Clip the requested distance to the allowed spatial averaging geometry.
+    '''
+
     nt, ny0, nx0 = v1.shape
+    # Place time last before the independent reference Fourier transforms.
     lower = np.transpose(v1, (1, 2, 0))
     higher = np.transpose(v2, (1, 2, 0))
     fft_lower = np.fft.fft(lower, axis = 2)
     fft_higher = np.fft.fft(higher, axis = 2)
 
+    # Clip skip distances to the spatial extent allowed by the averaging width.
     requested_maxpix = int(np.floor(maxdist_Mm/dx_Mm))
     maxpix_geom = int(np.floor((min(nx0, ny0) - 4*width - 3)/2))
     maxpix = min(requested_maxpix, maxpix_geom)
@@ -209,6 +582,7 @@ def _legacy_xcorrj_reference(v1, v2, *, width, dx_pixels, dx_Mm, dt, maxdist_Mm,
     fullgrid = np.hypot(xgrid, ygrid)
     center = fullgrid.shape[0] // 2
 
+    # Evaluate each skip-distance annulus/direction using the original serial algorithm.
     for delta in deltas:
         bsize = int(np.floor((min(nx0, ny0) - 2*delta - 1)/2) - (2*width + 1))
         ntarg = 2*bsize + 1
@@ -264,14 +638,45 @@ def _legacy_xcorrj_reference(v1, v2, *, width, dx_pixels, dx_Mm, dt, maxdist_Mm,
 
 
 def _legacy_azimuthal_average_fft_complex_oana(mid_time, end_time, array, mid_space, radial_meshgrid):
+    '''
+    Purpose
+    -------
+    Reproduce the original complex annular Fourier average using explicit radial masks.
+
+    Inputs
+    ------
+    mid_time: int
+        Index at the start of the retained temporal-frequency half-grid.
+
+    end_time: int
+        Exclusive temporal-frequency endpoint of the reference averaging loop.
+
+    array: np.array
+        Fourier or spatial array passed to the reference implementation.
+
+    mid_space: int
+        Number of radial bins retained by the reference calculation.
+
+    radial_meshgrid: np.array
+        Radial Fourier-grid distances used to select half-pixel annuli.
+
+    Outputs
+    -------
+    average: np.array, complex
+        Radial-bin by retained-frequency values, using half-pixel annuli and
+        the original odd/even temporal-grid convention.
+    '''
+
     if end_time % 2 == 0:
         azim = np.zeros([mid_space, mid_time], dtype = np.complex128)
     else:
         azim = np.zeros([mid_space, mid_time + 1], dtype = np.complex128)
 
+    # Retain an independent Fourier-array copy for the historical annular average.
     copied_array = np.array(array, copy = True)
     annulus_half_width = 0.5
 
+    # Average complex Fourier coefficients over each half-pixel radial annulus.
     for j in range(mid_time, end_time):
         arr_product = copied_array[:, :, j]
 
@@ -287,11 +692,28 @@ def _legacy_azimuthal_average_fft_complex_oana(mid_time, end_time, array, mid_sp
 
 
 def test_xcorrj_matches_legacy_reference_small_cube():
+    '''
+    Purpose
+    -------
+    Verify xcorrj matches legacy reference small cube.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(21)
     v1 = rng.standard_normal((24, 20, 20))
     v2 = rng.standard_normal((24, 20, 20))
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -323,11 +745,28 @@ def test_xcorrj_matches_legacy_reference_small_cube():
 
 
 def test_xcorrj_legacy_engine_matches_legacy_reference_small_cube():
+    '''
+    Purpose
+    -------
+    Verify xcorrj legacy engine matches legacy reference small cube.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(22)
     v1 = rng.standard_normal((24, 20, 20))
     v2 = rng.standard_normal((24, 20, 20))
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -358,11 +797,28 @@ def test_xcorrj_legacy_engine_matches_legacy_reference_small_cube():
 
 @pytest.mark.parametrize("xcorr_geometry", ["east", "west", "north", "south"])
 def test_xcorrj_directional_geometry_matches_reference_small_cube(xcorr_geometry):
+    '''
+    Purpose
+    -------
+    Verify xcorrj directional geometry matches reference small cube.
+
+    Inputs
+    ------
+    xcorr_geometry: str
+        Cross-correlation geometry selecting annulus or directional averaging.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(220 + len(xcorr_geometry))
     v1 = rng.standard_normal((20, 20, 20))
     v2 = rng.standard_normal((20, 20, 20))
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -403,11 +859,28 @@ def test_xcorrj_directional_geometry_matches_reference_small_cube(xcorr_geometry
 
 
 def test_xcorrj_chunked_parallel_matches_chunked_serial():
+    '''
+    Purpose
+    -------
+    Verify xcorrj chunked parallel matches chunked serial.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(23)
     v1 = rng.standard_normal((24, 22, 22))
     v2 = rng.standard_normal((24, 22, 22))
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -448,11 +921,31 @@ def test_xcorrj_chunked_parallel_matches_chunked_serial():
     ],
 )
 def test_xcorrj_chunked_handles_odd_even_width_and_clipped_maxdist(nt, width):
+    '''
+    Purpose
+    -------
+    Verify xcorrj chunked handles odd even width and clipped maxdist.
+
+    Inputs
+    ------
+    nt: int or None
+        Number of temporal samples in the synthetic cube.
+
+    width: int
+        Spatial averaging half-width in pixels.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(24 + nt + width)
     v1 = rng.standard_normal((nt, 18, 18))
     v2 = rng.standard_normal((nt, 18, 18))
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = "/tmp/06May2019.ibis.to.hmi.vel.fe5434.fits",
         v2_path = "/tmp/06May2019.ibis.to.hmi.vel.fe7090.fits",
@@ -489,7 +982,24 @@ def test_xcorrj_chunked_handles_odd_even_width_and_clipped_maxdist(nt, width):
 
 
 def test_xcorrj_runtime_controls_do_not_change_output_names(tmp_path):
-    base_config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify xcorrj runtime controls do not change output names.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    base_config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe5434.fits"),
         v2_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe7090.fits"),
@@ -514,11 +1024,28 @@ def test_xcorrj_runtime_controls_do_not_change_output_names(tmp_path):
     for key in ["outfile", "phase_outfile", "komega_outfile", "coherence_outfile"]:
         assert Path(controlled_runtime["data"][key]).name == Path(base_runtime["data"][key]).name
         assert "_annulus" not in Path(base_runtime["data"][key]).name
-        assert "annulus" in Path(base_runtime["data"][key]).parts
+        assert "Annulus" in Path(base_runtime["data"][key]).parts
 
 
 def test_directional_xcorr_geometry_changes_output_names(tmp_path):
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify directional xcorr geometry changes output names.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe5434.fits"),
         v2_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe7090.fits"),
@@ -533,11 +1060,28 @@ def test_directional_xcorr_geometry_changes_output_names(tmp_path):
 
     for key in ["outfile", "phase_outfile", "komega_outfile", "coherence_outfile"]:
         path = Path(runtime_config["data"][key])
-        assert "north" in path.parts
+        assert "North" in path.parts
         assert "_north_" in path.name
 
 
 def test_prepare_runtime_config_strips_filter_and_magnetogram_metadata_from_filenames(tmp_path):
+    '''
+    Purpose
+    -------
+    Verify prepare runtime config strips filter and magnetogram metadata from filenames.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     filtering = copy.deepcopy(config_module.default_filtering)
     filtering["magnetogram"]["enabled"] = True
     filtering["magnetogram"]["selection"] = "magnetic"
@@ -546,7 +1090,7 @@ def test_prepare_runtime_config_strips_filter_and_magnetogram_metadata_from_file
     filtering["gaussian"]["width_k"] = 2.0
     filtering["gaussian"]["central_f"] = 1.5
     filtering["gaussian"]["width_f"] = 1.5
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe5434.fits"),
         v2_path = str(tmp_path / "06May2019.ibis.to.hmi.vel.fe7090.fits"),
@@ -561,17 +1105,33 @@ def test_prepare_runtime_config_strips_filter_and_magnetogram_metadata_from_file
     outfile_path = Path(runtime_config["data"]["outfile"])
     parameter_text = Path(runtime_config["data"]["filter_parameters_file"]).read_text(encoding = "utf-8")
 
-    assert outfile_path.parts[-7:-4] == ("observations", "magneto", "06may2019")
-    assert outfile_path.parts[-4:-1] == ("xcorr", "annulus", "v1")
+    assert outfile_path.parts[-4:-1] == ("Annulus", "fe5434_vs_fe7090", "xcorr")
     assert "gaussian" not in outfile_path.name
     assert "gauss_ck" not in outfile_path.name
     assert "magnetogram" not in outfile_path.name
     assert "b_gt_10g" not in outfile_path.name
-    assert "filtering.gaussian.central_k: 2.0" in parameter_text
-    assert "filtering.magnetogram.threshold_G: 10.0" in parameter_text
+    assert json.loads(parameter_text)["identity"]["filtering"]["gaussian"]["central_k"] == 2.0
+    assert json.loads(parameter_text)["identity"]["filtering"]["magnetogram"]["threshold_G"] == 10.0
 
 
 def test_azimuthal_average_fft_complex_oana_matches_legacy_reference():
+    '''
+    Purpose
+    -------
+    Verify azimuthal average FFT complex oana matches legacy reference.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     rng = np.random.default_rng(8)
     array = rng.standard_normal((24, 24, 15)) + 1j*rng.standard_normal((24, 24, 15))
     mid_time = array.shape[2] // 2
@@ -600,10 +1160,27 @@ def test_azimuthal_average_fft_complex_oana_matches_legacy_reference():
 
 
 def test_load_magnetograms_discovers_dataset_hmimag_cube(tmp_path):
+    '''
+    Purpose
+    -------
+    Verify load magnetograms discovers dataset hmimag cube.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     magnetogram_path = tmp_path / "06May2019.HMImag.ibis.aligned.fits"
     magnetogram_path.touch()
 
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "cube_v1.fits"),
         v2_path = str(tmp_path / "cube_v2.fits"),
@@ -617,6 +1194,22 @@ def test_load_magnetograms_discovers_dataset_hmimag_cube(tmp_path):
     load_calls = []
 
     def _fake_load_cube(file_path):
+        '''
+        Purpose
+        -------
+        Record the resolved source path and return a small constant magnetic cube.
+
+        Inputs
+        ------
+        file_path: str or pathlib.Path
+            Path of the source, module, or numerical product being inspected.
+
+        Outputs
+        -------
+        cube: np.array
+            Float64 ones with shape (2, 2, 2).
+        '''
+
         load_calls.append(str(Path(file_path).resolve()))
         return np.ones((2, 2, 2), dtype = np.float64)
 
@@ -629,7 +1222,24 @@ def test_load_magnetograms_discovers_dataset_hmimag_cube(tmp_path):
 
 
 def test_load_magnetograms_raises_when_dataset_hmimag_missing(tmp_path):
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify load magnetograms raises when dataset hmimag missing.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "cube_v1.fits"),
         v2_path = str(tmp_path / "cube_v2.fits"),
@@ -641,14 +1251,32 @@ def test_load_magnetograms_raises_when_dataset_hmimag_missing(tmp_path):
     runtime_config = td.prepare_runtime_config(config)
     agw_filter = agw_filter_module.AGWFilter(runtime_config)
 
+    # Require the expected FileNotFoundError from this failure case.
     with pytest.raises(FileNotFoundError, match = r"Expected pattern: \*HMImag\*\.fits"):
         agw_filter.load_magnetograms()
 
 
 def test_load_magnetograms_raises_when_dataset_hmimag_ambiguous(tmp_path):
+    '''
+    Purpose
+    -------
+    Verify load magnetograms raises when dataset hmimag ambiguous.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     (tmp_path / "a.HMImag.fits").touch()
     (tmp_path / "b.HMImag.fits").touch()
-    config = config_module.get_config(
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "cube_v1.fits"),
         v2_path = str(tmp_path / "cube_v2.fits"),
@@ -660,11 +1288,29 @@ def test_load_magnetograms_raises_when_dataset_hmimag_ambiguous(tmp_path):
     runtime_config = td.prepare_runtime_config(config)
     agw_filter = agw_filter_module.AGWFilter(runtime_config)
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "Ambiguous paired_cubes magnetogram candidates"):
         agw_filter.load_magnetograms()
 
 
 def test_paired_cubes_mask_loader_rejects_multiple_magnetograms():
+    '''
+    Purpose
+    -------
+    Verify paired cubes mask loader rejects multiple magnetograms.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "data": {
             "source_type": "paired_cubes",
@@ -687,14 +1333,74 @@ def test_paired_cubes_mask_loader_rejects_multiple_magnetograms():
         np.ones((2, 2, 2), dtype = np.float64),
     )
 
+    # Require the expected ValueError from this failure case.
     with pytest.raises(ValueError, match = "paired_cubes magnetogram filtering requires exactly one"):
         agw_filter.load_magnetogram_filter_masks()
 
 
 def test_gaussian_filter_cache_reuses_existing_filter(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify gaussian filter cache reuses existing filter.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     calls = {"create_filter": 0}
 
     def fake_create_filter(array, frequency_array, kx_array, ky_array, central_f, width_f, central_k, width_k):
+        '''
+        Purpose
+        -------
+        Record a Gaussian-filter construction and return a constant shape-matched test
+        filter.
+
+        Inputs
+        ------
+        array: np.array
+            Fourier or spatial array passed to the reference implementation.
+
+        frequency_array: np.array
+            Frequency samples passed through the filter API.
+
+        kx_array: np.array
+            Horizontal x-wavenumber samples passed through the filter API.
+
+        ky_array: np.array
+            Horizontal y-wavenumber samples passed through the filter API.
+
+        central_f: float
+            Gaussian-filter frequency center in the filter API units.
+
+        width_f: float
+            Gaussian-filter frequency width in the filter API units.
+
+        central_k: float
+            Gaussian-filter horizontal-wavenumber center in the filter API units.
+
+        width_k: float
+            Gaussian-filter horizontal-wavenumber width in the filter API units.
+
+        Outputs
+        -------
+        filter: np.array
+            Float64 array matching array.shape; use the enclosing fixture constant
+            or call counter as its uniform value.
+        '''
+
         calls["create_filter"] += 1
         return np.full(array.shape, 0.125, dtype = np.float64)
 
@@ -726,9 +1432,68 @@ def test_gaussian_filter_cache_reuses_existing_filter(tmp_path: Path, monkeypatc
 
 
 def test_gaussian_filter_cache_uses_shape_specific_keys(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify gaussian filter cache uses shape specific keys.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     calls = {"create_filter": 0}
 
     def fake_create_filter(array, frequency_array, kx_array, ky_array, central_f, width_f, central_k, width_k):
+        '''
+        Purpose
+        -------
+        Record a Gaussian-filter construction and return a constant shape-matched test
+        filter.
+
+        Inputs
+        ------
+        array: np.array
+            Fourier or spatial array passed to the reference implementation.
+
+        frequency_array: np.array
+            Frequency samples passed through the filter API.
+
+        kx_array: np.array
+            Horizontal x-wavenumber samples passed through the filter API.
+
+        ky_array: np.array
+            Horizontal y-wavenumber samples passed through the filter API.
+
+        central_f: float
+            Gaussian-filter frequency center in the filter API units.
+
+        width_f: float
+            Gaussian-filter frequency width in the filter API units.
+
+        central_k: float
+            Gaussian-filter horizontal-wavenumber center in the filter API units.
+
+        width_k: float
+            Gaussian-filter horizontal-wavenumber width in the filter API units.
+
+        Outputs
+        -------
+        filter: np.array
+            Float64 array matching array.shape; use the enclosing fixture constant
+            or call counter as its uniform value.
+        '''
+
         calls["create_filter"] += 1
         return np.full(array.shape, calls["create_filter"], dtype = np.float64)
 
@@ -755,6 +1520,26 @@ def test_gaussian_filter_cache_uses_shape_specific_keys(tmp_path: Path, monkeypa
 
 
 def test_magnetogram_filter_cache_reuses_existing_masks(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify magnetogram filter cache reuses existing masks.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     calls = {"compute_masks": 0}
     original_compute_masks = agw_filter_module.AGWFilter.compute_magnetogram_filter_masks
     bottom_magnetogram = np.array(
@@ -766,9 +1551,51 @@ def test_magnetogram_filter_cache_reuses_existing_masks(tmp_path: Path, monkeypa
     )
 
     def fake_bottom_magnetogram(self, file_path):
+        '''
+        Purpose
+        -------
+        Return the enclosing fixed bottom-height magnetic fixture.
+
+        Inputs
+        ------
+        file_path: str or pathlib.Path
+            Path of the source, module, or numerical product being inspected.
+
+        Outputs
+        -------
+        magnetogram: np.array
+            Bottom magnetogram used by the mask-cache regression.
+        '''
+
         return bottom_magnetogram
 
     def counting_compute_masks(self, abs_magnetogram_for_v1, abs_magnetogram_for_v2, selection, threshold_G):
+        '''
+        Purpose
+        -------
+        Count mask construction calls before delegating to the original mask
+        computation.
+
+        Inputs
+        ------
+        abs_magnetogram_for_v1: np.array
+            Absolute magnetic-field values paired with the first velocity cube (Gauss).
+
+        abs_magnetogram_for_v2: np.array
+            Absolute magnetic-field values paired with the second velocity cube (Gauss).
+
+        selection: str
+            Magnetic threshold selection applied to the paired masks.
+
+        threshold_G: float
+            Magnetic selection threshold in Gauss.
+
+        Outputs
+        -------
+        masks: object
+            Unchanged return value of the original mask constructor.
+        '''
+
         calls["compute_masks"] += 1
         return original_compute_masks(self, abs_magnetogram_for_v1, abs_magnetogram_for_v2, selection, threshold_G)
 
@@ -805,6 +1632,23 @@ def test_magnetogram_filter_cache_reuses_existing_masks(tmp_path: Path, monkeypa
 
 
 def test_single_cube_bottom_magnetogram_mode_uses_one_shared_map(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify single cube bottom magnetogram mode uses one shared map.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "paths": {"project_dir": str(tmp_path)},
         "data": {
@@ -838,6 +1682,23 @@ def test_single_cube_bottom_magnetogram_mode_uses_one_shared_map(tmp_path: Path)
 
 
 def test_single_cube_per_height_pair_magnetogram_mode_uses_two_maps(tmp_path: Path):
+    '''
+    Purpose
+    -------
+    Verify single cube per height pair magnetogram mode uses two maps.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     runtime_config = {
         "paths": {"project_dir": str(tmp_path)},
         "data": {
@@ -873,6 +1734,26 @@ def test_single_cube_per_height_pair_magnetogram_mode_uses_two_maps(tmp_path: Pa
 
 
 def test_zero_field_single_cube_uses_synthetic_zero_magnetogram(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify zero field single cube uses synthetic zero magnetogram.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_file = tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc"
     fake_dataset = _FakeNetCDFDataset(cube_file)
     monkeypatch.setattr(agw_filter_module, "nc", SimpleNamespace(Dataset = lambda _path: fake_dataset))
@@ -908,6 +1789,26 @@ def test_zero_field_single_cube_uses_synthetic_zero_magnetogram(tmp_path: Path, 
 
 
 def test_zero_field_single_cube_orientation_metadata_uses_synthetic_zero_components(tmp_path: Path, monkeypatch):
+    '''
+    Purpose
+    -------
+    Verify zero field single cube orientation metadata uses synthetic zero components.
+
+    Inputs
+    ------
+    tmp_path: Path
+        Isolated temporary directory supplied by pytest.
+
+    monkeypatch: pytest.MonkeyPatch
+        Fixture used to replace dependencies or settings for this test.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     cube_file = tmp_path / "co5bold" / "z0" / "0G" / "simulation_z0_0G.nc"
     fake_dataset = _FakeNetCDFDataset(cube_file)
     monkeypatch.setattr(td, "nc", SimpleNamespace(Dataset = lambda _path: fake_dataset))
@@ -948,9 +1849,33 @@ def test_zero_field_single_cube_orientation_metadata_uses_synthetic_zero_compone
     assert metadata["field_strength_G_between_heights"] == [0.0, 0.0]
     assert metadata["alfven_sound_ratio"]["mean_field_strength_G_between_heights"] == pytest.approx(0.0)
     assert metadata["alfven_sound_ratio"]["alfven_speed_cgs"] == pytest.approx(0.0)
+    pair = metadata["dispersion_height_pair"]
+    assert pair["height_values_km"] == pytest.approx([0.0, 300.0])
+    assert pair["a_by_height_km_s"] == pytest.approx([0.0, 0.0])
+    assert pair["a_km_s"] == pytest.approx(0.0)
+    assert pair["dz_km"] == pytest.approx(300.0)
+    assert np.isnan(pair["theta_deg"])
+    assert np.isnan(pair["phi_deg"])
 
 
 def test_parse_spectral_identifier_supports_aia_bandpass_tokens():
+    '''
+    Purpose
+    -------
+    Verify parse spectral identifier supports aia bandpass tokens.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
     spectral_id = td.parse_spectral_identifier("06May2019.AIA1600.ibis.aligned.final.fits")
 
     assert spectral_id["element"] == "AIA"
@@ -958,7 +1883,24 @@ def test_parse_spectral_identifier_supports_aia_bandpass_tokens():
 
 
 def test_prepare_runtime_config_builds_slug_for_aia_bandpass_pairs(tmp_path):
-    config = config_module.get_config(
+    '''
+    Purpose
+    -------
+    Verify prepare runtime config builds slug for aia bandpass pairs.
+
+    Inputs
+    ------
+    tmp_path: pathlib.Path
+        Isolated temporary directory supplied by pytest.
+
+    Outputs
+    -------
+    None
+        Complete this regression case; report mismatches through the test
+        assertions and expected-exception checks.
+    '''
+
+    config = config_module.get_config(optimized_filtering={'mode':'manual'},
         source_type = "paired_cubes",
         v1_path = str(tmp_path / "06May2019.AIA1600.ibis.aligned.final.fits"),
         v2_path = str(tmp_path / "06May2019.AIA1700.ibis.aligned.final.fits"),

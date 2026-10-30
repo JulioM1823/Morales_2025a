@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
+# Purpose
+# -------
+# Run the local MESA star executable without selecting a restart photo.
+#
+# Inputs
+# ------
+# No arguments; execute from the MESA work directory containing ./star.
+#
+# Outputs
+# -------
+# Remove restart_photo, print start/end timestamps, and invoke ./star.
+# The final date command determines the shell status; no explicit star-status check is made.
 
+
+# Clear any previous restart selection before running the configured model
 rm -f restart_photo
 
 date "+DATE: %Y-%m-%d%nTIME: %H:%M:%S"

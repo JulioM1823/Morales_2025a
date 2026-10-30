@@ -1,9 +1,32 @@
+'''
+Purpose
+-------
+Load atmospheric cubes, compute time-distance and Fourier diagnostics, and write the
+configured numerical products.
+
+Cube interfaces use [t, y, x] unless a helper documents a different ordering.
+Physical sampling uses seconds and Mm; theory adapters convert to km and rad/s.
+
+Inputs
+------
+None
+
+Outputs
+-------
+exports: functions and classes
+    Numerical helpers or publication interfaces defined below; importing the
+    module does not execute the command-line pipeline.
+'''
+
 # Import the relevant libraries
+# Import the relevant libraries and shared project helpers.
 import argparse
 import configparser
 import copy
 import importlib.util
+import itertools
 import os
+import sys
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -56,6 +79,22 @@ DIRECTION_ORDER = (
 
 
 def _load_output_paths_module():
+    '''
+    Purpose
+    -------
+    Load the sibling output-path helpers by their filesystem path.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    module: module
+        Executed output_paths.py module; import failures propagate.
+    '''
+
+    # Resolve the sibling helper independently of the current working directory.
     module_path = Path(__file__).resolve().with_name('output_paths.py')
     spec = importlib.util.spec_from_file_location('time_distance_output_paths', module_path)
     module = importlib.util.module_from_spec(spec)
@@ -64,11 +103,39 @@ def _load_output_paths_module():
     return module
 
 
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 output_paths = _load_output_paths_module()
 
 
 @dataclass(frozen = True)
 class TimeDistanceResult:
+    '''
+    Purpose
+    -------
+    Store the directional correlation result and its sampled offsets.
+
+    Inputs
+    ------
+    xcorr: np.ndarray
+        FFT-shifted circular correlations, shape (9, n_skip, nt), in
+        DIRECTION_ORDER.
+
+    phase: np.ndarray
+        Angle of the shifted Fourier transform of xcorr (rad), with the same
+        shape.
+
+    skip_distances: np.ndarray
+        Requested spatial offsets in pixels, shape (n_skip,).
+
+    Outputs
+    -------
+    instance: TimeDistanceResult
+        Frozen dataclass carrying the supplied arrays; contained arrays remain
+        mutable.
+    '''
+
     xcorr: np.ndarray
     phase: np.ndarray
     skip_distances: np.ndarray
@@ -76,15 +143,50 @@ class TimeDistanceResult:
 
 def lag_axis_minutes(nt: int, dt: float) -> np.ndarray:
 
-    '''Return the fftshifted lag axis in minutes.'''
+    '''
+    Purpose
+    -------
+    Return the fftshifted lag axis in minutes.
 
+    Inputs
+    ------
+    nt: int
+        Number of temporal samples.
+
+    dt: float
+        Temporal sampling interval (s).
+
+    Outputs
+    -------
+    lags: np.ndarray
+        FFT-shifted lag centers in minutes, shape (nt,), with zero at index
+        nt//2.
+    '''
+
+    # Center the temporal sample indices before converting seconds to minutes.
     return (np.arange(int(nt), dtype = float) - int(nt)//2)*float(dt)/60.0
 
 
 def peak_lag_from_xcorr(xcorr: np.ndarray) -> int:
 
-    '''Return the lag sample at the maximum of an fftshifted correlation.'''
+    '''
+    Purpose
+    -------
+    Return the lag sample at the maximum of an fftshifted correlation.
 
+    Inputs
+    ------
+    xcorr: np.ndarray
+        One-dimensional FFT-shifted correlation samples.
+
+    Outputs
+    -------
+    lag: int
+        Index of the maximum non-NaN sample minus half the array size, in
+        samples. Empty or all-NaN input raises ValueError.
+    '''
+
+    # Locate the largest finite correlation relative to the centered zero-lag index.
     values = np.asarray(xcorr)
 
     return int(np.nanargmax(values) - values.size//2)
@@ -100,11 +202,44 @@ def synthetic_delay_cube(
     seed: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
 
-    '''Build a deterministic cube pair with the second cube delayed in time.'''
+    '''
+    Purpose
+    -------
+    Build a cube pair with a circular temporal delay and optional seeded noise.
 
+    Inputs
+    ------
+    nt: int
+        Number of time samples.
+
+    ny: int
+        Number of image rows.
+
+    nx: int
+        Number of image columns.
+
+    lag_samples: int
+        Circular temporal shift applied to the first cube to create the second.
+
+    noise_std: float
+        Standard deviation of independent noise added to the shifted cube when
+        positive.
+
+    seed: int or None
+        Seed passed to NumPy default_rng; None uses fresh generator entropy.
+
+    Outputs
+    -------
+    v1, v2: tuple of np.ndarray
+        Float32 arrays with shape (nt, ny, nx); v2 is a circularly delayed copy
+        of v1 with optional noise.
+    '''
+
+    # Generate one seeded float32 cube and circularly delay it along the time axis.
     rng = np.random.default_rng(seed)
     v1 = rng.standard_normal((int(nt), int(ny), int(nx)), dtype = np.float32)
     v2 = np.roll(v1, int(lag_samples), axis = 0)
+    # Add independent Gaussian noise only when a positive noise scale is requested.
     if float(noise_std) > 0.0:
         v2 = v2 + rng.normal(0.0, float(noise_std), size = v2.shape).astype(np.float32)
 
@@ -113,13 +248,51 @@ def synthetic_delay_cube(
 
 def _invalid_edge(edge: np.ndarray) -> bool:
 
+    '''
+    Purpose
+    -------
+    Determine whether a spatial border contains no finite nonzero samples.
+
+    Inputs
+    ------
+    edge: np.ndarray
+        Time/space samples belonging to one border.
+
+    Outputs
+    -------
+    invalid: bool
+        True when every sample is nonfinite or zero.
+    '''
+
+    # Treat zero and every nonfinite value as an unusable border sample.
     return bool(np.all(~np.isfinite(edge) | (edge == 0.0)))
 
 
 def trim_spatial_zero_nan_borders(v1: np.ndarray, v2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
-    '''Trim shared spatial borders that are entirely zero or NaN in either cube.'''
+    '''
+    Purpose
+    -------
+    Trim shared spatial borders that are entirely zero or NaN in either cube.
 
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    Outputs
+    -------
+    cube_1, cube_2: tuple of np.ndarray
+        Matching spatial views after iterative border removal. Preserve at least
+        one sample in each spatial dimension; mismatched or non-3D input raises
+        ValueError.
+    '''
+
+    # Require matching [t, y, x] cubes before selecting a shared spatial region.
     cube_1 = np.asarray(v1)
     cube_2 = np.asarray(v2)
     if cube_1.shape != cube_2.shape:
@@ -127,11 +300,13 @@ def trim_spatial_zero_nan_borders(v1: np.ndarray, v2: np.ndarray) -> Tuple[np.nd
     if cube_1.ndim != 3:
         raise ValueError('v1 and v2 must have shape [t, y, x].')
 
+    # Initialize the common inclusive/exclusive row and column limits.
     y0 = 0
     y1 = cube_1.shape[1]
     x0 = 0
     x1 = cube_1.shape[2]
 
+    # Repeat border removal because trimming one side can expose another empty side.
     changed = True
     while changed and y1 - y0 > 1 and x1 - x0 > 1:
         changed = False
@@ -148,11 +323,29 @@ def trim_spatial_zero_nan_borders(v1: np.ndarray, v2: np.ndarray) -> Tuple[np.nd
             x1 -= 1
             changed = True
 
+    # Return matching slice views without copying the surviving samples.
     return cube_1[:, y0:y1, x0:x1], cube_2[:, y0:y1, x0:x1]
 
 
 def _direction_offsets(skip_pixels: int) -> Tuple[Tuple[int, int], ...]:
 
+    '''
+    Purpose
+    -------
+    Construct the nine cardinal/diagonal offsets in DIRECTION_ORDER.
+
+    Inputs
+    ------
+    skip_pixels: int
+        Offset radius in pixels, converted to int.
+
+    Outputs
+    -------
+    offsets: tuple of tuple
+        Nine (dy, dx) pairs, including the central (0, 0) offset.
+    '''
+
+    # Keep the directional order aligned with the result array and its public labels.
     r = int(skip_pixels)
 
     return (
@@ -170,11 +363,40 @@ def _direction_offsets(skip_pixels: int) -> Tuple[Tuple[int, int], ...]:
 
 def _overlap_for_offset(v1: np.ndarray, v2: np.ndarray, dy: int, dx: int) -> Tuple[np.ndarray, np.ndarray]:
 
+    '''
+    Purpose
+    -------
+    Extract spatially aligned regions for a requested displacement.
+
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    dy: int
+        Row offset of the second cube relative to the first, in pixels.
+
+    dx: int
+        Column offset of the second cube relative to the first, in pixels.
+
+    Outputs
+    -------
+    lower, upper: tuple of np.ndarray
+        Spatial slice views at the requested offset, retaining the complete time
+        axis.
+    '''
+
+    # Clip the first spatial region so the displaced second region remains in bounds.
     y1_start = max(0, -dy)
     y1_stop = min(v1.shape[1], v1.shape[1] - dy)
     x1_start = max(0, -dx)
     x1_stop = min(v1.shape[2], v1.shape[2] - dx)
 
+    # Translate the matching bounds into the second cube coordinate system.
     y2_start = y1_start + dy
     y2_stop = y1_stop + dy
     x2_start = x1_start + dx
@@ -188,17 +410,47 @@ def _overlap_for_offset(v1: np.ndarray, v2: np.ndarray, dy: int, dx: int) -> Tup
 
 def _mean_cross_correlation(v1: np.ndarray, v2: np.ndarray, *, normalize: bool) -> np.ndarray:
 
+    '''
+    Purpose
+    -------
+    Average demeaned circular temporal correlations over finite pixel pairs.
+
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    normalize: bool
+        Divide each demeaned pixel time series by its standard deviation before
+        correlation; zero deviations are replaced by one.
+
+    Outputs
+    -------
+    xcorr: np.ndarray
+        FFT-shifted circular correlation, shape (nt,). Return all NaN if no
+        paired pixel has a fully finite time series. The inverse-FFT correlation
+        sums over time; it is not divided by nt.
+    '''
+
+    # Flatten spatial pixels while retaining a complete temporal series per column.
     nt = int(v1.shape[0])
     a = np.asarray(v1, dtype = np.float64).reshape(nt, -1)
     b = np.asarray(v2, dtype = np.float64).reshape(nt, -1)
+    # Reject a pixel pair if either time series contains any nonfinite sample.
     valid = np.all(np.isfinite(a), axis = 0) & np.all(np.isfinite(b), axis = 0)
     if not np.any(valid):
         return np.full(nt, np.nan, dtype = np.float64)
 
+    # Remove per-pixel means before forming the circular temporal correlation.
     a = a[:, valid]
     b = b[:, valid]
     a = a - np.mean(a, axis = 0, keepdims = True)
     b = b - np.mean(b, axis = 0, keepdims = True)
+    # Optionally standardize each pixel series, leaving constant series finite.
     if normalize:
         a_std = np.std(a, axis = 0, keepdims = True)
         b_std = np.std(b, axis = 0, keepdims = True)
@@ -207,8 +459,11 @@ def _mean_cross_correlation(v1: np.ndarray, v2: np.ndarray, *, normalize: bool) 
         a = a/a_std
         b = b/b_std
 
+    # Use conjugate(first FFT) times second FFT so a delayed second cube peaks at
+    # positive lag.
     cross = np.fft.ifft(np.conj(np.fft.fft(a, axis = 0))*np.fft.fft(b, axis = 0), axis = 0).real
 
+    # Average over valid spatial pairs and place zero lag at the center.
     return np.fft.fftshift(np.mean(cross, axis = 1))
 
 
@@ -222,6 +477,44 @@ def _compute_time_distance_result(
     trim_zero_nan_borders: bool,
 ) -> TimeDistanceResult:
 
+    '''
+    Purpose
+    -------
+    Compute all nine directional correlations for every requested skip.
+
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    skip_distances: iterable of float
+        Requested spatial offsets in pixels; round each value to the nearest
+        integer.
+
+    width: int
+        Legacy compatibility argument; ignored by this implementation.
+
+    normalize: bool
+        Divide each demeaned pixel time series by its standard deviation before
+        correlation; zero deviations are replaced by one.
+
+    trim_zero_nan_borders: bool
+        Trim shared spatial borders when either cube has only zero or nonfinite
+        samples there.
+
+    Outputs
+    -------
+    result: TimeDistanceResult
+        Correlation and phase grids with shape (9, n_skip, nt), plus the
+        requested skip-distance array. Correlation is a temporal circular sum
+        averaged over valid spatial pairs; phase is in radians.
+    '''
+
+    # Retain the historical width argument without changing the shared implementation.
     del width
 
     cube_1 = np.asarray(v1)
@@ -229,10 +522,12 @@ def _compute_time_distance_result(
     if trim_zero_nan_borders:
         cube_1, cube_2 = trim_spatial_zero_nan_borders(cube_1, cube_2)
 
+    # Allocate one temporal correlation for every skip and all nine directions.
     skip_array = np.asarray(list(skip_distances), dtype = np.float64)
     nt = int(cube_1.shape[0])
     xcorr = np.zeros((len(DIRECTION_ORDER), skip_array.size, nt), dtype = np.float64)
 
+    # Round physical pixel offsets and correlate each overlapping spatial pair.
     for skip_index, skip_distance in enumerate(skip_array):
         skip_pixels = int(round(float(skip_distance)))
         for direction_index, (dy, dx) in enumerate(_direction_offsets(skip_pixels)):
@@ -243,6 +538,7 @@ def _compute_time_distance_result(
                 normalize = normalize,
             )
 
+    # Transform the centered correlations into their Fourier phase diagnostics.
     phase = np.angle(np.fft.fftshift(np.fft.fft(xcorr, axis = -1), axes = -1))
 
     return TimeDistanceResult(xcorr = xcorr, phase = phase, skip_distances = skip_array)
@@ -260,6 +556,50 @@ def time_distance_baseline(
     trim_zero_nan_borders: bool = True,
 ) -> TimeDistanceResult:
 
+    '''
+    Purpose
+    -------
+    Expose the shared nine-direction circular-correlation implementation.
+
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    skip_distances: iterable of float
+        Requested spatial offsets in pixels; round each value to the nearest
+        integer.
+
+    width: int
+        Legacy compatibility argument; ignored.
+
+    n_jobs: int
+        Legacy worker-count argument; ignored.
+
+    normalize: bool
+        Divide each demeaned pixel time series by its standard deviation before
+        correlation; zero deviations are replaced by one.
+
+    legacy_axis_swap: bool
+        Legacy axis-control argument; ignored; input remains [t, y, x].
+
+    trim_zero_nan_borders: bool
+        Trim shared spatial borders when either cube has only zero or nonfinite
+        samples there.
+
+    Outputs
+    -------
+    result: TimeDistanceResult
+        Correlation and phase grids with shape (9, n_skip, nt), plus the
+        requested skip-distance array. Correlation is a temporal circular sum
+        averaged over valid spatial pairs; phase is in radians.
+    '''
+
+    # Keep the historical worker/axis arguments as compatibility-only inputs.
     del n_jobs, legacy_axis_swap
 
     return _compute_time_distance_result(
@@ -285,6 +625,54 @@ def time_distance_fast(
     trim_zero_nan_borders: bool = True,
 ) -> TimeDistanceResult:
 
+    '''
+    Purpose
+    -------
+    Expose the shared directional-correlation implementation through the fast API.
+
+    Inputs
+    ------
+    v1: np.ndarray
+        First cube with shape (nt, ny, nx); finite complete pixel time series
+        are used.
+
+    v2: np.ndarray
+        Second cube matching v1, with the same physical units.
+
+    skip_distances: iterable of float
+        Requested spatial offsets in pixels; round each value to the nearest
+        integer.
+
+    width: int
+        Legacy compatibility argument; ignored.
+
+    normalize: bool
+        Divide each demeaned pixel time series by its standard deviation before
+        correlation; zero deviations are replaced by one.
+
+    legacy_axis_swap: bool
+        Legacy axis-control argument; ignored.
+
+    phase_average_mode: str
+        Legacy phase-averaging argument; ignored.
+
+    time_chunk: int or None
+        Legacy temporal-chunk argument; ignored.
+
+    trim_zero_nan_borders: bool
+        Trim shared spatial borders when either cube has only zero or nonfinite
+        samples there.
+
+    Outputs
+    -------
+    result: TimeDistanceResult
+        Correlation and phase grids with shape (9, n_skip, nt), plus the
+        requested skip-distance array. Correlation is a temporal circular sum
+        averaged over valid spatial pairs; phase is in radians.
+    '''
+
+    # Route the compatibility fast interface through the same verified correlation
+    # implementation.
     del legacy_axis_swap, phase_average_mode, time_chunk
 
     return _compute_time_distance_result(
@@ -349,12 +737,15 @@ def load_time_distance_config(config_file):
     if hasattr(config_module, 'get_config'):
         source_type = _normalize_source_type(getattr(config_module, 'source_type', ''))
         dispersion_curves = copy.deepcopy(getattr(config_module, 'dispersion_curve_inputs', None))
+        komega_comparison = copy.deepcopy(getattr(config_module, 'komega_comparison_inputs', None))
 
         if source_type == 'paired_cubes':
             paired_inputs = copy.deepcopy(getattr(config_module, 'paired_cubes_inputs', {}))
             return config_module.get_config(
                 source_type = source_type,
                 dispersion_curves = dispersion_curves,
+                komega_comparison = komega_comparison,
+                optimized_filtering = copy.deepcopy(getattr(config_module, 'config', {}).get('optimized_filtering', {'mode':'optimized'})),
                 **paired_inputs,
             )
 
@@ -363,6 +754,8 @@ def load_time_distance_config(config_file):
             return config_module.get_config(
                 source_type = source_type,
                 dispersion_curves = dispersion_curves,
+                komega_comparison = komega_comparison,
+                optimized_filtering = copy.deepcopy(getattr(config_module, 'config', {}).get('optimized_filtering', {'mode':'optimized'})),
                 **single_inputs,
             )
 
@@ -596,7 +989,8 @@ def _infer_observation_date_object(file_path):
     '''
     Purpose
     -------
-    Extract an observation date from a file path when it follows the IBIS naming pattern.
+    Extract an observation date from a file path when it follows the IBIS naming
+    pattern.
 
     Inputs
     ------
@@ -858,6 +1252,24 @@ def _infer_uniform_step(values, label):
 def infer_netcdf_time_step_seconds(file_path):
 
     # Require NetCDF support before touching any single-cube files.
+    '''
+    Purpose
+    -------
+    Infer a positive uniform cadence from the NetCDF time or t coordinate.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    Outputs
+    -------
+    dt_seconds: float
+        Median absolute nonzero coordinate step (s). Missing files/coordinates,
+        unsupported units, or nonuniform sampling raise an error.
+    '''
+
     require_netcdf4()
 
     # Resolve the file path once before checking its existence and opening it.
@@ -891,6 +1303,25 @@ def infer_netcdf_time_step_seconds(file_path):
 def infer_netcdf_pixel_scale_Mm(file_path):
 
     # Require NetCDF support before touching any single-cube files.
+    '''
+    Purpose
+    -------
+    Infer a common uniform spacing from valid horizontal NetCDF coordinates.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    Outputs
+    -------
+    dx_Mm: float
+        Positive pixel scale (Mm) shared by valid xb1, xb2, xc1, and xc2
+        coordinates. Missing/invalid axes or inconsistent spacings raise an
+        error.
+    '''
+
     require_netcdf4()
 
     # Resolve the file path once before checking its existence and opening it.
@@ -946,6 +1377,24 @@ def infer_netcdf_pixel_scale_Mm(file_path):
 def infer_netcdf_sampling(file_path):
 
     # Resolve the file path once before checking its existence.
+    '''
+    Purpose
+    -------
+    Collect the inferred temporal and horizontal sampling metadata.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    Outputs
+    -------
+    sampling: dict
+        dt_seconds (s) and dx_Mm (Mm), inferred with the coordinate validation
+        helpers.
+    '''
+
     file_path = Path(file_path).expanduser().resolve()
 
     # Reject missing files before trying to infer any sampling metadata.
@@ -962,6 +1411,25 @@ def infer_netcdf_sampling(file_path):
 def infer_netcdf_height_coordinates_km(file_path):
 
     # Require NetCDF support before touching any single-cube files.
+    '''
+    Purpose
+    -------
+    Read xc3 heights and reference them to the first atmospheric layer.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    Outputs
+    -------
+    height_values_km: np.ndarray
+        Height coordinate in km with xc3[0] set to zero; unavailable entries
+        retain NaN. Missing coordinates or an invalid reference layer raise an
+        error.
+    '''
+
     require_netcdf4()
 
     # Resolve the file path once before checking its existence and opening it.
@@ -1000,6 +1468,31 @@ def infer_netcdf_height_coordinates_km(file_path):
 def infer_netcdf_height_pair_km(file_path, h1, h2):
 
     # Require NetCDF support before touching any single-cube files.
+    '''
+    Purpose
+    -------
+    Resolve two integer layer selectors to their physical heights.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    h1: int or str
+        First zero-based height-layer index.
+
+    h2: int or str
+        Second zero-based height-layer index.
+
+    Outputs
+    -------
+    pair: dict
+        h1_index, h2_index, h1_km, and h2_km relative to the first cube layer.
+        Invalid selectors/heights raise ValueError; out-of-range indices raise
+        IndexError.
+    '''
+
     require_netcdf4()
 
     # Resolve the file path once before checking its existence and opening it.
@@ -1043,7 +1536,8 @@ def load_model_atmosphere(model_file):
     '''
     Purpose
     -------
-    Load and validate the tabulated model-atmosphere file used by single-cube diagnostics.
+    Load and validate the tabulated model-atmosphere file used by single-cube
+    diagnostics.
 
     Inputs
     ------
@@ -1053,7 +1547,8 @@ def load_model_atmosphere(model_file):
     Outputs
     -------
     atmosphere: dict
-        Dictionary containing the sorted atmospheric profiles and derived sound speed in km s^-1.
+        Dictionary containing the sorted atmospheric profiles and derived sound speed in
+        km s^-1.
 
     Author(s)
     ---------
@@ -1225,7 +1720,8 @@ def summarize_single_cube_alfven_sound_ratio(single_cube_model_atmosphere, lower
     '''
     Purpose
     -------
-    Summarize the mean Alfven-to-sound-speed ratio across the selected single-cube height range.
+    Summarize the mean Alfven-to-sound-speed ratio across the selected single-cube
+    height range.
 
     Inputs
     ------
@@ -1244,7 +1740,8 @@ def summarize_single_cube_alfven_sound_ratio(single_cube_model_atmosphere, lower
     Outputs
     -------
     summary: dict
-        Dictionary containing the averaged density, sound speed, Alfven speed, and their ratio.
+        Dictionary containing the averaged density, sound speed, Alfven speed, and their
+        ratio.
 
     Author(s)
     ---------
@@ -1301,6 +1798,87 @@ def summarize_single_cube_alfven_sound_ratio(single_cube_model_atmosphere, lower
                        'alfven_speed_cgs': alfven_speed_cgs,
                       'alfven_speed_km_s': alfven_speed_cgs*1.0e-5 if np.isfinite(alfven_speed_cgs) else np.nan,
              'alfven_to_sound_speed_ratio': alfven_to_sound_speed_ratio}
+
+
+def summarize_single_cube_layer_alfven_speeds(
+    single_cube_model_atmosphere,
+    height_indices,
+    mean_field_strengths_G,
+):
+
+    '''
+    Purpose
+    -------
+    Calculate the Alfven speed independently at each selected layer.
+
+    Inputs
+    ------
+    single_cube_model_atmosphere: dict or None
+        Profiles interpolated onto cube layers, including density_cgs and
+        optionally sound_speed_km_s.
+
+    height_indices: iterable of int
+        Exactly two selected zero-based atmospheric-layer indices.
+
+    mean_field_strengths_G: iterable of float
+        Exactly two mean magnetic-field strengths (G), one per selected layer.
+
+    Outputs
+    -------
+    summary: dict
+        Layer densities (g/cm^3), sound and Alfvén speeds (km/s), field
+        strengths (G), indices, and the arithmetic pair Alfvén speed. Return {}
+        for unavailable atmosphere/density; reject invalid counts or indices.
+    '''
+
+    # Return no layer summary when the interpolated atmosphere is unavailable.
+    if single_cube_model_atmosphere in ['', None]:
+        return {}
+
+    # Require exactly one density/field-strength input for each selected layer.
+    height_indices = [int(value) for value in height_indices]
+    mean_field_strengths_G = [float(value) for value in mean_field_strengths_G]
+    if len(height_indices) != 2 or len(mean_field_strengths_G) != 2:
+        raise ValueError('Exactly two layer indices and two layer field strengths are required.')
+
+    # Load the interpolated profiles and verify the requested density indices.
+    density_cgs = np.asarray(single_cube_model_atmosphere.get('density_cgs', []), dtype = np.float64)
+    sound_speed_km_s = np.asarray(
+        single_cube_model_atmosphere.get('sound_speed_km_s', []),
+        dtype = np.float64,
+    )
+    if density_cgs.size == 0:
+        return {}
+    if any(index < 0 or index >= density_cgs.size for index in height_indices):
+        raise IndexError('A selected height index is outside the interpolated model atmosphere.')
+
+    # Read each layer independently before calculating its Alfvén speed.
+    layer_density_cgs = [float(density_cgs[index]) for index in height_indices]
+    layer_sound_speed_km_s = [
+        float(sound_speed_km_s[index]) if index < sound_speed_km_s.size else np.nan
+        for index in height_indices
+    ]
+    layer_alfven_speed_km_s = [
+        float(compute_alfven_speed_cgs(field_strength, density))*1.0e-5
+        for field_strength, density in zip(mean_field_strengths_G, layer_density_cgs)
+    ]
+    # Average the two layer speeds only when both values are finite.
+    finite_alfven = np.asarray(layer_alfven_speed_km_s, dtype = np.float64)
+    pair_alfven_speed_km_s = (
+        float(np.mean(finite_alfven))
+        if finite_alfven.size == 2 and np.all(np.isfinite(finite_alfven))
+        else np.nan
+    )
+
+    return {
+        'height_indices': height_indices,
+        'mean_field_strength_G_by_height': mean_field_strengths_G,
+        'density_cgs_by_height': layer_density_cgs,
+        'sound_speed_km_s_by_height': layer_sound_speed_km_s,
+        'alfven_speed_km_s_by_height': layer_alfven_speed_km_s,
+        'pair_averaged_alfven_speed_km_s': pair_alfven_speed_km_s,
+        'averaging_method': 'arithmetic mean of the two independently calculated layer values',
+    }
 
 
 def _resolve_module_dir(reference_dir = None):
@@ -1418,12 +1996,30 @@ def _normalize_dispersion_curve_mode(mode):
 def _normalize_dispersion_curve_toggle(curves_value):
 
     '''
+    Purpose
+    -------
     Normalize the dispersion-curve plotting toggle to a single flag.
+
+    Inputs
+    ------
+    curves_value: object
+        Missing/boolean value, an enabled dictionary, or legacy dictionaries
+        containing per-curve enabled flags.
+
+    Outputs
+    -------
+    toggle: dict
+        A single enabled boolean. Missing input disables plotting; dictionaries
+        without a top-level enabled key use any enabled legacy curve. Other
+        values use Python truth conversion.
     '''
 
+    # Treat absent curve settings as a disabled plotting toggle.
     if curves_value in ['', None]:
         return {'enabled': False}
 
+    # Accept either the current top-level flag or the legacy per-curve flag
+    # dictionaries.
     if isinstance(curves_value, dict):
         if 'enabled' in curves_value:
             return {'enabled': bool(curves_value.get('enabled', False))}
@@ -2221,7 +2817,8 @@ def _extract_netcdf_height_slice(variable, axis_order, height_index):
     '''
     Purpose
     -------
-    Extract a single height plane from a 4D NetCDF variable and reorder it to `[t, y, x]`.
+    Extract a single height plane from a 4D NetCDF variable and reorder it to `[t, y,
+    x]`.
 
     Inputs
     ------
@@ -2269,7 +2866,8 @@ def derive_magnetic_orientation_epsilon(*field_components):
     '''
     Purpose
     -------
-    Derive a stable minimum field-strength threshold for magnetic-orientation diagnostics.
+    Derive a stable minimum field-strength threshold for magnetic-orientation
+    diagnostics.
 
     Inputs
     ------
@@ -2328,10 +2926,19 @@ def compute_magnetic_orientation_angles(bx, by, bz, magnitude_epsilon = None):
     magnitude_epsilon: float, optional
         Minimum magnitude used to define valid angle measurements.
 
+
+    bx: np.ndarray
+        First Cartesian magnetic-field component, broadcast-compatible with by
+        and bz.
+
+    by: np.ndarray
+        Second Cartesian component, in the same units as bx and bz.
+
     Outputs
     -------
     orientation: dict
-        Dictionary containing the inclination, azimuth, field magnitude, and validity masks.
+        Dictionary containing the inclination, azimuth, field magnitude, and validity
+        masks.
 
     Author(s)
     ---------
@@ -2367,7 +2974,7 @@ def compute_magnetic_orientation_angles(bx, by, bz, magnitude_epsilon = None):
     # Compute the inclination and azimuth only on the valid subsets.
     with np.errstate(invalid = 'ignore', divide = 'ignore'):
         theta_deg[valid_theta] = np.rad2deg(
-            np.arccos(np.clip(bz[valid_theta]/field_magnitude[valid_theta], -1.0, 1.0)))
+            np.arctan2(horizontal_magnitude[valid_theta], bz[valid_theta]))
         phi_deg[valid_phi] = np.rad2deg(np.arctan2(by[valid_phi], bx[valid_phi]))
 
     # Return both the angles and the validity information used to derive them.
@@ -3074,7 +3681,8 @@ def resolve_paired_cube_spectral_identifier(file_path):
     '''
     Purpose
     -------
-    Resolve the paired-cube spectral identifier from the filename and, when needed, the FITS header.
+    Resolve the paired-cube spectral identifier from the filename and, when needed, the
+    FITS header.
 
     Inputs
     ------
@@ -3138,7 +3746,8 @@ def normalize_observable_slug(observable):
         'b2': 'bb2',
         'b3': 'bb3'}
 
-    observable = str(observable or '').strip().lower()
+    from simulation_observables import normalize
+    observable = normalize(observable)
 
     return alias_lookup.get(observable, observable)
 
@@ -3273,7 +3882,7 @@ def build_context_labels(config):
         default_v1 = paired.get('v1', paired.get('file_1', ''))
         context = infer_observational_context(data.get('v1', default_v1))
     elif source_type == 'single_cube':
-        context = infer_simulation_context(data.get('file', data['single_cube'].get('file', '')))
+        context = infer_simulation_context(data.get('file', data.get('single_cube', {}).get('file', '')))
     else:
         raise ValueError(f'Unsupported source_type: {source_type}')
 
@@ -3456,7 +4065,8 @@ def normalize_paired_line_token(file_path):
     '''
     Purpose
     -------
-    Normalize a paired-cube spectral identifier to the compact line token used in metadata lookups.
+    Normalize a paired-cube spectral identifier to the compact line token used in
+    metadata lookups.
 
     Inputs
     ------
@@ -3846,6 +4456,8 @@ def prepare_runtime_config(config):
                 "data['paired_cubes']['p_dx_Mm'], and data['paired_cubes']['dt'].")
 
         data['resolved_delta_z_km'] = abs(float(paired['delta_z_km']))
+        for key in ('resolved_h1_km', 'resolved_h2_km', 'height_labels', 'dataset_id', 'category', 'field_strength_G'):
+            if key in paired: data[key] = copy.deepcopy(paired[key])
         runtime_config['time_distance']['p_dx_Mm'] = float(paired['p_dx_Mm'])
         runtime_config['time_distance']['dt'] = float(paired['dt'])
     elif source_type == 'single_cube':
@@ -3875,54 +4487,24 @@ def prepare_runtime_config(config):
     else:
         raise ValueError(f'Unsupported source_type: {source_type}')
 
-    data_output_dir = Path(paths['data_output_dir']).expanduser().resolve()
-    figure_output_dir = Path(paths.get('figure_dir', data_output_dir)).expanduser().resolve()
-    output_context = output_paths.build_runtime_output_paths(
-        runtime_config,
-        data_output_dir,
-        figure_output_dir if source_type == 'single_cube' else None)
-    filter_folder_name = output_context['filter_folder']
-    data['filter_folder'] = filter_folder_name
-    data['filter_parameters_file'] = str(data_output_dir / filter_folder_name / 'filter_parameters.txt')
-    data['outfile'] = str(output_paths.build_output_file(
-        data_output_dir,
-        runtime_config,
-        'time_distance',
-        f"{build_output_stem(runtime_config, 'time_distance')}.fits",
-        filter_folder_name))
-    data['phase_outfile'] = str(output_paths.build_output_file(
-        data_output_dir,
-        runtime_config,
-        'phase_difference',
-        f"{build_output_stem(runtime_config, 'phase_difference')}.fits",
-        filter_folder_name))
-    data['komega_outfile'] = str(output_paths.build_output_file(
-        data_output_dir,
-        runtime_config,
-        'komega_diagram',
-        f"{build_output_stem(runtime_config, 'komega_diagram')}.fits",
-        filter_folder_name))
-    data['coherence_outfile'] = str(output_paths.build_output_file(
-        data_output_dir,
-        runtime_config,
-        'coherence_diagram',
-        f"{build_output_stem(runtime_config, 'coherence_diagram')}.fits",
-        filter_folder_name))
-    if source_type == 'single_cube':
-        data['orientation_validation_outfile'] = str(output_paths.build_output_file(
-            figure_output_dir,
-            runtime_config,
-            'orientation_validation',
-            f"{build_output_stem(runtime_config, 'komega_diagram')}_magnetic_orientation_validation.png",
-            filter_folder_name))
-    else:
-        data['orientation_validation_outfile'] = ''
+    from optimized_filter_config import apply_optimized_filters
+    apply_optimized_filters(runtime_config)
+    output_paths.configure_outputs(runtime_config)
 
     # Normalize the dispersion-curve config before numerical curve generation.
     runtime_config['dispersion_curves'] = resolve_dispersion_curve_config(
         runtime_config,
         reference_dir = module_dir,
     )
+
+    # Resolve the authoritative external solver path once.  Model loading and
+    # validation remain in dispersion_comparison.py so the core pipeline does
+    # not acquire a second dispersion-relation implementation.
+    komega_comparison = runtime_config.setdefault('komega_comparison', {})
+    if komega_comparison.get('vesa_2026_dir', '') not in ['', None]:
+        komega_comparison['vesa_2026_dir'] = str(
+            Path(komega_comparison['vesa_2026_dir']).expanduser().resolve()
+        )
 
     return runtime_config
 
@@ -4191,6 +4773,10 @@ def select_xcorr_offsets_for_geometry(yy_shift, xx_shift, geometry):
 
     geometry: str
         Cross-correlation geometry label.
+
+
+    yy_shift: np.ndarray
+        Row offsets from the annular geometry lookup, in pixels.
 
     Outputs
     -------
@@ -4465,7 +5051,8 @@ def parallel_loop(delta):
     Outputs
     -------
     result: tuple
-        Tuple containing the radius, cross-correlation array, and phase-difference array.
+        Tuple containing the radius, cross-correlation array, and phase-difference
+        array.
 
     Author(s)
     ---------
@@ -4730,9 +5317,45 @@ def finalize_chunked_xcorrj_results(partial_results, deltas, nt):
 
 class TimeDistance:
 
+    '''
+    Purpose
+    -------
+    Execute the configured height-pair time-distance and Fourier analysis.
+
+    Inputs
+    ------
+    config: dict
+        Prepared runtime configuration with data, filtering, and time_distance
+        sections and resolved output files.
+
+    Outputs
+    -------
+    instance: TimeDistance
+        Pipeline instance holding input/output paths and caches for results,
+        magnetic metadata, and correlation diagnostics.
+    '''
+
     def __init__(self, config):
 
         # Store the shared runtime configuration and its key sub-dictionaries.
+        '''
+        Purpose
+        -------
+        Store the prepared configuration and initialize pipeline result caches.
+
+        Inputs
+        ------
+        config: dict
+            Runtime dictionaries and resolved paths produced by
+            prepare_runtime_config().
+
+        Outputs
+        -------
+        None
+            Set configuration references, file paths, selected heights, atmosphere
+            metadata, and initially empty result caches.
+        '''
+
         self.config = config
         self.data = config['data']
         self.filtering = config['filtering']
@@ -4745,7 +5368,9 @@ class TimeDistance:
         self.phase_outfile = Path(self.data['phase_outfile']).expanduser()
         self.komega_outfile = Path(self.data['komega_outfile']).expanduser()
         self.coherence_outfile = Path(self.data['coherence_outfile']).expanduser()
-        self.orientation_validation_outfile = Path(self.data['orientation_validation_outfile']).expanduser() if self.data.get('orientation_validation_outfile', '') not in ['', None] else None
+        # Ignore retired plot destinations in historical runtime configurations.
+        # The magnetic orientation calculation and its numerical metadata remain active.
+        self.orientation_validation_outfile = None
         self.single_cube_model_atmosphere = copy.deepcopy(self.data.get('single_cube_model_atmosphere'))
         self.module_dir = Path(self.config.get('_module_dir', Path(__file__).resolve().parent))
 
@@ -4778,11 +5403,17 @@ class TimeDistance:
         Julio M. Morales, March 12th, 2026
         '''
 
-        # Load the Dopplergrams through the optional filtering pipeline
+        cache = self.data.get('filtered_dopplergrams_file')
+        if cache and output_paths.can_reuse(cache, self.config):
+            with np.load(cache, allow_pickle=False) as saved:
+                return saved['v1'], saved['v2']
         filtering = AGWFilter(self.config)
         v1, v2 = filtering.run()
-
+        if cache and self.config.get('output', {}).get('save_filtered_dopplergrams', True):
+            output_paths.atomic_npz(cache, v1=v1, v2=v2)
+            output_paths.register_output(cache, self.config, 'filtered_dopplergrams')
         return v1, v2
+
 
     def load_raw_dopplergrams(self):
 
@@ -4890,7 +5521,8 @@ class TimeDistance:
         '''
         Purpose
         -------
-        Compute the single-cube magnetic-orientation metadata used by the saved k-omega products.
+        Compute the single-cube magnetic-orientation metadata used by the saved k-omega
+        products.
 
         Inputs
         ------
@@ -4899,7 +5531,8 @@ class TimeDistance:
         Outputs
         -------
         metadata: dict or None
-            Magnetic-orientation summary metadata for single-cube runs, or `None` for paired cubes.
+            Magnetic-orientation summary metadata for single-cube runs, or `None` for
+            paired cubes.
 
         Author(s)
         ---------
@@ -4943,6 +5576,7 @@ class TimeDistance:
         theta_snapshots_deg = []
         phi_snapshots_deg = []
         magnitude_epsilons = []
+        mean_field_strengths_G_at_selected_heights = []
         mean_field_strengths_G_between_heights = []
         validation_time_index = None
         height_coordinate_name = ''
@@ -5046,6 +5680,19 @@ class TimeDistance:
                 phi_deg = orientation['phi_deg']
                 finite_theta = np.isfinite(theta_deg)
                 finite_phi = np.isfinite(phi_deg)
+                field_magnitude = np.asarray(orientation['field_magnitude'], dtype = np.float64)
+                # Zero/weak field has a valid magnitude even when its angles
+                # are undefined. Excluding it biases the mean strength upward.
+                valid_field = np.isfinite(field_magnitude)
+
+                if synthetic_zero_field_components:
+                    mean_field_strengths_G_at_selected_heights.append(0.0)
+                elif np.any(valid_field):
+                    mean_field_strengths_G_at_selected_heights.append(
+                        float(np.nanmean(field_magnitude[valid_field]))
+                    )
+                else:
+                    mean_field_strengths_G_at_selected_heights.append(np.nan)
 
                 # Average the inclination only when valid samples are present.
                 if np.any(finite_theta):
@@ -5072,7 +5719,7 @@ class TimeDistance:
                 bz = _extract_netcdf_height_slice(component_variables['bz'], component_axis_orders['bz'], height_index)
                 orientation = compute_magnetic_orientation_angles(bx, by, bz)
                 field_magnitude = np.asarray(orientation['field_magnitude'], dtype = np.float64)
-                valid_field = np.isfinite(field_magnitude) & (field_magnitude > float(orientation['magnitude_epsilon']))
+                valid_field = np.isfinite(field_magnitude)
 
                 if np.any(valid_field):
                     mean_field_strengths_G_between_heights.append(float(np.nanmean(field_magnitude[valid_field])))
@@ -5095,6 +5742,43 @@ class TimeDistance:
             selected_height_range[1],
             mean_field_strength_G_between_heights)
 
+        # Calculate a independently at h1 and h2, then average those two layer
+        # values exactly as required by the detailed dispersion comparison.
+        layer_alfven = summarize_single_cube_layer_alfven_speeds(
+            self.single_cube_model_atmosphere,
+            resolved_height_indices,
+            mean_field_strengths_G_at_selected_heights,
+        )
+        finite_theta_pair = np.asarray(theta_means_deg, dtype = np.float64)
+        pair_theta_deg = (
+            float(np.mean(finite_theta_pair))
+            if finite_theta_pair.size == 2 and np.all(np.isfinite(finite_theta_pair))
+            else np.nan
+        )
+        pair_phi_deg = circular_mean_degrees(phi_means_deg)
+        pair_dz_km = (
+            abs(float(height_values_km[1]) - float(height_values_km[0]))
+            if len(height_values_km) == 2 and np.all(np.isfinite(height_values_km))
+            else float(self.data.get('resolved_delta_z_km', np.nan))
+        )
+        dispersion_height_pair = {
+            'height_indices': [int(value) for value in resolved_height_indices],
+            'height_values_km': [float(value) for value in height_values_km],
+            'a_by_height_km_s': list(layer_alfven.get('alfven_speed_km_s_by_height', [])),
+            'a_km_s': float(layer_alfven.get('pair_averaged_alfven_speed_km_s', np.nan)),
+            'theta_by_height_deg': [float(value) for value in theta_means_deg],
+            'theta_deg': pair_theta_deg,
+            'phi_by_height_deg': [float(value) for value in phi_means_deg],
+            'phi_deg': float(pair_phi_deg),
+            'dz_km': float(pair_dz_km),
+            'a_averaging': 'arithmetic mean of independently calculated h1 and h2 Alfven speeds',
+            'theta_averaging': 'arithmetic mean of h1 and h2 inclinations',
+            'phi_averaging': 'circular mean of h1 and h2 azimuths',
+            'theta_convention': 'inclination from +z',
+            'phi_convention': 'azimuth atan2(By, Bx) from +x toward +y',
+            'dz_convention': 'absolute physical layer separation',
+        }
+
         # Assemble the full orientation metadata dictionary exported with the saved products.
         metadata = {
                  'height_indices': [int(value) for value in resolved_height_indices],
@@ -5107,7 +5791,10 @@ class TimeDistance:
           'magnitude_epsilon': float(max(magnitude_epsilons)) if len(magnitude_epsilons) > 0 else np.nan,
               'component_names': component_names,
         'field_strength_G_between_heights': mean_field_strengths_G_between_heights,
+        'mean_field_strength_G_at_selected_heights': mean_field_strengths_G_at_selected_heights,
             'alfven_sound_ratio': alfven_sound_ratio,
+                  'layer_alfven': layer_alfven,
+       'dispersion_height_pair': dispersion_height_pair,
             'height_coordinate': height_coordinate_name,
          'validation_time_index': int(validation_time_index if validation_time_index is not None else 0),
            'validation_plot_file': ''}
@@ -5217,6 +5904,18 @@ class TimeDistance:
 
         if self.magnetic_orientation_metadata is not None:
             metadata['magnetic_orientation'] = copy.deepcopy(self.magnetic_orientation_metadata)
+
+        # Profile-derived model initialization is metadata only; the native FFT,
+        # phase convention and existing magnetic diagnostics above are unchanged.
+        atmosphere = None
+        if source_type == 'single_cube' and self.config.get('atmospheric_profiles', {}).get('enabled', False):
+            from atmospheric_profiles import resolve_parameters
+            atmosphere = resolve_parameters(self.config,
+                make_figure=self.config.get('atmospheric_profiles', {}).get('make_figure', True))
+        if atmosphere is not None:
+            metadata['atmospheric_parameters'] = atmosphere
+            if atmosphere['status'] != 'available':
+                print('Atmospheric model defaults unavailable:', atmosphere['unavailable'])
 
         return np.asarray(spectrum, dtype = np.float64), metadata['k_axis'], metadata['nu_axis'], metadata
 
@@ -5643,14 +6342,10 @@ class TimeDistance:
         core_header = fits.Header()
         core_header['XCGEO'] = (xcorr_geometry, 'Cross-correlation averaging geometry')
         core_header['SRCMODE'] = str(self.data.get('source_type', ''))
-        fits.PrimaryHDU(np.asarray(xc, dtype = np.float32), header = core_header).writeto(
-            self.outfile,
-            overwrite = True)
+        output_paths.atomic_fits(self.outfile, np.asarray(xc, dtype = np.float32), core_header)
         phase_header = core_header.copy()
         phase_header['BUNIT'] = ('deg', 'Phase-difference units')
-        fits.PrimaryHDU(np.asarray(phase_diff, dtype = np.float32), header = phase_header).writeto(
-            self.phase_outfile,
-            overwrite = True)
+        output_paths.atomic_fits(self.phase_outfile, np.asarray(phase_diff, dtype = np.float32), phase_header)
 
         # Save the optional k-omega phase-difference product and its metadata.
         if komega_spectrum is not None:
@@ -5711,10 +6406,38 @@ class TimeDistance:
                             k_header['CACSRAT'] = (
                                 float(alfven_sound_ratio['alfven_to_sound_speed_ratio']),
                                 'Mean cA/cs between selected heights')
+
+                    # Persist the exact two-layer values used by the detailed
+                    # comparison adapter.  CAAVG above keeps its legacy
+                    # between-layer meaning; PAIRA is specifically (a1+a2)/2.
+                    dispersion_pair = magnetic_orientation.get('dispersion_height_pair', {})
+                    a_by_height = dispersion_pair.get('a_by_height_km_s', [])
+                    height_values_km = dispersion_pair.get('height_values_km', [])
+                    for header_key, values, value_index, comment in [
+                        ('AKMSH1', a_by_height, 0, 'Alfven speed at h1 [km s^-1]'),
+                        ('AKMSH2', a_by_height, 1, 'Alfven speed at h2 [km s^-1]'),
+                        ('H1_KM', height_values_km, 0, 'First layer height [km]'),
+                        ('H2_KM', height_values_km, 1, 'Second layer height [km]'),
+                    ]:
+                        if len(values) > value_index and np.isfinite(float(values[value_index])):
+                            k_header[header_key] = (float(values[value_index]), comment)
+                    for header_key, pair_key, comment in [
+                        ('PAIRA', 'a_km_s', 'Pair-averaged Alfven speed [km s^-1]'),
+                        ('PAIRTHE', 'theta_deg', 'Pair-averaged inclination [deg]'),
+                        ('PAIRPHI', 'phi_deg', 'Pair circular-mean azimuth [deg]'),
+                        ('DZ_KM', 'dz_km', 'Absolute layer separation [km]'),
+                    ]:
+                        pair_value = float(dispersion_pair.get(pair_key, np.nan))
+                        if np.isfinite(pair_value):
+                            k_header[header_key] = (pair_value, comment)
             # Write the finished k-omega product to disk.
-            fits.PrimaryHDU(np.asarray(komega_spectrum, dtype = np.float32), header = k_header).writeto(
-                self.komega_outfile,
-                overwrite = True)
+            output_paths.atomic_fits(self.komega_outfile, np.asarray(komega_spectrum, dtype = np.float32), k_header)
+            from dopplergram_recalculation import write_input_reference
+            write_input_reference(self.komega_outfile,self.config)
+            atmosphere = (komega_metadata or {}).get('atmospheric_parameters')
+            if atmosphere is not None:
+                from atmospheric_profiles import write_sidecar
+                write_sidecar(self.komega_outfile, atmosphere)
 
         # Save the optional coherence product and its metadata.
         if coherence_spectrum is not None:
@@ -5743,9 +6466,16 @@ class TimeDistance:
                     int(coherence_metadata.get('higher_index', 1)),
                     'Higher-forming cube index')
             # Write the finished coherence product to disk.
-            fits.PrimaryHDU(np.asarray(coherence_spectrum, dtype = np.float32), header = c_header).writeto(
-                self.coherence_outfile,
-                overwrite = True)
+            output_paths.atomic_fits(self.coherence_outfile, np.asarray(coherence_spectrum, dtype = np.float32), c_header)
+
+        for path, product, present in [
+            (self.outfile, 'time_distance', True),
+            (self.phase_outfile, 'phase_difference', True),
+            (self.komega_outfile, 'komega_diagram', komega_spectrum is not None),
+            (self.coherence_outfile, 'coherence_diagram', coherence_spectrum is not None),
+        ]:
+            if present:
+                output_paths.register_output(path, self.config, product)
 
     def load_time_distance_output(self):
 
@@ -5855,12 +6585,26 @@ class TimeDistance:
         Outputs
         -------
         results: dict
-            Dictionary containing the cross-correlation array, phase-difference array, axes, and output paths.
+            Dictionary containing the cross-correlation array, phase-difference array,
+            axes, and output paths.
 
         Author(s)
         ---------
         Julio M. Morales, March 12th, 2026
         '''
+
+        state = self.data.get('run_state_file')
+        products = (self.outfile, self.phase_outfile, self.komega_outfile, self.coherence_outfile)
+        if state and self.config.get('output', {}).get('reuse', True) and all(
+                output_paths.can_reuse(path, self.config) for path in (*products, state)):
+            import json
+            with np.load(state, allow_pickle=False) as saved:
+                self.results = {key: saved[key] for key in saved.files if key != 'metadata_json'}
+                self.results.update(json.loads(str(saved['metadata_json'])))
+            self.results.update(outfile=self.outfile, phase_outfile=self.phase_outfile,
+                komega_outfile=self.komega_outfile, coherence_outfile=self.coherence_outfile,
+                orientation_validation_outfile=self.orientation_validation_outfile, reused=True)
+            return self.results
 
         # Load the working Dopplergram cubes through the configured filter pipeline.
         v1, v2 = self.load_dopplergrams()
@@ -5913,6 +6657,11 @@ class TimeDistance:
             'coherence_outfile': self.coherence_outfile,
             'orientation_validation_outfile': self.orientation_validation_outfile}
 
+        if state:
+            arrays = {key:value for key,value in self.results.items() if isinstance(value, np.ndarray)}
+            metadata = {key:value for key,value in self.results.items() if not isinstance(value, (np.ndarray, Path))}
+            output_paths.atomic_npz(state, **arrays, metadata_json=np.asarray(output_paths.canonical_json(metadata)))
+            output_paths.register_output(state, self.config, 'run_state')
         return self.results
 
 # Populate this module-level reference when the pipeline imports `filter.py`.
@@ -6128,17 +6877,42 @@ def parse_cli_args(argv = None):
     parser.add_argument('--config', default = None,
         help = 'Path to the configuration Python file. Defaults to config.py in the current directory or Code/Time-Distance/config.py.')
     parser.add_argument('--source-type', choices = ['single_cube', 'paired_cubes'], default = None)
-    parser.add_argument('--file', dest = 'files', action = 'append', default = None,
+    simulations = parser.add_mutually_exclusive_group()
+    simulations.add_argument('--file', dest = 'files', action = 'append', default = None,
         help = 'Repeat to run multiple single_cube files through the same pipeline.')
-    parser.add_argument('--observable', default = None,
+    simulations.add_argument('--all-simulations', action = 'store_true',
+        help = 'Discover every simulation NetCDF file under the configured co5bold_batch_root; selects single_cube mode.')
+    parser.add_argument('--simulation-root', type = Path, default = None,
+        help = 'Override the simulation discovery root used by --all-simulations.')
+    observables = parser.add_mutually_exclusive_group()
+    observables.add_argument('--observable', default = None,
         help = 'Override the single_cube observable for all generated runs.')
+    observables.add_argument('--all-observables', action = 'store_true',
+        help = 'Process every available 4D observable in each simulation; absent fields are not synthesized.')
     parser.add_argument('--h1', type = int, default = None,
         help = 'Override the first height index for a single single_cube run.')
     parser.add_argument('--h2', type = int, default = None,
         help = 'Override the second height index for a single single_cube run.')
-    parser.add_argument('--height-pair', nargs = 2, type = int, action = 'append', default = None,
+    heights = parser.add_mutually_exclusive_group()
+    heights.add_argument('--height-pair', nargs = 2, type = int, action = 'append', default = None,
         metavar = ('H1', 'H2'),
         help = 'Repeat to run multiple single_cube height-index pairs.')
+    heights.add_argument('--all-height-pairs', action = 'store_true',
+        help = 'Process every unique h1 < h2 pair on each simulation height grid.')
+    geometries = parser.add_mutually_exclusive_group()
+    geometries.add_argument('--geometry', action = 'append', type = str.lower,
+        choices = _XCORR_GEOMETRIES, default = None,
+        help = 'Cross-correlation geometry; repeat for multiple geometries (case-insensitive).')
+    geometries.add_argument('--all-geometries', action = 'store_true',
+        help = 'Process Annulus, East, West, North, and South once each.')
+    parser.add_argument('--default-gaussian', action = 'store_true',
+        help = 'Use one shared default_filtering Gaussian parameter set in manual mode; no filter sweep.')
+    parser.add_argument('--no-magnetogram', action = 'store_true',
+        help = 'Disable magnetogram filtering and remove it from the active sequence; selects manual filtering mode.')
+    parser.add_argument('--skip-existing', action = 'store_true',
+        help = 'Reuse complete runs after source, configuration, implementation, and checksum validation.')
+    parser.add_argument('--dry-run', action = 'store_true',
+        help = 'Expand and count the metadata-only run plan without calculating or writing output products.')
     parser.add_argument('--file-1', default = None,
         help = 'Override the first paired_cubes file for a single run.')
     parser.add_argument('--file-2', default = None,
@@ -6153,7 +6927,142 @@ def parse_cli_args(argv = None):
     parser.add_argument('--dt', type = float, default = None,
         help = 'Override the paired_cubes cadence.')
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.simulation_root is not None and not args.all_simulations:
+        parser.error('--simulation-root requires --all-simulations.')
+    if args.all_height_pairs and (args.h1 is not None or args.h2 is not None):
+        parser.error('--all-height-pairs cannot be combined with --h1 or --h2.')
+    if args.all_simulations and args.source_type == 'paired_cubes':
+        parser.error('--all-simulations requires single_cube mode.')
+    return args
+
+
+def discover_simulation_files(root):
+    '''
+    Purpose
+    -------
+    Discover native simulation files, collapsing repeated resolved paths.
+
+    Inputs
+    ------
+    root: str or Path
+        Simulation directory searched recursively for nonhidden *.nc files.
+
+    Outputs
+    -------
+    files: list of str
+        Sorted unique resolved NetCDF file paths. Raise NotADirectoryError for
+        an invalid root and ValueError when no files are found.
+    '''
+    # Validate the simulation root before recursive NetCDF discovery.
+    root = Path(root).expanduser().resolve()
+    if not root.is_dir():
+        raise NotADirectoryError(f'Simulation root is not a directory: {root}')
+    # Deduplicate resolved paths and exclude hidden directory/file components.
+    files = sorted({str(path.resolve()) for path in root.rglob('*.nc')
+                    if path.is_file() and not any(part.startswith('.') for part in path.relative_to(root).parts)})
+    if not files:
+        raise ValueError(f'No simulation NetCDF files found under {root}.')
+    return files
+
+
+def infer_netcdf_observables(file_path):
+    '''
+    Purpose
+    -------
+    Read available field names without loading the four-dimensional arrays.
+
+    Inputs
+    ------
+    file_path: str or Path
+        NetCDF cube file to inspect; the optional netCDF4 package must be
+        available.
+
+    Outputs
+    -------
+    names: list of str
+        Names of 4D variables, deduplicated by normalized observable slug. Raise
+        ValueError when no 4D field exists.
+    '''
+    # Inspect variable metadata without loading the four-dimensional field arrays.
+    require_netcdf4()
+    with nc.Dataset(file_path, 'r') as dataset:
+        # Aliases of the same observable must not queue the same field twice.
+        names = {}
+        for name, variable in sorted(dataset.variables.items()):
+            if variable.ndim == 4:
+                names.setdefault(normalize_observable_slug(name), name)
+    if not names:
+        raise ValueError(f'No 4D observables found in {file_path}.')
+    return list(names.values())
+
+
+def build_cli_run_configs(config_file, args):
+    '''
+    Purpose
+    -------
+    Apply CLI coverage/filter controls without preparing or writing outputs.
+
+    Inputs
+    ------
+    config_file: str or Path
+        Python configuration module loaded by the command-line runner.
+
+    args: argparse.Namespace
+        Parsed coverage, source, filtering, and reuse options.
+
+    Outputs
+    -------
+    configs: iterator
+        Run configurations from iter_run_configs after applying CLI overrides.
+        Copies the loaded base configuration; this helper does not prepare/write
+        numerical outputs.
+    '''
+    # Determine whether CLI coverage requires a different configured source type.
+    source_type = 'single_cube' if args.all_simulations else args.source_type
+    base_config = copy.deepcopy(load_time_distance_config(config_file))
+    change_source = source_type is not None and source_type != base_config['data']['source_type']
+    if args.all_simulations or args.default_gaussian or change_source:
+        settings = load_config_module(config_file)
+    # Rebuild source-specific inputs while preserving unrelated runtime settings.
+    if change_source:
+        input_name = 'single_cube_inputs' if source_type == 'single_cube' else 'paired_cubes_inputs'
+        base_config = settings.get_config(
+            source_type = source_type,
+            optimized_filtering = copy.deepcopy(base_config.get('optimized_filtering', {'mode': 'manual'})),
+            dispersion_curves = copy.deepcopy(getattr(settings, 'dispersion_curve_inputs', None)),
+            komega_comparison = copy.deepcopy(getattr(settings, 'komega_comparison_inputs', None)),
+            **copy.deepcopy(getattr(settings, input_name)),
+        )
+    # Expand the simulation root into explicit files on a copy of the parsed arguments.
+    if args.all_simulations:
+        root = args.simulation_root or getattr(settings, 'co5bold_batch_root', None)
+        if root is None:
+            raise ValueError('--all-simulations requires co5bold_batch_root in the configuration or --simulation-root.')
+        args = copy.copy(args)
+        args.files = discover_simulation_files(root)
+        args.source_type = 'single_cube'
+    # Apply explicit filtering controls and disable registry overrides for those
+    # settings.
+    if args.default_gaussian or args.no_magnetogram:
+        filtering = base_config['filtering']
+        sequence = list(filtering.get('filter_sequence', []))
+        if args.default_gaussian:
+            filtering['gaussian'] = copy.deepcopy(settings.default_filtering['gaussian'])
+            filtering['gaussian']['enabled'] = True
+            filtering['enabled'] = True
+            if 'gaussian' not in sequence:
+                sequence.append('gaussian')
+        if args.no_magnetogram:
+            filtering.setdefault('magnetogram', {})['enabled'] = False
+            sequence = [name for name in sequence if name != 'magnetogram']
+        filtering['filter_sequence'] = sequence
+        # Optimized registry entries cannot re-enable or replace explicit CLI settings.
+        base_config['optimized_filtering'] = {'mode': 'manual'}
+    # Request output reuse before handing the configuration to the batch iterator.
+    if args.skip_existing:
+        base_config.setdefault('output', {})['reuse'] = True
+    return iter_run_configs(base_config, args)
 
 
 def iter_run_configs(base_config, args):
@@ -6184,6 +7093,9 @@ def iter_run_configs(base_config, args):
     base_run_config = copy.deepcopy(base_config)
     data = base_run_config['data']
     active_source_type = _normalize_source_type(args.source_type or data['source_type'])
+    geometries = (_XCORR_GEOMETRIES if getattr(args, 'all_geometries', False) else
+                  getattr(args, 'geometry', None) or [base_run_config['time_distance'].get('xcorr_geometry', _XCORR_GEOMETRY_DEFAULT)])
+    geometries = list(dict.fromkeys(normalize_xcorr_geometry(value) for value in geometries))
 
     if active_source_type == 'single_cube':
         if any([
@@ -6199,20 +7111,25 @@ def iter_run_configs(base_config, args):
 
         single_cube_config = copy.deepcopy(data.get('single_cube', {}))
         file_list = list(args.files) if args.files not in [None, []] else [single_cube_config['file']]
-        height_pairs = [tuple(pair) for pair in args.height_pair] if args.height_pair not in [None, []] else [(
+        file_list = list(dict.fromkeys(str(Path(path).expanduser().resolve()) for path in file_list))
+        explicit_height_pairs = [tuple(pair) for pair in args.height_pair] if args.height_pair not in [None, []] else [(
             int(args.h1 if args.h1 is not None else single_cube_config['h1']),
             int(args.h2 if args.h2 is not None else single_cube_config['h2']))]
         observable = args.observable if args.observable not in ['', None] else single_cube_config.get('observable', '')
 
         run_configs = []
         for file_path in file_list:
-            for h1_value, h2_value in height_pairs:
+            height_pairs = (list(itertools.combinations(range(len(infer_netcdf_height_coordinates_km(file_path))), 2))
+                            if getattr(args, 'all_height_pairs', False) else list(dict.fromkeys(explicit_height_pairs)))
+            observables = (infer_netcdf_observables(file_path) if getattr(args, 'all_observables', False) else [observable])
+            for observable_value, (h1_value, h2_value), geometry in itertools.product(observables, height_pairs, geometries):
                 run_config = copy.deepcopy(base_run_config)
                 run_config['data']['source_type'] = active_source_type
                 run_config['data']['single_cube']['file'] = file_path
-                run_config['data']['single_cube']['observable'] = observable
+                run_config['data']['single_cube']['observable'] = observable_value
                 run_config['data']['single_cube']['h1'] = int(h1_value)
                 run_config['data']['single_cube']['h2'] = int(h2_value)
+                run_config['time_distance']['xcorr_geometry'] = geometry
                 run_configs.append(run_config)
 
         return run_configs
@@ -6222,9 +7139,11 @@ def iter_run_configs(base_config, args):
         args.observable not in ['', None],
         args.height_pair not in [None, []],
         args.h1 is not None,
-        args.h2 is not None]):
+        args.h2 is not None,
+        getattr(args, 'all_observables', False),
+        getattr(args, 'all_height_pairs', False)]):
         raise ValueError(
-            "single_cube-only overrides (--file, --observable, --h1, --h2, --height-pair) "
+            "single_cube-only overrides (--file, --observable, --h1, --h2, --height-pair, --all-observables, --all-height-pairs) "
             "cannot be used when source_type = 'paired_cubes'.")
 
     paired_config = copy.deepcopy(data.get('paired_cubes', {}))
@@ -6238,7 +7157,8 @@ def iter_run_configs(base_config, args):
     dt = float(args.dt if args.dt is not None else paired_config['dt'])
 
     run_configs = []
-    for file_1, file_2 in file_pairs:
+    file_pairs = list(dict.fromkeys(tuple(str(Path(path).expanduser().resolve()) for path in pair) for pair in file_pairs))
+    for (file_1, file_2), geometry in itertools.product(file_pairs, geometries):
         run_config = copy.deepcopy(base_run_config)
         run_config['data']['source_type'] = active_source_type
         run_config['data']['paired_cubes']['v1'] = file_1
@@ -6248,6 +7168,7 @@ def iter_run_configs(base_config, args):
         run_config['data']['paired_cubes']['delta_z_km'] = delta_z_km
         run_config['data']['paired_cubes']['p_dx_Mm'] = p_dx_Mm
         run_config['data']['paired_cubes']['dt'] = dt
+        run_config['time_distance']['xcorr_geometry'] = geometry
         run_configs.append(run_config)
 
     return run_configs
@@ -6277,10 +7198,15 @@ def main(argv = None):
 
     args = parse_cli_args(argv)
     resolved_config_file = resolve_config_file(args.config)
-    base_config = copy.deepcopy(load_time_distance_config(resolved_config_file))
-    run_configs = iter_run_configs(base_config, args)
+    run_configs = build_cli_run_configs(resolved_config_file, args)
 
     total_runs = len(run_configs)
+    if not total_runs:
+        raise ValueError('No valid time-distance runs were selected.')
+    print(f'Planned {total_runs} unique time-distance runs.')
+    if args.dry_run:
+        print('Dry run: no calculations executed or output products written.')
+        return 0
 
     for run_index, run_config in enumerate(run_configs, start = 1):
         if total_runs > 1:

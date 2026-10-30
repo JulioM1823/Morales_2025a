@@ -15,5 +15,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+Code/Time-Distance/observation_filter_parameters.json.lock
+Code/Time-Distance/.komega_service/
 .vscode/
 Code/Time-Distance/Oana_codes/
+
+Deliverables/
+Morales_2025a et al/Figures/**/HTML/

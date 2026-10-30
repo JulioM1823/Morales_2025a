@@ -1,9 +1,19 @@
-"""Dispersion and diagnostic tools for solar atmospheric wave models.
+'''
+Purpose
+-------
+Evaluate atmospheric dispersion polynomials, bracket real boundary roots,
+and calculate phase speeds and differences.
 
-This module provides a DiagnosticDiagram class that evaluates model-specific
-polynomials for omega and kz, solves for dispersion boundaries, and computes
-phase speeds and phase differences.
-"""
+Inputs
+------
+None
+
+Outputs
+-------
+DiagnosticDiagram: type
+    Model-specific diagnostic object using km, seconds, and radian angles.
+    Solvers retain the legacy real-root sign-scanning behavior.
+'''
 
 from __future__ import annotations
 
@@ -14,6 +24,7 @@ from numpy.typing import ArrayLike
 from scipy import optimize
 
 
+# Define the model-specific and shared required parameter names
 _MODEL_KEYS = {
     "sf1966": ("N", "wac"),
     "mt1981": ("H", "N"),
@@ -26,7 +37,28 @@ _BASE_KEYS = ("cs", "g", "kz_order", "omega_order", "model")
 
 
 def _as_1d_grid(grid: ArrayLike, name: str, axis: str) -> np.ndarray:
-    """Coerce a 1D meshgrid axis to a 1D numpy array."""
+    '''
+    Purpose
+    -------
+    Extract a finite real one-dimensional axis from a vector or replicated meshgrid.
+
+    Inputs
+    ------
+    grid: array-like
+        Nonempty vector or compatible two-dimensional meshgrid.
+
+    name: str
+        Input name used in validation errors.
+
+    axis: str
+        Use row for identical rows or col for identical columns.
+
+    Outputs
+    -------
+    grid_1d: np.ndarray
+        Finite real coordinate vector in the input units. Non-real values,
+        incompatible meshgrids, empty inputs, and invalid dimensions raise ValueError.
+    '''
     arr = np.asarray(grid)
     if np.iscomplexobj(arr):
         if not np.allclose(arr.imag, 0.0):
@@ -64,7 +96,24 @@ def _as_1d_grid(grid: ArrayLike, name: str, axis: str) -> np.ndarray:
 
 
 def _require_real_array(value: ArrayLike, name: str) -> np.ndarray:
-    """Return a real-valued array, rejecting NaNs/Infs and complex values."""
+    '''
+    Purpose
+    -------
+    Convert a nonempty finite real input to a floating-point array.
+
+    Inputs
+    ------
+    value: array-like
+        Scalar or array to validate; negligible imaginary components are discarded.
+
+    name: str
+        Input name included in validation errors.
+
+    Outputs
+    -------
+    array: np.ndarray
+        Real floating-point values of the input shape; invalid values raise ValueError.
+    '''
     arr = np.asarray(value)
     if np.iscomplexobj(arr):
         if not np.allclose(arr.imag, 0.0):
@@ -79,7 +128,24 @@ def _require_real_array(value: ArrayLike, name: str) -> np.ndarray:
 
 
 def _require_scalar(value: ArrayLike, name: str) -> float:
-    """Return a scalar float and reject non-scalars."""
+    '''
+    Purpose
+    -------
+    Require one finite real scalar and return it as a Python float.
+
+    Inputs
+    ------
+    value: array-like
+        Scalar input to validate.
+
+    name: str
+        Parameter name used in validation errors.
+
+    Outputs
+    -------
+    value: float
+        Finite real scalar; non-scalar input raises ValueError.
+    '''
     arr = _require_real_array(value, name)
     if arr.ndim != 0:
         raise ValueError(f"{name} must be a scalar.")
@@ -87,7 +153,25 @@ def _require_scalar(value: ArrayLike, name: str) -> float:
 
 
 def _require_positive_int(value: object, name: str) -> int:
-    """Validate a positive integer setting."""
+    '''
+    Purpose
+    -------
+    Validate an integer-valued positive configuration setting.
+
+    Inputs
+    ------
+    value: object
+        Value convertible to a whole-number float greater than zero.
+
+    name: str
+        Setting name included in validation errors.
+
+    Outputs
+    -------
+    value: int
+        Positive integer. Invalid conversion raises TypeError; fractional or
+        nonpositive values raise ValueError.
+    '''
     try:
         as_float = float(value)
     except (TypeError, ValueError) as exc:
@@ -101,17 +185,34 @@ def _require_positive_int(value: object, name: str) -> int:
 
 
 def _maybe_scalar(value: np.ndarray):
-    """Return a numpy scalar if value is 0d, else the array itself."""
+    '''
+    Purpose
+    -------
+    Unwrap a zero-dimensional NumPy array while retaining other values.
+
+    Inputs
+    ------
+    value: np.ndarray
+        Array or scalar result to return.
+
+    Outputs
+    -------
+    value: object
+        NumPy scalar for a zero-dimensional array; otherwise the original object.
+    '''
     if isinstance(value, np.ndarray) and value.ndim == 0:
         return value[()]
     return value
 
 
 class DiagnosticDiagram:
-    """Compute dispersion diagnostics for multiple atmospheric wave models.
+    '''
+    Purpose
+    -------
+    Compute dispersion diagnostics for multiple atmospheric wave models.
 
-    Parameters
-    ----------
+    Inputs
+    ------
     kh_grid : array-like
         Horizontal wavenumber grid (km^-1). Accepts a 1D array or a 2D
         meshgrid with identical rows.
@@ -121,16 +222,46 @@ class DiagnosticDiagram:
     params : Mapping[str, float]
         Model parameters. Must include base keys: cs, g, kz_order, omega_order,
         and model. Additional keys are model dependent.
-    """
+
+    Outputs
+    -------
+    diagram: DiagnosticDiagram
+        Validated physical axes, model parameters, and real-root scan grids.
+    '''
 
     _OMEGA_FINE_POINTS = 5_000
     _KZ_FINE_POINTS = 5_000
     _KZ_FINE_RANGE = (-1.0, 1.0)
 
     def __init__(self, kh_grid: ArrayLike, omega_grid: ArrayLike, params: Mapping[str, float]):
+        '''
+        Purpose
+        -------
+        Validate the coordinate axes and required model parameters, then build scan grids.
+
+        Inputs
+        ------
+        kh_grid: array-like
+            Horizontal wavenumbers in km^-1, as a vector or repeated-row meshgrid.
+
+        omega_grid: array-like
+            Angular frequencies in rad/s, as a vector or repeated-column meshgrid.
+
+        params: Mapping
+            Base/model keys in km, seconds, and radians; positive cs and integer
+            root storage orders are required.
+
+        Outputs
+        -------
+        None
+            Copy parameters, initialize model attributes, and create 5,000-point
+            frequency and vertical-wavenumber sign-scanning grids.
+        '''
+
         self.kh = _as_1d_grid(kh_grid, "kh_grid", axis="row")  # km^-1
         self.omega = _as_1d_grid(omega_grid, "omega_grid", axis="col")  # rad/s
 
+        # Validate model identity and required keys before constructing attributes
         if not isinstance(params, Mapping):
             raise TypeError("params must be a mapping of parameter names to values.")
         self.params = dict(params)
@@ -148,6 +279,7 @@ class DiagnosticDiagram:
                 f"Missing required parameters for model '{self.model}': {sorted(set(missing))}"
             )
 
+        # Require finite physical scales and positive root-storage dimensions
         self.cs = _require_scalar(self.params["cs"], "cs")  # km/s
         if self.cs <= 0:
             raise ValueError("cs (sound speed) must be positive.")
@@ -159,18 +291,23 @@ class DiagnosticDiagram:
         self.sound_speed = self.cs
         self.gravity = self.g
 
+        # Initialize only the physical attributes used by the selected model
+        # Evaluate the sf1966 model branch with its configured physical parameters
         if self.model == "sf1966":
             self.N = _require_scalar(self.params["N"], "N")
             self.wac = _require_scalar(self.params["wac"], "wac")
+        # Evaluate the mt1981 model branch with its configured physical parameters
         elif self.model == "mt1981":
             self.H = _require_scalar(self.params["H"], "H")
             self.N = _require_scalar(self.params["N"], "N")
+        # Evaluate the mt1982 model branch with its configured physical parameters
         elif self.model == "mt1982":
             self.gamma = _require_scalar(self.params["gamma"], "gamma")
             self.N = _require_scalar(self.params["N"], "N")
             self.H = _require_scalar(self.params["H"], "H")
             self.tau = _require_scalar(self.params["tau"], "tau")
             self.a = 0.0
+        # Evaluate the bunte1993 model branch with its configured physical parameters
         elif self.model == "bunte1993":
             self.a = _require_scalar(self.params["a"], "a")
             self.epsilon = _require_scalar(self.params["epsilon"], "epsilon")
@@ -178,6 +315,7 @@ class DiagnosticDiagram:
             self.H = _require_scalar(self.params["H"], "H")
             self.tau = _require_scalar(self.params["tau"], "tau")
             self.wac = _require_scalar(self.params["wac"], "wac")
+        # Evaluate the nc2009 model branch with its configured physical parameters
         elif self.model == "nc2009":
             self.a = _require_scalar(self.params["a"], "a")
             self.ax = _require_scalar(self.params["ax"], "ax")
@@ -188,34 +326,46 @@ class DiagnosticDiagram:
             self.N = _require_scalar(self.params["N"], "N")
             self.wac = _require_scalar(self.params["wac"], "wac")
 
+        # Retain the legacy scan domains for real-root bracketing
         self._omega_fine_grid = np.linspace(0.0, float(np.max(self.omega)), self._OMEGA_FINE_POINTS)
         self._kz_fine_grid = np.linspace(
             self._KZ_FINE_RANGE[0], self._KZ_FINE_RANGE[1], self._KZ_FINE_POINTS
         )
 
     def fmode_dispersion(self) -> np.ndarray:
-        """Compute the f-mode dispersion curve omega(kh).
+        '''
+        Purpose
+        -------
+        Compute the f-mode dispersion curve omega(kh).
 
-        Returns
+        Inputs
+        ------
+        None
+
+        Outputs
         -------
         omega : numpy.ndarray
             Angular frequency for each kh in the grid (rad/s), computed as
             sqrt(g * kh).
-        """
+        '''
+        # Evaluate the surface-gravity angular frequency on the stored kh axis
         omega = np.sqrt(self.g * np.asarray(self.kh, dtype=float))
         return omega
 
     def omega_poly(self, omega: ArrayLike, kh: ArrayLike):
-        """Evaluate the model-specific dispersion polynomial in omega.
+        '''
+        Purpose
+        -------
+        Evaluate the model-specific dispersion polynomial in omega.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         omega : array-like
             Angular frequency (rad/s). Must be real and finite.
         kh : array-like
             Horizontal wavenumber (km^-1). Must be real and finite.
 
-        Returns
+        Outputs
         -------
         poly : numpy.ndarray or numpy scalar
             Polynomial value(s) for the provided omega and kh.
@@ -223,7 +373,7 @@ class DiagnosticDiagram:
         Notes
         -----
         This method does not solve for omega; it only evaluates the polynomial.
-        """
+        '''
         omega_arr = _require_real_array(omega, "omega")
         kh_arr = _require_real_array(kh, "kh")
         omega_arr, kh_arr = np.broadcast_arrays(omega_arr, kh_arr)
@@ -231,6 +381,7 @@ class DiagnosticDiagram:
         cs = self.cs
         g = self.g
 
+        # Evaluate the sf1966 model branch with its configured physical parameters
         if self.model == "sf1966":
             c4 = cs ** (-2)
             c3 = 0.0
@@ -238,6 +389,7 @@ class DiagnosticDiagram:
             c1 = 0.0
             c0 = self.N ** 2 * kh_arr ** 2
             poly = c4 * omega_arr ** 4 + c3 * omega_arr ** 3 + c2 * omega_arr ** 2 + c1 * omega_arr + c0
+        # Evaluate the mt1981 model branch with its configured physical parameters
         elif self.model == "mt1981":
             c4 = cs ** (-2)
             c3 = 0.0
@@ -320,6 +472,7 @@ class DiagnosticDiagram:
                 + c1 * omega_arr
                 + c0
             )
+        # Evaluate the nc2009 model branch with its configured physical parameters
         elif self.model == "nc2009":
             c6 = 1.0
             c5 = 0.0
@@ -357,10 +510,13 @@ class DiagnosticDiagram:
         return _maybe_scalar(poly)
 
     def kz_poly(self, kz: ArrayLike, omega: ArrayLike, kh: ArrayLike):
-        """Evaluate the model-specific polynomial in kz.
+        '''
+        Purpose
+        -------
+        Evaluate the model-specific polynomial in kz.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         kz : array-like
             Vertical wavenumber (km^-1). Must be real and finite.
         omega : array-like
@@ -369,7 +525,7 @@ class DiagnosticDiagram:
         kh : array-like
             Horizontal wavenumber (km^-1). Must be real and finite.
 
-        Returns
+        Outputs
         -------
         poly : numpy.ndarray or numpy scalar
             Polynomial value(s) for the provided kz, omega, and kh.
@@ -378,7 +534,7 @@ class DiagnosticDiagram:
         -----
         For models containing omega^-2 terms, omega must be non-zero to avoid
         division by zero.
-        """
+        '''
         kz_arr = _require_real_array(kz, "kz")
         omega_arr = _require_real_array(omega, "omega")
         kh_arr = _require_real_array(kh, "kh")
@@ -392,6 +548,7 @@ class DiagnosticDiagram:
         cs = self.cs
         g = self.g
 
+        # Evaluate the sf1966 model branch with its configured physical parameters
         if self.model == "sf1966":
             c2 = 1.0
             c1 = 0.0
@@ -399,6 +556,7 @@ class DiagnosticDiagram:
                 omega_arr ** 2 - self.wac ** 2
             ) * cs ** (-2)
             poly = c2 * kz_arr ** 2 + c1 * kz_arr + c0
+        # Evaluate the mt1981 model branch with its configured physical parameters
         elif self.model == "mt1981":
             c2 = 1.0
             c1 = 0.0
@@ -409,6 +567,7 @@ class DiagnosticDiagram:
                 - omega_arr ** 2 * cs ** (-2)
             )
             poly = c2 * kz_arr ** 2 + c1 * kz_arr + c0
+        # Evaluate the mt1982 model branch with its configured physical parameters
         elif self.model == "mt1982":
             c2 = 1.0
             c1 = 0.0
@@ -439,6 +598,7 @@ class DiagnosticDiagram:
                 - (4 * H ** 2) ** (-1)
             )
             poly = c2 * kz_arr ** 2 + c1 * kz_arr + c0
+        # Evaluate the bunte1993 model branch with its configured physical parameters
         elif self.model == "bunte1993":
             a0 = self.a
             gamma_hat = (1 - 1j * omega_arr * self.tau * self.gamma) * (
@@ -469,6 +629,7 @@ class DiagnosticDiagram:
                     * (p_gamma ** 2 + (omega_arr * self.tau * self.gamma) ** 2 * p1 ** 2) ** (-1)
                 )
             poly = c2 * kz_arr ** 2 + c1 * kz_arr + c0
+        # Evaluate the nc2009 model branch with its configured physical parameters
         elif self.model == "nc2009":
             sin_th = np.sin(self.theta)
             cos_th = np.cos(self.theta)
@@ -549,19 +710,22 @@ class DiagnosticDiagram:
         return _maybe_scalar(poly)
 
     def omega_solve(self, kh: ArrayLike) -> np.ndarray:
-        """Find omega roots for a single kh by bracketing sign changes.
+        '''
+        Purpose
+        -------
+        Find omega roots for a single kh by bracketing sign changes.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         kh : float
             Horizontal wavenumber (km^-1).
 
-        Returns
+        Outputs
         -------
         omega_bounds : numpy.ndarray
             Roots of the omega polynomial, length omega_order. Missing roots
             are returned as zeros for backwards compatibility.
-        """
+        '''
         kh_scalar = _require_scalar(kh, "kh")
 
         fine_grid = self._omega_fine_grid
@@ -577,6 +741,7 @@ class DiagnosticDiagram:
                 "Increase omega_order or adjust the omega grid."
             )
 
+        # Retain fixed legacy slots and turn unavailable/failed roots into zeros
         roots = np.zeros(self.omega_order)
         for ind, idx in enumerate(sign_changes):
             A0, B0 = fine_grid[idx], fine_grid[idx + 1]
@@ -589,24 +754,28 @@ class DiagnosticDiagram:
         return np.nan_to_num(roots, nan=0.0)
 
     def kz_solve(self, kh: ArrayLike) -> np.ndarray:
-        """Solve for kz roots across the omega grid for a single kh.
+        '''
+        Purpose
+        -------
+        Solve for kz roots across the omega grid for a single kh.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         kh : float
             Horizontal wavenumber (km^-1).
 
-        Returns
+        Outputs
         -------
         roots : numpy.ndarray
             Array of shape (len(omega), kz_order) with roots for each omega.
             Missing roots are returned as zeros for backwards compatibility.
-        """
+        '''
         kh_scalar = _require_scalar(kh, "kh")
 
         fine_grid = self._kz_fine_grid
         roots = np.full((len(self.omega), self.kz_order), np.nan)
 
+        # Repeat real-root bracketing independently at every sampled frequency
         for j, omega_j in enumerate(self.omega):
             poly = self.kz_poly(fine_grid, omega_j, kh_scalar)
             if np.iscomplexobj(poly) and not np.allclose(np.imag(poly), 0.0):
@@ -631,31 +800,38 @@ class DiagnosticDiagram:
         return np.nan_to_num(roots, nan=0.0)
 
     def phase_speed(self, omega: ArrayLike, kz: ArrayLike):
-        """Compute phase speed v_phase = omega / kz.
+        '''
+        Purpose
+        -------
+        Compute phase speed v_phase = omega / kz.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         omega : array-like
             Angular frequency (rad/s). Must be real and finite.
         kz : array-like
             Vertical wavenumber (km^-1). Must be real and finite.
 
-        Returns
+        Outputs
         -------
         v_phase : numpy.ndarray or numpy scalar
             Phase speed (km/s). Division by zero yields +/-inf.
-        """
+        '''
         omega_arr = _require_real_array(omega, "omega")
         kz_arr = _require_real_array(kz, "kz")
+        # Broadcast physical inputs before calculating omega/kz
         omega_arr, kz_arr = np.broadcast_arrays(omega_arr, kz_arr)
         v_phase = omega_arr * kz_arr ** (-1)
         return _maybe_scalar(v_phase)
 
     def phase_difference(self, omega: ArrayLike, v_phase: ArrayLike, dz: ArrayLike):
-        """Compute phase difference between two heights.
+        '''
+        Purpose
+        -------
+        Compute phase difference between two heights.
 
-        Parameters
-        ----------
+        Inputs
+        ------
         omega : array-like
             Angular frequency (rad/s). Must be real and finite.
         v_phase : array-like
@@ -663,15 +839,16 @@ class DiagnosticDiagram:
         dz : float
             Height separation (km).
 
-        Returns
+        Outputs
         -------
         delta_phi : numpy.ndarray or numpy scalar
             Phase difference (rad). Division by zero yields +/-inf.
-        """
+        '''
         omega_arr = _require_real_array(omega, "omega")
         v_phase_arr = _require_real_array(v_phase, "v_phase")
         dz_scalar = _require_scalar(dz, "dz")
 
         omega_arr, v_phase_arr = np.broadcast_arrays(omega_arr, v_phase_arr)
+        # Convert propagation time across dz to an angular phase difference
         delta_phi = omega_arr * dz_scalar * v_phase_arr ** (-1)
         return _maybe_scalar(delta_phi)

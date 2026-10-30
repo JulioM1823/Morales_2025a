@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""Plot T(r) from a MESA text model file."""
+'''
+Purpose
+-------
+Plot radial temperature from a MESA text model and save the resulting figure.
+
+Inputs
+------
+None
+
+Outputs
+-------
+Command-line program
+    Read a .mod file, plot shell temperature in K versus the requested
+    radius coordinate, and write an image; --show also displays it.
+'''
 
 from __future__ import annotations
 
@@ -11,19 +25,51 @@ from pathlib import Path
 import numpy as np
 
 
+# Define the solar-radius conversion used for the optional radius axis
 RSUN_CM = 6.957e10
 
 
 def mesa_float(value: str) -> float:
-    """Convert a MESA/Fortran-style float such as 1.0D+00 to Python float."""
+    '''
+    Purpose
+    -------
+    Convert a Fortran-style real literal to a Python float.
+
+    Inputs
+    ------
+    value: str
+        Number text; D and d exponent markers are accepted.
+
+    Outputs
+    -------
+    number: float
+        Converted value. Invalid numeric text raises ValueError.
+    '''
     return float(value.replace("D", "E").replace("d", "e"))
 
 
 def read_temperature_profile(model_path: Path) -> tuple[np.ndarray, np.ndarray]:
-    """Return radius in cm and temperature in K from a MESA .mod file."""
+    '''
+    Purpose
+    -------
+    Read shell log-temperature/log-radius values and return a radius-sorted profile.
+
+    Inputs
+    ------
+    model_path: Path
+        MESA text model; shell records contain index and natural-log T/r columns.
+
+    Outputs
+    -------
+    radius, temperature: tuple of np.ndarray
+        One-dimensional radius in cm and temperature in K, sorted by radius.
+        Comments, non-shell rows, and malformed numeric rows are skipped; no
+        valid shell data raises ValueError.
+    '''
     radius_cm: list[float] = []
     temperature_k: list[float] = []
 
+    # Skip headers/comments and decode shell natural logarithms
     with model_path.open("r", encoding="utf-8") as handle:
         for raw_line in handle:
             line = raw_line.strip()
@@ -49,11 +95,29 @@ def read_temperature_profile(model_path: Path) -> tuple[np.ndarray, np.ndarray]:
     radius = np.asarray(radius_cm)
     temperature = np.asarray(temperature_k)
 
+    # Return shells in ascending physical radius
     order = np.argsort(radius)
     return radius[order], temperature[order]
 
 
 def main() -> None:
+    '''
+    Purpose
+    -------
+    Parse MESA plotting settings and save the radial temperature figure.
+
+    Inputs
+    ------
+    None
+
+    Outputs
+    -------
+    None
+        Save the selected image and optionally display it. Headless runs use
+        the Agg backend and temporary Matplotlib/XDG cache directories.
+    '''
+
+    # Parse model path, output image, radius unit, and display preference
     parser = argparse.ArgumentParser(
         description="Plot the radial temperature profile from a MESA .mod file."
     )
@@ -83,6 +147,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Select a headless renderer and writable cache locations before importing pyplot
     if not args.show:
         cache_root = Path(tempfile.gettempdir()) / "mesa_temperature_profile_cache"
         mpl_cache = cache_root / "matplotlib"
@@ -101,6 +166,7 @@ def main() -> None:
     model_path = args.model.expanduser().resolve()
     radius_cm, temperature_k = read_temperature_profile(model_path)
 
+    # Convert radius to cm, solar radii, or fractions of the maximum model radius
     if args.radius_unit == "cm":
         x = radius_cm
         xlabel = r"$r\ \mathrm{[cm]}$"
@@ -111,10 +177,12 @@ def main() -> None:
         x = radius_cm / radius_cm.max()
         xlabel = r"$r/R_\star$"
 
+    # Derive the default output filename alongside the source model
     output = args.output
     if output is None:
         output = model_path.with_name(f"{model_path.stem}_temperature_profile.png")
 
+    # Plot temperature on a logarithmic axis and save the completed figure
     fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
     ax.plot(x, temperature_k, color="tab:red", linewidth=2)
     ax.set_xlabel(xlabel)

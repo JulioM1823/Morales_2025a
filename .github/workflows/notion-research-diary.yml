@@ -1,5 +1,20 @@
+# Purpose
+# -------
+# Record every pushed or manually selected commit in the shared Notion diary.
+#
+# Inputs
+# ------
+# Push event commits or optional manual commit_sha, plus the existing Actions
+# token and Notion data-source/token/optional native-owner secrets.
+#
+# Outputs
+# -------
+# Validated diary pages keyed solely by canonical Commit Link, or explicit
+# workflow failure; deletion pushes are excluded from publication.
+
 name: Notion Research Diary
 
+# Run on pushes to any branch and allow an explicit manual commit selection
 on:
   push:
   workflow_dispatch:
@@ -10,6 +25,7 @@ on:
         default: ""
         type: string
 
+# Give the repository token only the read access needed for commit metadata
 permissions:
   contents: read
 
@@ -19,12 +35,14 @@ concurrency:
   queue: max
   cancel-in-progress: false
 
+# Serialize publication through the shared concurrency group above
 jobs:
   record-commits:
     name: Record commits in Research Diary
     if: ${{ github.event_name != 'push' || !github.event.deleted }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Read only the automation sources, then use the pinned Node runtime
     steps:
       - name: Check out automation files
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,9 +56,11 @@ jobs:
           node-version: "24"
           package-manager-cache: false
 
+      # Run isolated mock-based regression checks before enabling publication
       - name: Verify diary automation
         run: node --test .github/scripts/notion-research-diary.test.mjs
 
+      # Publish the selected event through the validated script and existing secrets
       - name: Record pushed or manually selected commits
         run: node .github/scripts/notion-research-diary.mjs
         env:

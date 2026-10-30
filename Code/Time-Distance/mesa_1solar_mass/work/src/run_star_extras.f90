@@ -1,3 +1,15 @@
+! Purpose
+! -------
+! Expose standard MESA run-star extra hooks without custom overrides.
+!
+! Inputs
+! ------
+! MESA star, constants, and mathematics modules plus standard_run_star_extras.inc.
+!
+! Outputs
+! -------
+! Compile the standard extra-hook implementation into run_star_extras.
+
 ! ***********************************************************************
 !
 !   Copyright (C) 2010-2025  Bill Paxton & The MESA Team
@@ -19,6 +31,7 @@
 
 module run_star_extras
 
+   ! Import the state, library, and constants required by the standard hook include
    use star_lib
    use star_def
    use const_def
@@ -29,6 +42,7 @@ module run_star_extras
    ! these routines are called by the standard run_star check_model
 contains
 
+   ! Keep the shipped standard callbacks as this work directory hook implementation
    include 'standard_run_star_extras.inc'
 
 end module run_star_extras

@@ -1,4 +1,18 @@
 #!/usr/bin/env zsh
+# Purpose
+# -------
+# Run dataset URL groups sequentially while each downloader manages its own workers.
+#
+# Inputs
+# ------
+# No positional arguments; CO5BOLD_DATA_ROOT, concurrency, timeout, and skip
+# environment settings select the configured dataset groups.
+#
+# Outputs
+# -------
+# Run download_files.sh for each selected URL list and report failure-list paths.
+# A missing URL list or downloader stops the batch.
+
 # run_download_batches.sh
 #
 # Purpose
@@ -22,6 +36,7 @@
 #
 set -euo pipefail
 
+# Resolve the downloader and data-root paths from this script location
 script_dir="${0:A:h}"
 project_root="${script_dir:h:h}"
 downloader="${script_dir}/download_files.sh"
@@ -31,11 +46,12 @@ downloader="${script_dir}/download_files.sh"
   exit 1
 }
 
-data_root="/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold"
+data_root="${CO5BOLD_DATA_ROOT:-${project_root}/Data/co5bold}"
 : "${SKIP_OUTPUT_DIRS:=}"
 : "${MAX_JOBS:=auto}"
 : "${AUTO_MIN_IMPROVEMENT_PCT:=5}"
 
+# Derive a bounded automatic-worker cap when none was supplied
 if [[ -z "${AUTO_MAX_JOBS_CAP:-}" ]]; then
   if command -v sysctl >/dev/null 2>&1; then
     AUTO_MAX_JOBS_CAP="$(sysctl -n hw.logicalcpu 2>/dev/null || true)"
@@ -45,6 +61,7 @@ fi
 (( AUTO_MAX_JOBS_CAP >= 1 )) || AUTO_MAX_JOBS_CAP=8
 (( AUTO_MAX_JOBS_CAP <= 16 )) || AUTO_MAX_JOBS_CAP=16
 
+# Pair each configured URL list with its model/field-strength destination
 typeset -a mappings
 mappings=(
   "${data_root}/hx/file_names_hx_0.txt|${data_root}/hx/10G"
@@ -70,6 +87,17 @@ if [[ -n "${SKIP_OUTPUT_DIRS}" ]]; then
 fi
 echo "[INFO] Starting sequential dataset processing across ${#mappings[@]} URL lists"
 
+# Purpose
+# -------
+# Match a destination against configured comma-separated exclusions.
+#
+# Inputs
+# ------
+# $1: output directory; SKIP_OUTPUT_DIRS: full, relative, or suffix directory entries.
+#
+# Outputs
+# -------
+# Return status 0 when an entry matches and 1 when this destination should run.
 should_skip_output_dir() {
   local out_dir="$1"
   local relative_out_dir="${out_dir#${data_root}/}"
@@ -94,6 +122,7 @@ should_skip_output_dir() {
   return 1
 }
 
+# Process dataset groups in order, leaving concurrency within each downloader
 for mapping in "${mappings[@]}"; do
   url_list="${mapping%%|*}"
   out_dir="${mapping#*|}"
@@ -116,6 +145,7 @@ for mapping in "${mappings[@]}"; do
 
   mkdir -p "${out_dir}"
 
+  # Forward the selected worker and retry settings to the per-list downloader
   env \
     MAX_JOBS="${MAX_JOBS}" \
     AUTO_MAX_JOBS_CAP="${AUTO_MAX_JOBS_CAP}" \

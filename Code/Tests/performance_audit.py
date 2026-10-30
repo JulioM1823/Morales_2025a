@@ -1,8 +1,24 @@
 #!/usr/bin/env python3
-"""Profile time-distance pipeline and plotting notebook performance."""
+'''
+Purpose
+-------
+Profile time-distance pipeline and plotting notebook performance.
+
+Inputs
+------
+None
+    Test cases use local fixtures, parameterized inputs, and the imported
+    implementation modules.
+
+Outputs
+-------
+Tests and audit helpers: callable
+    Expose the regression cases or measured audit entrypoints defined here.
+'''
 
 from __future__ import annotations
 
+# Import the test dependencies and implementation modules used by these checks.
 import argparse
 import contextlib
 import copy
@@ -43,9 +59,40 @@ TD_BATCH_NOTEBOOK = TIME_DISTANCE_DIR / "batch.ipynb"
 
 
 class MemorySampler:
-    """Sample process RSS during long pipeline and notebook operations."""
+    '''
+    Purpose
+    -------
+    Sample process RSS during long pipeline and notebook operations.
+
+    Inputs
+    ------
+    interval_seconds: float
+        Delay in seconds between process-memory samples.
+
+    Outputs
+    -------
+    instance: MemorySampler
+        Fixture or test-suite object providing the documented methods.
+    '''
 
     def __init__(self, interval_seconds: float = 0.1):
+        '''
+        Purpose
+        -------
+        Initialize the memory sampling interval, stop event, and optional process
+        handle.
+
+        Inputs
+        ------
+        interval_seconds: float
+            Delay in seconds between process-memory samples.
+
+        Outputs
+        -------
+        None
+            Store sampler state; do not start the background thread yet.
+        '''
+
         self.interval_seconds = float(interval_seconds)
         self.peak_rss = 0
         self._stop = threading.Event()
@@ -53,25 +100,115 @@ class MemorySampler:
         self._process = psutil.Process() if psutil is not None else None
 
     def __enter__(self) -> "MemorySampler":
+        '''
+        Purpose
+        -------
+        Start resident-memory sampling when entering the measured context.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        sampler: MemorySampler
+            This running sampler instance.
+        '''
+
         self.start()
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        '''
+        Purpose
+        -------
+        Stop resident-memory sampling when leaving the measured context.
+
+        Inputs
+        ------
+        exc_type: type or None
+            Exception type passed to the context-manager exit hook.
+
+        exc: BaseException or None
+            Active exception passed to the exit hook.
+
+        tb: traceback or None
+            Traceback passed to the context-manager exit hook.
+
+        Outputs
+        -------
+        None
+            Join the sampler thread and retain the peak value; do not suppress
+            exceptions.
+        '''
+
         self.stop()
 
     def start(self) -> None:
+        '''
+        Purpose
+        -------
+        Start a daemon thread and initialize the peak resident-memory sample.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        None
+            Store and start the sampler thread; the performance-audit variant
+            also clears its stop event before starting.
+        '''
+
         self.peak_rss = self.current_rss()
         self._stop.clear()
         self._thread = threading.Thread(target=self._sample, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
+        '''
+        Purpose
+        -------
+        Signal and join the sampler thread, then retain the final peak-memory
+        observation.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        None
+            Stop periodic sampling and update peak_rss in place.
+        '''
+
         self._stop.set()
         if self._thread is not None:
             self._thread.join()
         self.peak_rss = max(self.peak_rss, self.current_rss())
 
     def current_rss(self) -> int:
+        '''
+        Purpose
+        -------
+        Read resident memory and normalize the resource fallback to bytes.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        rss: int
+            Resident-memory observation in bytes; resource fallback uses the
+            process high-water mark rather than an instantaneous sample.
+        '''
+
         if self._process is not None:
             return int(self._process.memory_info().rss)
 
@@ -81,12 +218,49 @@ class MemorySampler:
         return int(usage * 1024)
 
     def _sample(self) -> None:
+        '''
+        Purpose
+        -------
+        Update the recorded peak resident memory until the stop event is set.
+
+        Inputs
+        ------
+        None
+            Uses the surrounding fixture or object state where needed.
+
+        Outputs
+        -------
+        None
+            Mutate peak_rss on the daemon thread at interval_seconds spacing.
+        '''
+
         while not self._stop.is_set():
             self.peak_rss = max(self.peak_rss, self.current_rss())
             time.sleep(self.interval_seconds)
 
 
 def load_local_module(module_name: str, file_path: str | Path) -> ModuleType:
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    module_name: str
+        Import name assigned to the dynamically loaded module.
+
+    file_path: str | Path
+        Path of the source, module, or numerical product being inspected.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     file_path = Path(file_path).expanduser().resolve()
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     if spec is None or spec.loader is None:
@@ -97,10 +271,47 @@ def load_local_module(module_name: str, file_path: str | Path) -> ModuleType:
 
 
 def load_time_distance_module() -> ModuleType:
+    '''
+    Purpose
+    -------
+    Import the selected on-disk module under the isolated name used by the test.
+
+    Inputs
+    ------
+    None
+        Uses the surrounding fixture or object state where needed.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Executed module exposing the implementation under test. Where present,
+        register it in sys.modules before loader execution.
+    '''
+
+    # Create and execute an isolated import of the on-disk implementation module.
     return load_local_module("time_distance_performance_audit", TIME_DISTANCE_DIR / "pipeline.py")
 
 
 def load_td_batch_helpers(notebook_path: str | Path = TD_BATCH_NOTEBOOK) -> ModuleType:
+    '''
+    Purpose
+    -------
+    Execute only the selected notebook helper-definition cells in an isolated module
+    namespace.
+
+    Inputs
+    ------
+    notebook_path: str | Path
+        Notebook from which executable helper cells are loaded.
+
+    Outputs
+    -------
+    module: types.ModuleType
+        Loaded helper namespace; raise RuntimeError if the expected notebook
+        helper cells cannot be located.
+    '''
+
+    # Find definition cells by their known helper signatures before executing them.
     notebook_path = Path(notebook_path).expanduser().resolve()
     notebook = nbformat.read(notebook_path, as_version=4)
     module = ModuleType("td_batch_performance_audit")
@@ -126,20 +337,45 @@ def load_td_batch_helpers(notebook_path: str | Path = TD_BATCH_NOTEBOOK) -> Modu
 
 
 def load_base_config(time_distance_module: ModuleType, config_file: str | Path, source_type: str) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Load source-type-specific settings and preserve configured dispersion inputs for a
+    benchmark.
+
+    Inputs
+    ------
+    time_distance_module: ModuleType
+        Dynamically loaded time-distance pipeline module.
+
+    config_file: str | Path
+        Python configuration file used to build the runtime settings.
+
+    source_type: str
+        Dataset mode, such as single_cube or paired_cubes.
+
+    Outputs
+    -------
+    config: dict
+        Configuration for the requested dataset mode. Unsupported source modes
+        raise ValueError; source overrides require a get_config() interface.
+    '''
+
+    # Load only the requested source-mode defaults before applying benchmark changes.
     config_file = Path(config_file).expanduser().resolve()
     config_module = time_distance_module.load_config_module(config_file)
     normalized_source_type = time_distance_module._normalize_source_type(source_type)
     dispersion_curves = copy.deepcopy(getattr(config_module, "dispersion_curve_inputs", None))
 
     if normalized_source_type == "paired_cubes":
-        return config_module.get_config(
+        return config_module.get_config(optimized_filtering={'mode':'manual'},
             source_type=normalized_source_type,
             dispersion_curves=dispersion_curves,
             **copy.deepcopy(getattr(config_module, "paired_cubes_inputs", {})),
         )
 
     if normalized_source_type == "single_cube":
-        return config_module.get_config(
+        return config_module.get_config(optimized_filtering={'mode':'manual'},
             source_type=normalized_source_type,
             dispersion_curves=dispersion_curves,
             **copy.deepcopy(getattr(config_module, "single_cube_inputs", {})),
@@ -149,12 +385,52 @@ def load_base_config(time_distance_module: ModuleType, config_file: str | Path, 
 
 
 def selected_source_types(source_type: str) -> list[str]:
+    '''
+    Purpose
+    -------
+    Expand the both-source audit option into its two concrete dataset modes.
+
+    Inputs
+    ------
+    source_type: str
+        Dataset mode, such as single_cube or paired_cubes.
+
+    Outputs
+    -------
+    source_types: list of str
+        Requested mode, or both single_cube and paired_cubes.
+    '''
+
     if source_type == "both":
         return ["single_cube", "paired_cubes"]
     return [source_type]
 
 
 def audit_run_config(base_config: dict[str, Any], run_dir: Path, *, show_plots: bool = False) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Copy runtime settings and redirect saved artifacts to a noninteractive audit
+    directory.
+
+    Inputs
+    ------
+    base_config: dict[str, Any]
+        Base configuration copied before applying benchmark-specific settings.
+
+    run_dir: Path
+        Directory assigned to this benchmark run.
+
+    show_plots: bool
+        Whether audit runs display figures interactively.
+
+    Outputs
+    -------
+    config: dict
+        Independent run configuration with audit-specific paths and figure settings.
+    '''
+
+    # Redirect scientific artifacts and disable interactive figures for this audit case.
     run_config = copy.deepcopy(base_config)
     run_config.setdefault("paths", {})
     run_config["paths"]["data_output_dir"] = str(run_dir / "data")
@@ -177,8 +453,41 @@ def build_scenario_run_configs(
     time_distance_module: ModuleType | None = None,
     config_file: str | Path | None = None,
 ) -> list[dict[str, Any]]:
-    """Return deterministic audit configs without mutating configured research outputs."""
+    '''
+    Purpose
+    -------
+    Return deterministic audit configs without mutating configured research outputs.
 
+    Inputs
+    ------
+    base_config: dict[str, Any]
+        Base configuration copied before applying benchmark-specific settings.
+
+    scenario: str
+        Single-run, batch, or plotting workload selected for profiling.
+
+    source_type: str
+        Dataset mode, such as single_cube or paired_cubes.
+
+    run_dir: Path
+        Directory assigned to this benchmark run.
+
+    batch_helpers: ModuleType | None
+        Notebook helper namespace used to construct or execute batch scenarios.
+
+    time_distance_module: ModuleType | None
+        Dynamically loaded time-distance pipeline module.
+
+    config_file: str | Path | None
+        Python configuration file used to build the runtime settings.
+
+    Outputs
+    -------
+    configs: list of dict
+        Independent runtime records with distinct scenario/case output directories.
+    '''
+
+    # Expand the selected audit scenario into isolated per-case configurations.
     if scenario not in {"smoke", "representative", "full"}:
         raise ValueError("scenario must be 'smoke', 'representative', or 'full'.")
 
@@ -220,14 +529,72 @@ def build_scenario_run_configs(
 
 
 def wrap_pipeline_stages(pipeline: Any) -> tuple[dict[str, float], dict[str, int]]:
+    '''
+    Purpose
+    -------
+    Instrument pipeline methods with elapsed-time and call-count accumulators.
+
+    Inputs
+    ------
+    pipeline: Any
+        Pipeline instance whose methods are wrapped with timing counters.
+
+    Outputs
+    -------
+    stage_times, stage_call_counts: tuple of dict
+        Mutable timing totals in seconds and invocation counts. Replace
+        selected pipeline methods in place with delegating wrappers.
+    '''
+
+    # Keep timing/count dictionaries in closures while replacing only selected methods.
     stage_times: dict[str, float] = {}
     stage_call_counts: dict[str, int] = {}
 
     def wrap(stage_name: str) -> None:
+        '''
+        Purpose
+        -------
+        Wrap the selected pipeline method with the enclosing timing/counting closure.
+
+        Inputs
+        ------
+        stage_name: str
+            Pipeline method name captured by the timing wrapper.
+
+        Outputs
+        -------
+        None
+            Replace the named method on the enclosing pipeline instance.
+        '''
+
         original = getattr(pipeline, stage_name)
 
         def timed_stage(*args, **kwargs):
+            '''
+            Purpose
+            -------
+            Call the original pipeline method and record elapsed time even when it
+            raises.
+
+            Inputs
+            ------
+            *args: tuple
+                Positional arguments accepted by the wrapper, or parsed benchmark
+                options.
+
+            **kwargs: dict
+                Keyword arguments accepted by the substituted or wrapped callable.
+
+            Outputs
+            -------
+            result: object
+                Unchanged original method result. Update timing/count dictionaries
+                in finally and propagate the original exception.
+            '''
+
             start_time = time.perf_counter()
+            # Delegate unchanged results/errors while collecting stage timing in
+            # finally.
             try:
                 return original(*args, **kwargs)
             finally:
@@ -254,6 +621,26 @@ def wrap_pipeline_stages(pipeline: Any) -> tuple[dict[str, float], dict[str, int
 
 
 def summarize_cprofile(profile: cProfile.Profile, output_prefix: Path) -> dict[str, str]:
+    '''
+    Purpose
+    -------
+    Write binary profiler data and a cumulative-time text summary.
+
+    Inputs
+    ------
+    profile: cProfile.Profile
+        Collected profiler data to serialize and summarize.
+
+    output_prefix: Path
+        Path prefix used for binary and text profile artifacts.
+
+    Outputs
+    -------
+    artifacts: dict
+        Paths of the written profile and text report files.
+    '''
+
+    # Serialize the collected profile and render a separate cumulative-time report.
     output_prefix.parent.mkdir(parents=True, exist_ok=True)
     profile_file = output_prefix.with_suffix(".prof")
     text_file = output_prefix.with_suffix(".txt")
@@ -268,6 +655,24 @@ def summarize_cprofile(profile: cProfile.Profile, output_prefix: Path) -> dict[s
 
 
 def fits_summary(file_path: str | Path) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Read a FITS product and summarize its dimensions and numerical range.
+
+    Inputs
+    ------
+    file_path: str | Path
+        Path of the source, module, or numerical product being inspected.
+
+    Outputs
+    -------
+    summary: dict
+        Path/existence metadata and, when present, shape and NaN-aware
+        minimum, maximum, mean, and standard deviation.
+    '''
+
+    # Summarize an existing FITS product while recording missing products explicitly.
     file_path = Path(file_path).expanduser().resolve()
     if not file_path.exists():
         return {"path": str(file_path), "exists": False}
@@ -285,6 +690,30 @@ def fits_summary(file_path: str | Path) -> dict[str, Any]:
 
 
 def compare_fits(reference_file: str | Path, candidate_file: str | Path) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Compare candidate and reference FITS arrays using shape, exact, and tolerance
+    checks.
+
+    Inputs
+    ------
+    reference_file: str | Path
+        Reference FITS product used for numerical comparison.
+
+    candidate_file: str | Path
+        New FITS product being checked against the reference.
+
+    Outputs
+    -------
+    comparison: dict
+        Shape agreement and, for matching arrays, exact/tolerance checks and
+        difference statistics. Tolerance checks use atol=rtol=1e-6. Both paths
+        are required; invalid or unreadable inputs propagate errors.
+    '''
+
+    # Require matching array shapes before computing exact and tolerance-based
+    # differences.
     reference_file = Path(reference_file).expanduser().resolve()
     candidate_file = Path(candidate_file).expanduser().resolve()
     reference = np.asarray(fits.getdata(reference_file), dtype=np.float64)
@@ -320,6 +749,34 @@ def run_pipeline_profile(
     run_config: dict[str, Any],
     output_dir: Path,
 ) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Profile a prepared pipeline run and summarize stages, memory, and generated
+    products.
+
+    Inputs
+    ------
+    time_distance_module: ModuleType
+        Dynamically loaded time-distance pipeline module.
+
+    config_file: Path
+        Python configuration file used to build the runtime settings.
+
+    run_config: dict[str, Any]
+        Per-run pipeline configuration.
+
+    output_dir: Path
+        Destination directory for profile summaries and artifacts.
+
+    Outputs
+    -------
+    summary: dict
+        Recorded performance metrics and product/profile paths, also saved
+        beneath output_dir.
+    '''
+
+    # Build the runtime pipeline before measuring its stages and saved products.
     output_dir.mkdir(parents=True, exist_ok=True)
     _, runtime_config, pipeline = time_distance_module.build_pipeline(
         config_file=config_file,
@@ -383,6 +840,36 @@ def run_analysis_profile(
     analysis_backend: str,
     config_file: Path,
 ) -> dict[str, Any]:
+    '''
+    Purpose
+    -------
+    Profile batch plotting through the requested analysis backend.
+
+    Inputs
+    ------
+    batch_helpers: ModuleType
+        Notebook helper namespace used to construct or execute batch scenarios.
+
+    runtime_config: dict[str, Any]
+        Runtime configuration being prepared, executed, or summarized.
+
+    output_dir: Path
+        Destination directory for profile summaries and artifacts.
+
+    analysis_backend: str
+        Notebook analysis execution backend selected for profiling.
+
+    config_file: Path
+        Python configuration file used to build the runtime settings.
+
+    Outputs
+    -------
+    summary: dict
+        Analysis timings, memory, output products, and profiler artifacts
+        written beneath output_dir.
+    '''
+
+    # Profile the selected plotting backend using the prepared runtime configuration.
     output_dir.mkdir(parents=True, exist_ok=True)
     record = {
         "run_index": 1,
@@ -443,6 +930,26 @@ def run_analysis_profile(
 
 
 def write_matrix_csv(records: Iterable[dict[str, Any]], output_file: Path) -> None:
+    '''
+    Purpose
+    -------
+    Write the combined scenario summaries as a CSV matrix.
+
+    Inputs
+    ------
+    records: Iterable[dict[str, Any]]
+        Benchmark summary rows written to the CSV matrix.
+
+    output_file: Path
+        CSV destination path.
+
+    Outputs
+    -------
+    None
+        Create the destination directory and write the selected record columns.
+    '''
+
+    # Write a consistent set of summary columns for the collected audit scenarios.
     rows = []
     for record in records:
         pipeline = record.get("pipeline", {})
@@ -472,6 +979,22 @@ def write_matrix_csv(records: Iterable[dict[str, Any]], output_file: Path) -> No
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    '''
+    Purpose
+    -------
+    Parse the benchmark or performance-audit command-line options.
+
+    Inputs
+    ------
+    argv: list[str] | None
+        Command-line argument tokens; None uses the process arguments.
+
+    Outputs
+    -------
+    arguments: argparse.Namespace
+        Parsed options; argparse reports malformed or unsupported arguments.
+    '''
+
     parser = argparse.ArgumentParser(description="Profile time-distance notebooks and shared pipeline code.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--scenario", choices=["smoke", "representative", "full"], default="smoke")
@@ -484,6 +1007,24 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    '''
+    Purpose
+    -------
+    Run requested performance scenarios, write the reports, and report aggregate failure
+    status.
+
+    Inputs
+    ------
+    argv: list[str] | None
+        Command-line argument tokens; None uses the process arguments.
+
+    Outputs
+    -------
+    status: int
+        Zero when all scenarios succeed, otherwise one. Write JSON/CSV and
+        profile artifacts beneath the configured audit output root.
+    '''
+
     args = parse_args(argv)
     label = args.label or datetime.now().strftime("%Y%m%d_%H%M%S")
     output_root = Path(args.output_root).expanduser().resolve() / label
