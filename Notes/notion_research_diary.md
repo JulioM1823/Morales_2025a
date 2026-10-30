@@ -69,6 +69,29 @@ or write access.
 
 ## Project, owner, and existing date
 
+The same workflow and scripts work in any repository; there is no repository
+allowlist or project page ID in the code. Each repository needs its own copy of
+the workflow and scripts, and its own Actions secrets. GitHub does not apply a
+workflow installed in one personal repository to other repositories, and it does
+not share that repository's secrets with them.
+
+For each repository whose name matches a project, install these four files on
+its default branch and on existing branches that should record pushes:
+
+- `.github/workflows/notion-research-diary.yml`
+- `.github/scripts/notion-research-diary.mjs`
+- `.github/scripts/notion-research-diary.test.mjs`
+- `Notes/notion_research_diary.md`
+
+Configure `NOTION_TOKEN` and `NOTION_DATA_SOURCE_ID` in that repository, and
+optionally `NOTION_OWNER_USER_ID`. The same integration, Research Diary data
+source, and native owner can be used across repositories. The integration needs
+access to Research Diary and its related Project Database; individual project
+page IDs are resolved at runtime. Verify each installation with **Run workflow**.
+New branches inherit automation when created from a branch containing these
+files. A newly created repository still needs this installation and its secrets;
+creating a matching Notion project alone does not install a GitHub workflow.
+
 The script reads the target data source from the diary's **Project** relation,
 discovers that source's title property, and queries for the repository's name
 (without the owner prefix). It prefers an exact name. If there is no exact
@@ -119,6 +142,13 @@ that platform limit, canceled runs need to be rerun. Notion does not enforce URL
 uniqueness, so other independent writers to this data source must avoid inserting
 the same commit URL concurrently.
 
+Concurrency groups are scoped to a GitHub repository. Different repositories can
+write to the shared diary independently because their canonical Commit Link URLs
+include their distinct owner/repository names. Even the same Git SHA in two
+repositories has two different commit URLs and belongs to each repository's own
+matching project. Branches and repeated runs within one repository still share
+the same URL and are skipped normally.
+
 Unexpected HTTP errors, schema errors, and request timeouts fail the job. Logs
 include the commit SHA, HTTP status, and API error details while redacting secrets.
 HTTP 429 responses receive bounded retries honoring `Retry-After`; ambiguous
@@ -147,6 +177,7 @@ commits, title extraction, exact URL payloads and filtering, cross-branch and
 manual duplicates, manual HEAD/SHA resolution, partial-failure recovery, deletion
 and empty events, API failures, schema validation, and redacted logging.
 They also test project name matching and ambiguity, native user pagination and
-selection, and leaving the automatic Date property to Notion.
+selection, leaving the automatic Date property to Notion, and multiple
+repositories resolving different projects and commit URLs in the shared diary.
 A real end-to-end test requires the two repository secrets, an accessible Notion data
 source, Project Database access, user-information capability, and a GitHub Actions run.

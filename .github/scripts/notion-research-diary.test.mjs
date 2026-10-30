@@ -363,6 +363,27 @@ test("missing or ambiguous project matches fail before creating pages", async (t
   assert.equal(f.pages.size, 0);
 });
 
+test("matching repositories use their own projects and commit URLs in the shared diary", async (t) => {
+  const f = await fixture(t, push(commit(SHA_A)));
+  const repositories = [
+    ["Morales_2023", "Morales 2023"],
+    ["Morales_2025a", "Morales 2025a"],
+    ["Morales_202xa", "Morales 202xa"],
+    ["Vesa_2026", "Vesa 2026"],
+    ["another-repository", "another repository"],
+  ];
+  f.state.projects = repositories.map(([, name], index) => project(name, `project-${index}`));
+  for (const [index, [repository]] of repositories.entries()) {
+    f.env.GITHUB_REPOSITORY = `example/${repository}`;
+    assert.deepEqual(await f.execute(), { created: 1, skipped: 0 });
+    const url = `https://github.com/example/${repository}/commit/${SHA_A}`;
+    assert.deepEqual(f.pages.get(url).properties.Project, { relation: [{ id: `project-${index}` }] });
+    assert.equal(f.pages.get(url).properties["Commit Link"].url, url);
+    assert.deepEqual(await f.execute(), { created: 0, skipped: 1 });
+  }
+  assert.equal(f.pages.size, repositories.length);
+});
+
 test("owner resolution uses native people and supports the full name or verified display name", async (t) => {
   const f = await fixture(t, push(commit(SHA_A)));
   f.state.users = [
