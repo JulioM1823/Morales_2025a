@@ -1,0 +1,67 @@
+\RequirePackage[hyphens]{url}
+\documentclass[twocolumn]{aastex7}
+
+\newcommand{\vdag}{(v)^\dagger}
+\newcommand\aastex{AAS\TeX}
+\newcommand\latex{La\TeX}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\definecolor{mylinkcolor}{RGB}{16, 37, 110}
+\hypersetup{linkcolor=mylinkcolor,citecolor=mylinkcolor,urlcolor=mylinkcolor}
+
+\newcommand{\todo}[1]{\textcolor{red}{[#1]}}
+\newcommand{\reviewchange}[1]{\textcolor{red}{#1}}
+
+\shorttitle{}
+\shortauthors{Morales et al.}
+
+\received{}
+\revised{}
+\accepted{}
+\submitjournal{The Astronomical Journal}
+
+
+\usepackage[nolist]{acronym}
+\newacro{ar}[AR]{Active Regions}
+
+\begin{document}
+
+\title{\todo{Working Title}}
+
+\author[0000-0001-7525-7423]{Julio M. Morales} %chktex 8
+\correspondingauthor{Julio M. Morales}
+\email{jmmorale@nmsu.edu}
+\affiliation{Department of Astronomy, New Mexico State University, P.O. Box 30001, MSC 4500, Las Cruces, NM 88003-8001, USA} %chktex 8
+
+\author[0000-0001-9659-7486]{Jason Jackiewicz}%chktex 8
+\affiliation{Department of Astronomy, New Mexico State University, P.O. Box 30001, MSC 4500, Las Cruces, NM 88003-8001, USA} %chktex 8
+
+\begin{abstract}
+Abstract is here 
+\end{abstract}
+
+\keywords{keywords}
+
+\NewPageAfterKeywords{}
+
+\section{Introduction}\label{sec:intro}
+
+\section{Simultation}\label{sec:sim}
+
+\section{Results}\label{sec:results}
+
+\section{Discussion}\label{sec:disc}
+
+\section{Conclusions}\label{sec:conc}
+
+
+% Acklowledgments
+\begin{acknowledgments}
+    Acknowledgments
+\end{acknowledgments}\label{sec:ack}
+
+% Make an appendix
+\appendix\label{sec:appendix}
+
+This is an appendix.
+
+\end{document}
