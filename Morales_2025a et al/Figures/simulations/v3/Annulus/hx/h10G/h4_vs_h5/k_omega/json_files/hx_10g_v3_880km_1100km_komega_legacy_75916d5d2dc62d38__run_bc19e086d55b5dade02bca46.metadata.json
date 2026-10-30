@@ -1,0 +1,122 @@
+{
+  "artifact": {
+    "sha256": "293c8926fc3829802b1714f990db76345597263c179d1cd0c7d417517ec5e033",
+    "size_bytes": 284075
+  },
+  "diagnostic_directory": "k_omega",
+  "extra": {
+    "automatic_reuse": false,
+    "migration_source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/hx_10g_v3_880km_1100km_unfiltered_komega.jpeg",
+    "source_sha256": "293c8926fc3829802b1714f990db76345597263c179d1cd0c7d417517ec5e033",
+    "verification": "same underlying file and SHA256"
+  },
+  "filter_configuration": {
+    "mode": "historical",
+    "provenance": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_11/simulations/nonmagneto/horizontal/10G/komega/annulus/v3/hx_10g_v3_880km_1100km_komega.inputs.json"
+  },
+  "identity": {
+    "category": "hx/h10G",
+    "dataset_id": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc",
+    "diagnostic_parameters": {},
+    "filtering": {
+      "enabled": false,
+      "filter_sequence": [],
+      "gaussian": {
+        "central_f": "",
+        "central_k": "",
+        "enabled": false,
+        "width_f": "",
+        "width_k": ""
+      },
+      "magnetogram": {
+        "enabled": false,
+        "fill_value": 0.0,
+        "selection": "nonmagnetic",
+        "threshold_G": ""
+      }
+    },
+    "geometry": {
+      "delta_z_km": 220.0001163636366,
+      "delta_z_rounded_km": 220,
+      "grouping_status": "available",
+      "heights_km": [
+        880.0,
+        1100.0001163636366
+      ],
+      "labels": [
+        "h4",
+        "h5"
+      ],
+      "pair": "h4_vs_h5"
+    },
+    "implementation": {
+      "status": "legacy implementation not fully recorded"
+    },
+    "legacy_provenance": {
+      "processing_parameters_status": "only recorded parameters; remaining values unknown",
+      "reference": {
+        "data": {
+          "file": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc",
+          "h1": 4,
+          "h2": 5,
+          "observable": "v3",
+          "resolved_h1_index": 4,
+          "resolved_h1_km": 880.0,
+          "resolved_h2_index": 5,
+          "resolved_h2_km": 1100.0001163636366,
+          "source_type": "single_cube"
+        },
+        "filtering": {
+          "enabled": false,
+          "filter_sequence": [],
+          "gaussian": {
+            "central_f": "",
+            "central_k": "",
+            "enabled": false,
+            "width_f": "",
+            "width_k": ""
+          },
+          "magnetogram": {
+            "enabled": false,
+            "fill_value": 0.0,
+            "selection": "nonmagnetic",
+            "threshold_G": ""
+          }
+        },
+        "magnetogram_mode": {
+          "single_cube": "bottom"
+        },
+        "provenance": "saved atmospheric cube/height provenance; observable from canonical pipeline name or saved megaplot metadata",
+        "sampling": {
+          "dt": 30.0,
+          "p_dx_Mm": 0.16000000000000014
+        },
+        "schema_version": 1
+      },
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_11/simulations/nonmagneto/horizontal/10G/komega/annulus/v3/hx_10g_v3_880km_1100km_komega.fits"
+    },
+    "magnetogram_mode": {
+      "single_cube": "bottom"
+    },
+    "observable": "v3",
+    "organization_prefix": "simulations/v3/Annulus",
+    "phase_calibration_sha256": "f7878ade053f7858b8363ca01f858e512dbfa424e490203afc38c9416422319a",
+    "processing": {
+      "dt": 30.0,
+      "p_dx_Mm": 0.16000000000000014,
+      "xcorr_geometry": "annulus"
+    },
+    "schema_version": 2,
+    "source_type": "single_cube",
+    "sources": [
+      {
+        "mtime_ns": 1774082716449860781,
+        "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/hx/10G/simulation_hx_10G_33570s_48000s.nc",
+        "size_bytes": 5687328003
+      }
+    ]
+  },
+  "product": "komega_diagram",
+  "run_id": "bc19e086d55b5dade02bca465cc258e3507c18342805f52c81f1f5a409e39170",
+  "schema_version": 2
+}
