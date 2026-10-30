@@ -1,0 +1,126 @@
+{
+  "artifact": {
+    "sha256": "76d612878557ea9a8318e4997d7f2ea7658e4e4fc3ca30b38780cf30048b8176",
+    "size_bytes": 200518
+  },
+  "diagnostic_directory": "xcorr",
+  "extra": {
+    "automatic_reuse": false,
+    "migration_source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Morales_2025a et al/Figures/Simulations/vx_50g_v3_220km_880km_gaussian_filtered_gauss_ck_2_wk_2_cf_1_5_wf_1_5_xc.jpeg",
+    "source_sha256": "76d612878557ea9a8318e4997d7f2ea7658e4e4fc3ca30b38780cf30048b8176",
+    "verification": "same underlying file and SHA256"
+  },
+  "filter_configuration": {
+    "mode": "historical",
+    "provenance": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/simulations/nonmagneto/vertical/50G/komega/annulus/v3/vx_50g_v3_220km_880km_komega.inputs.json"
+  },
+  "identity": {
+    "category": "vx/v50G",
+    "dataset_id": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/50G/simulation_vx_50G_47970s_62370s.nc",
+    "diagnostic_parameters": {},
+    "filtering": {
+      "enabled": true,
+      "filter_sequence": [
+        "gaussian"
+      ],
+      "gaussian": {
+        "central_f": 1.5,
+        "central_k": 2.0,
+        "enabled": true,
+        "width_f": 1.5,
+        "width_k": 2.0
+      },
+      "magnetogram": {
+        "enabled": false,
+        "fill_value": 0.0,
+        "selection": "nonmagnetic",
+        "threshold_G": ""
+      }
+    },
+    "geometry": {
+      "delta_z_km": 659.9999999999998,
+      "delta_z_rounded_km": 660,
+      "grouping_status": "available",
+      "heights_km": [
+        220.0,
+        879.9999999999998
+      ],
+      "labels": [
+        "h1",
+        "h4"
+      ],
+      "pair": "h1_vs_h4"
+    },
+    "implementation": {
+      "status": "legacy implementation not fully recorded"
+    },
+    "legacy_provenance": {
+      "processing_parameters_status": "only recorded parameters; remaining values unknown",
+      "reference": {
+        "data": {
+          "file": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/50G/simulation_vx_50G_47970s_62370s.nc",
+          "h1": 1,
+          "h2": 4,
+          "observable": "v3",
+          "resolved_h1_index": 1,
+          "resolved_h1_km": 220.0,
+          "resolved_h2_index": 4,
+          "resolved_h2_km": 879.9999999999998,
+          "source_type": "single_cube"
+        },
+        "filtering": {
+          "enabled": true,
+          "filter_sequence": [
+            "gaussian"
+          ],
+          "gaussian": {
+            "central_f": 1.5,
+            "central_k": 2.0,
+            "enabled": true,
+            "width_f": 1.5,
+            "width_k": 2.0
+          },
+          "magnetogram": {
+            "enabled": false,
+            "fill_value": 0.0,
+            "selection": "nonmagnetic",
+            "threshold_G": ""
+          }
+        },
+        "magnetogram_mode": {
+          "single_cube": "bottom"
+        },
+        "provenance": "saved atmospheric cube/height provenance; observable from canonical pipeline name or saved megaplot metadata",
+        "sampling": {
+          "dt": 30.0,
+          "p_dx_Mm": 0.16000000000000014
+        },
+        "schema_version": 1
+      },
+      "source": "/Users/juliomorales/Library/CloudStorage/GoogleDrive-juliomorales1823@gmail.com/My Drive/Graduate School/Research/Projects/Helioseismology/Morales_2025a/Data/Time-Distance/filter_7/simulations/nonmagneto/vertical/50G/komega/annulus/v3/vx_50g_v3_220km_880km_komega.fits"
+    },
+    "magnetogram_mode": {
+      "single_cube": "bottom"
+    },
+    "observable": "v3",
+    "organization_prefix": "simulations/v3/Annulus",
+    "phase_calibration_sha256": "f7878ade053f7858b8363ca01f858e512dbfa424e490203afc38c9416422319a",
+    "processing": {
+      "dt": 30.0,
+      "p_dx_Mm": 0.16000000000000014,
+      "xcorr_geometry": "annulus"
+    },
+    "schema_version": 2,
+    "source_type": "single_cube",
+    "sources": [
+      {
+        "mtime_ns": 1777337621678994154,
+        "path": "/Users/juliomorales/Research/Projects/Morales_2025a/Data/co5bold/vx/50G/simulation_vx_50G_47970s_62370s.nc",
+        "size_bytes": 6822664452
+      }
+    ]
+  },
+  "product": "time_distance",
+  "run_id": "37cdf3181676211b050e4c427326f66326e497fa272da2e0c6f8e131c189094b",
+  "schema_version": 2
+}
